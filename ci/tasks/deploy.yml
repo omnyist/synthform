@@ -1,0 +1,57 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: alpine
+    tag: "3.20"
+
+inputs:
+  - name: repo
+
+params:
+  SSH_KEY: ((deploy_ssh_key))
+  KNOWN_HOSTS: ((demi_known_hosts))
+
+run:
+  path: sh
+  args:
+    - -ec
+    - |
+      apk add --no-cache openssh-client rsync >/dev/null
+      mkdir -p ~/.ssh
+      echo "$SSH_KEY" > ~/.ssh/id_ed25519
+      chmod 600 ~/.ssh/id_ed25519
+      echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # Demi by TAILNET, not LAN. Its ufw denies all inbound with an empty
+      # ruleset; the tailnet works because Tailscale's userspace networking
+      # bypasses netfilter entirely. 10.0.20.22 will time out from here even
+      # though both boxes share a /24 -- that is the firewall, not a fault.
+      DEMI=avalonstar@100.111.202.16
+      SSH="ssh -i ~/.ssh/id_ed25519 -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=10"
+      RSYNC_SSH="$SSH"
+
+      # Demi is OFF unless Bryan is streaming or working. Fail loudly and say
+      # why: a deploy that silently succeeds against nothing is worse than one
+      # that stops and names the reason.
+      if ! $SSH -o BatchMode=yes "$DEMI" true 2>/dev/null; then
+        echo "::error:: Demi is unreachable at 100.111.202.16."
+        echo "           It is powered off unless Bryan is streaming or at the desk."
+        echo "           This is a manual-trigger job: re-run it when Demi is up."
+        exit 1
+      fi
+
+      $SSH "$DEMI" 'mkdir -p ~/ci/deploys/synthform'
+
+      # --exclude .env is load-bearing. Demi's .env is the WORKING config and
+      # is not in git: it holds VITE_GITHUB_TOKEN plus seven settings, and
+      # origin/main reads four more that it does not define (the two
+      # HOMEASSISTANT vars, which have code defaults, and the two SYNTHMULT_WS
+      # ones, which do not). The retired GHA workflow wrote a DIFFERENT and
+      # partly dead set -- HOMEASSISTANT vars but no WS_HOST/TENANT_SLUG --
+      # which is how the two copies drifted. This deploy ships code and leaves
+      # config alone rather than reconstructing a file it cannot fully know.
+      rsync -a --delete --exclude '.env' -e "$RSYNC_SSH" repo/ "$DEMI":~/ci/deploys/synthform/
+
+      $SSH "$DEMI" 'cd ~/ci/deploys/synthform && bash ci/deploy.sh && sh ci/verify.sh'

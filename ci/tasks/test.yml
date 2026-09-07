@@ -1,0 +1,17 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: oven/bun
+    # Pinned rather than :latest — an unpinned bun that changes under the
+    # pipeline turns an unrelated push red and sends the next person hunting
+    # through their own diff for a fault that is not there.
+    tag: "1.2-alpine"
+
+inputs:
+  - name: repo
+
+run:
+  path: sh
+  args: ["-ec", "sh repo/ci/test.sh"]
