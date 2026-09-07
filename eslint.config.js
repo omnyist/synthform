@@ -26,10 +26,23 @@ export default tseslint.config(
       // (the old deploy workflow never linted), so these accumulated unseen.
       // They print on every build and the counts only go down deliberately.
       //
-      // no-explicit-any: 27 occurrences, mostly src/types/*.ts describing
-      // backend payloads. The honest fix is real types — several could come
-      // from the generate:api OpenAPI output — not a blanket swap to unknown,
-      // which just moves the narrowing to every call site.
+      // no-explicit-any: 27 occurrences. NOT in the API types — that guess was
+      // wrong and is corrected here. They cluster in route components:
+      // telestrator/output.tsx (6), debug/ironmon.tsx (3),
+      // telestrator/index.tsx (2), debug/server.tsx (2), the rest scattered.
+      //
+      // Nearly all are `as any` at serverConnection.subscribe/unsubscribe call
+      // sites, and the tempting conclusion — "one badly typed signature" — is
+      // also wrong. subscribe is already correctly generic
+      // (<T extends MessageType>, callback: (data: PayloadType<T>) => void)
+      // and already absorbs the variance internally. The casts exist because
+      // callers pass a message-type VARIABLE rather than a literal, so T
+      // widens and PayloadType<T> becomes a union the handler cannot satisfy.
+      //
+      // The fix is therefore per-call-site (narrow those to literals or
+      // as-const), not one signature change. Real work, modest payoff, in
+      // overlay code — worth doing while touching these files, not as a
+      // dedicated sweep.
       //
       // react-hooks/immutability: 1 occurrence, a connect() called in a
       // useEffect. A genuine correctness rule; left visible rather than
