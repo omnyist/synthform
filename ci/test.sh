@@ -13,20 +13,11 @@ cd repo
 bun install --frozen-lockfile
 bun run typecheck
 
-# LINT RUNS BUT DOES NOT GATE — deliberately, and this should not be permanent.
-#
-# synthform has 29 pre-existing eslint errors (mostly no-explicit-any, plus an
-# empty-interface). They predate this pipeline: the retired GHA workflow only
-# deployed and never linted, so `eslint .` has never actually been enforced on
-# this repo. Gating on it today would make synthform red from its first build
-# and block the deploy path this pipeline exists to provide, for debt that has
-# nothing to do with the change being pushed.
-#
-# The output is still printed on every run, so the count is visible rather than
-# forgotten. Flip the `|| true` once the existing errors are cleared — a check
-# nobody is forced to pass is a declaration, not a gate, and this is currently
-# a declaration.
-bun run lint || echo "::warning:: lint has pre-existing failures; not gating (see ci/test.sh)"
+# Lint GATES. The two categories that were failing on day one are recorded as
+# warnings in eslint.config.js with their counts and the reason, so this stops
+# anything NEW at error level while the known debt stays visible rather than
+# hidden behind a blanket `|| true`.
+bun run lint
 
 bun test
 bun run build

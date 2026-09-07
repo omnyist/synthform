@@ -55,7 +55,7 @@ export interface OBSSceneItemsMessage {
   sceneItems: GetSceneItemListResponse['sceneItems']
 }
 
-export interface OBSStreamStatusMessage extends GetStreamStatusResponse {}
+export type OBSStreamStatusMessage = GetStreamStatusResponse
 
 // Command messages we send to the server
 export interface OBSCommand {
