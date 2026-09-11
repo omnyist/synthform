@@ -184,6 +184,14 @@ export async function fetchReadings(
   )
 }
 
+export type SynthhomeLatestReading = components['schemas']['LatestReadingSchema']
+
+/** Latest value of every metric a source has reported, keyed by metric name. */
+export async function fetchLatestReadings(source: string): Promise<Record<string, number>> {
+  const page = await fetchJSON<{ items: SynthhomeLatestReading[] }>(`/readings/latest?source=${source}`)
+  return Object.fromEntries(page.items.map((r) => [r.metric, r.value]))
+}
+
 export async function fetchCurrentWeather(): Promise<SynthhomeCurrentWeather> {
   return fetchJSON('/weather/current')
 }

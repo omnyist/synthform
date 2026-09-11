@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Canvas } from '@/components/ui/canvas'
-import { useHomeAssistant } from '@/hooks/use-homeassistant'
+import { useLatestReadings } from '@/hooks/use-latest-readings'
 import { useTempest, useTempestForecast, useTempestCurrent } from '@/hooks/use-tempest'
 import { useEnphase, useEnphaseBatteries, useEnphaseToday, useEnphaseCurrent, useEnphaseMicroinverters } from '@/hooks/use-enphase'
 import { useNetwork, useNetworkDevices, usePduOutlets } from '@/hooks/use-network'
@@ -12,16 +12,11 @@ import { useAlertQueue } from '@/hooks/use-alerts'
 import { useStatus } from '@/hooks/use-status'
 import { useMusic } from '@/hooks/use-music'
 import { useLimitbreak } from '@/hooks/use-limitbreak'
-import type { HassEntity } from 'home-assistant-js-websocket'
+import { unraidStats } from '@/lib/unraid'
 
 export const Route = createFileRoute('/(full)/hud')({
   component: HUD,
 })
-
-function numState(entity: HassEntity | undefined, fallback = 0): number {
-  if (!entity || entity.state === 'unavailable' || entity.state === 'unknown') return fallback
-  return parseFloat(entity.state) || fallback
-}
 
 function HUD() {
   // ---------------------------------------------------------------------------
@@ -33,70 +28,18 @@ function HUD() {
   const limitbreak = useLimitbreak()
 
   // ---------------------------------------------------------------------------
-  // Home Assistant (HA WebSocket)
+  // House telemetry (Synthhome REST, polled)
   // ---------------------------------------------------------------------------
-  const { entities, isConnected: haConnected } = useHomeAssistant()
+  const { data: vesync } = useLatestReadings('vesync')
+  const { data: unraidReadings } = useLatestReadings('unraid')
 
-  // Indoor climate (ecobee)
-  const indoorTemp = numState(entities['sensor.my_ecobee_temperature'])
-  const indoorHumidity = numState(entities['sensor.my_ecobee_humidity'])
-  const indoorCo2 = numState(entities['sensor.my_ecobee_carbon_dioxide'])
-  const indoorAqi = numState(entities['sensor.my_ecobee_air_quality_index'])
-  const indoorVocs = numState(entities['sensor.my_ecobee_vocs'])
-  const barTemp = numState(entities['sensor.living_room_temperature'])
-
-  // Air purifier
-  const pm25 = numState(entities['sensor.vital_200s_series_pm2_5'])
-  const airQuality = entities['sensor.vital_200s_series_air_quality']?.state ?? '—'
-  const filterLife = numState(entities['sensor.vital_200s_series_filter_lifetime'])
+  // Air purifier (Levoit via VeSync)
+  const pm25 = vesync?.pm25 ?? 0
+  const filterLife = vesync?.filter_life ?? 0
 
   // Server (Unraid)
-  const cpuUsage = numState(entities['sensor.unraid_cpu_usage'])
-  const ramUsage = numState(entities['sensor.unraid_ram_usage'])
-  const cpuTemp = numState(entities['sensor.unraid_cpu_temperature'])
-  const uptime = entities['sensor.unraid_uptime_status']?.state ?? '—'
-  const arrayUsage = numState(entities['sensor.unraid_array_usage'])
-  const disk1 = numState(entities['sensor.unraid_disk1_usage'])
-  const disk2 = numState(entities['sensor.unraid_disk2_usage'])
-  const disk3 = numState(entities['sensor.unraid_disk3_usage'])
-  const netIn = numState(entities['sensor.unraid_br0_inbound'])
-  const netOut = numState(entities['sensor.unraid_br0_outbound'])
-
-  // Network (UniFi) — now via Synthhome, see Network section below
-
-  // EV (Polestar 3)
-  const evBattery = numState(entities['sensor.polestar_5857_battery_charge_level'])
-  const evRange = numState(entities['sensor.polestar_5857_estimated_range'])
-  const evCharging = entities['sensor.polestar_5857_charging_status']?.state ?? '—'
-
-  // Grid carbon
-  const co2Intensity = numState(entities['sensor.electricity_maps_co2_intensity'])
-  const fossilPct = numState(entities['sensor.electricity_maps_grid_fossil_fuel_percentage'])
-
-  // Lights
-  const lightIds = [
-    'light.living_room_floor_lamp',
-    'light.master_bedroom_table_lamp',
-    'light.studio_table_lamp',
-    'light.bar_main_lights',
-    'light.bar_bar_pendants',
-    'light.family_room_main_lights',
-    'light.game_room_main_lights',
-    'light.game_room_chandelier',
-    'light.guest_bedroom_main_lights',
-    'light.adu_entry_main_lights',
-    'light.adu_kitchen_main_lights',
-    'light.adu_hallway_main_lights',
-  ]
-  const lights = lightIds.map((id) => {
-    const e = entities[id]
-    return {
-      id,
-      name: ((e?.attributes.friendly_name as string) ?? id.split('.')[1])
-        .replace(/ Main Lights| Floor Lamp| Table Lamp| Bar Pendants| Chandelier/g, ''),
-      on: e?.state === 'on',
-    }
-  })
+  const { cpuUsage, ramUsage, uptime, arrayUsage, disks } = unraidStats(unraidReadings ?? {})
+  const [disk1 = 0, disk2 = 0, disk3 = 0] = disks
 
   // ---------------------------------------------------------------------------
   // Weather (Synthhome WebSocket + REST)
@@ -189,22 +132,18 @@ function HUD() {
   // Render — this is your canvas
   // ---------------------------------------------------------------------------
   const debugPayloads = {
-    connections: { haConnected, tempestConnected, enphaseConnected, unifiConnected },
+    connections: { tempestConnected, enphaseConnected, unifiConnected },
     status,
     music: { track: musicTrack, source: musicSource, isPlaying },
     limitbreak,
-    indoorClimate: { indoorTemp, indoorHumidity, indoorCo2, indoorAqi, indoorVocs, barTemp },
-    airPurifier: { pm25, airQuality, filterLife },
-    server: { cpuUsage, ramUsage, cpuTemp, uptime, arrayUsage, disk1, disk2, disk3, netIn, netOut },
+    airPurifier: { pm25, filterLife },
+    server: { cpuUsage, ramUsage, uptime, arrayUsage, disk1, disk2, disk3 },
     network: {
       wanDownload, wanUpload, wanLatency, rackPower, wifiClients,
       devices: networkDevices?.map((d) => ({ name: d.name, type: d.device_type, cpu: d.cpu_pct, mem: d.mem_pct })),
       pdu: pduOutlets?.filter((o) => o.has_metering && (o.power_w ?? 0) > 0).map((o) => ({ index: o.index, name: o.name, power: o.power_w })),
       events: networkEvents.slice(0, 5),
     },
-    ev: { evBattery, evRange, evCharging },
-    gridCarbon: { co2Intensity, fossilPct },
-    lights,
     weather: {
       outdoorTemp, outdoorHumidity, windAvg, windGust, windDir,
       pressure, uv, solarRadiation, illuminance, dailyRain,

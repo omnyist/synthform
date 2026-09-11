@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useHomeAssistant } from '@/hooks/use-homeassistant'
+import { useLatestReadings } from '@/hooks/use-latest-readings'
+import { useNetwork } from '@/hooks/use-network'
 import { useTempest, useTempestForecast } from '@/hooks/use-tempest'
 import { useEnphase, useEnphaseBatteries, useEnphaseMicroinverters, useEnphaseToday } from '@/hooks/use-enphase'
 import { useGitHubCommits } from '@/hooks/use-github'
 import { useSteamPlayer, useSteamRecentGames } from '@/hooks/use-steam'
 import { useSparkline, useAccumulatingSparkline } from '@/hooks/use-sparkline'
-import type { HassEntity } from 'home-assistant-js-websocket'
+import { unraidStats } from '@/lib/unraid'
 import type { BatteryDetail } from '@/api/synthhome'
 
 export const Route = createFileRoute('/debug/hud-styles')({
@@ -15,11 +16,6 @@ export const Route = createFileRoute('/debug/hud-styles')({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function numState(entity: HassEntity | undefined, fallback = 0): number {
-  if (!entity || entity.state === 'unavailable' || entity.state === 'unknown') return fallback
-  return parseFloat(entity.state) || fallback
-}
 
 // ---------------------------------------------------------------------------
 // SVG Components
@@ -413,29 +409,6 @@ function BigNumber({
 }
 
 // Status dot grid — for lights, devices
-function StatusGrid({
-  items,
-}: {
-  items: { label: string; active: boolean; color?: string }[]
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-x-4 gap-y-1.5">
-      {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-2">
-          <div
-            className="size-2 rounded-full"
-            style={{
-              backgroundColor: item.active ? (item.color || '#00ff88') : 'rgba(255,255,255,0.1)',
-              boxShadow: item.active ? `0 0 6px ${item.color || '#00ff88'}` : 'none',
-            }}
-          />
-          <span className={`text-[10px] ${item.active ? 'text-gray-300' : 'text-gray-600'}`}>{item.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // Vertical bar (like a level meter)
 function VerticalBar({
   value,
@@ -777,7 +750,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ---------------------------------------------------------------------------
 
 function HUDStyles() {
-  const { entities, isConnected: haConnected } = useHomeAssistant()
+  const { data: vesync } = useLatestReadings('vesync')
+  const { data: unraidReadings } = useLatestReadings('unraid')
+  const { snapshot: networkSnapshot } = useNetwork()
   const { observation, rapidWind, isConnected: tempestConnected } = useTempest()
   const { snapshot: energySnapshot, isConnected: enphaseConnected } = useEnphase()
   const { data: batteriesData } = useEnphaseBatteries()
@@ -797,22 +772,11 @@ function HUDStyles() {
   const batteryPct = (energyReadings.battery_soc as number) ?? 0
   const batteryPower = (energyReadings.battery_agg_power_w as number) ?? 0
 
-  // HA data (everything not yet in Synthhome)
-  const temp = numState(entities['sensor.my_ecobee_temperature'])
-  const humidity = numState(entities['sensor.my_ecobee_humidity'])
-  const co2 = numState(entities['sensor.my_ecobee_carbon_dioxide'])
-  const cpuUsage = numState(entities['sensor.unraid_cpu_usage'])
-  const ramUsage = numState(entities['sensor.unraid_ram_usage'])
-  const arrayUsage = numState(entities['sensor.unraid_array_usage'])
-  const disk1 = numState(entities['sensor.unraid_disk1_usage'])
-  const disk2 = numState(entities['sensor.unraid_disk2_usage'])
-  const disk3 = numState(entities['sensor.unraid_disk3_usage'])
-  const evBattery = numState(entities['sensor.polestar_5857_battery_charge_level'])
-  const evRange = numState(entities['sensor.polestar_5857_estimated_range'])
-  const co2Intensity = numState(entities['sensor.electricity_maps_co2_intensity'])
-  const fossilPct = numState(entities['sensor.electricity_maps_grid_fossil_fuel_percentage'])
-  const wifiClients = numState(entities['sensor.exandria'])
-  const pm25 = numState(entities['sensor.vital_200s_series_pm2_5'])
+  // House telemetry (Synthhome REST, polled)
+  const { cpuUsage, ramUsage, arrayUsage, disks } = unraidStats(unraidReadings ?? {})
+  const [disk1 = 0, disk2 = 0, disk3 = 0] = disks
+  const wifiClients = networkSnapshot?.wifiClientsTotal ?? 0
+  const pm25 = vesync?.pm25 ?? 0
 
   // Tempest data (via Synthhome WebSocket — 3s rapid wind, ~1m observations)
   const readings = observation?.readings ?? {}
@@ -827,40 +791,13 @@ function HUDStyles() {
   const windSpeedHistory = useSparkline('tempest', 'rapid_wind_speed', windAvg)
   const solarProdHistory = useSparkline('enphase', 'pv_production_w', solarProd)
   const houseConsumptionHistory = useSparkline('enphase', 'house_consumption_w', houseConsumption)
-  const tempHistory = useAccumulatingSparkline(temp)
-  const co2History = useAccumulatingSparkline(co2)
   const cpuHistory = useAccumulatingSparkline(cpuUsage)
-
-  // Lights for status grid
-  const lightIds = [
-    'light.living_room_floor_lamp',
-    'light.master_bedroom_table_lamp',
-    'light.studio_table_lamp',
-    'light.bar_main_lights',
-    'light.bar_bar_pendants',
-    'light.family_room_main_lights',
-    'light.game_room_main_lights',
-    'light.game_room_chandelier',
-    'light.guest_bedroom_main_lights',
-    'light.adu_entry_main_lights',
-    'light.adu_kitchen_main_lights',
-    'light.adu_hallway_main_lights',
-  ]
-  const lightItems = lightIds.map((id) => {
-    const e = entities[id]
-    const name = ((e?.attributes.friendly_name as string) ?? id.split('.')[1]).replace(/ Main Lights| Floor Lamp| Table Lamp| Bar Pendants| Chandelier/g, '')
-    return { label: name, active: e?.state === 'on', color: '#ffd600' }
-  })
 
   return (
     <div className="min-h-screen bg-[#0a0e14] p-6 font-mono text-[13px] leading-relaxed text-gray-200 antialiased">
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <h1 className="text-sm font-bold uppercase tracking-[0.12em] text-gray-300">HUD Style Compendium</h1>
-        <div className={`flex items-center gap-2 text-[10px] ${haConnected ? 'text-green-400' : 'text-red-400'}`}>
-          <span className={`inline-block size-2 rounded-full ${haConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`} />
-          HA {haConnected ? 'LIVE' : 'OFFLINE'}
-        </div>
         <div className={`flex items-center gap-2 text-[10px] ${tempestConnected ? 'text-green-400' : 'text-red-400'}`}>
           <span className={`inline-block size-2 rounded-full ${tempestConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`} />
           Tempest {tempestConnected ? 'LIVE' : 'OFFLINE'}
@@ -884,18 +821,13 @@ function HUDStyles() {
             <div className="relative">
               <ArcGauge value={ramUsage} label="RAM" color="#b388ff" />
             </div>
-            <div className="relative">
-              <ArcGauge value={evBattery} label="EV" color="#ffd600" />
-            </div>
           </div>
         </Section>
 
         {/* Half-Arc Gauges */}
         <Section title="Half-Arc Gauges">
           <div className="flex flex-wrap items-start gap-6">
-            <HalfArcGauge value={temp} max={100} label="Indoor" unit="°F" color="#ff8c00" />
             <HalfArcGauge value={outdoorTemp} max={120} label="Outdoor" unit="°F" color="#00e5ff" />
-            <HalfArcGauge value={humidity} max={100} label="Humidity" unit="%" color="#00ff88" />
           </div>
         </Section>
 
@@ -909,9 +841,7 @@ function HUDStyles() {
         {/* Sparklines */}
         <Section title="Sparklines">
           <div className="flex flex-col gap-4">
-            <Sparkline data={tempHistory} label="Indoor Temp" currentValue={temp.toFixed(1)} unit="°F" color="#ff8c00" />
             <Sparkline data={outdoorTempHistory} label="Outdoor Temp" currentValue={outdoorTemp.toFixed(1)} unit="°F" color="#00e5ff" />
-            <Sparkline data={co2History} label="CO₂" currentValue={co2.toFixed(0)} unit="ppm" color="#00ff88" />
             <Sparkline data={windSpeedHistory} label="Wind Speed" currentValue={windAvg.toFixed(1)} unit="mph" color="#b388ff" />
             <Sparkline data={solarProdHistory} label="Solar" currentValue={(solarProd / 1000).toFixed(2)} unit="kW" color="#ffd600" />
             <Sparkline data={houseConsumptionHistory} label="House" currentValue={(houseConsumption / 1000).toFixed(2)} unit="kW" color="#ff8c00" />
@@ -926,8 +856,6 @@ function HUDStyles() {
             <SegmentBar value={disk1} label="Disk 1" color="#00e5ff" warningAt={85} criticalAt={95} />
             <SegmentBar value={disk2} label="Disk 2" color="#00e5ff" warningAt={85} criticalAt={95} />
             <SegmentBar value={disk3} label="Disk 3" color="#00e5ff" warningAt={85} criticalAt={95} />
-            <SegmentBar value={co2} max={2500} label="CO₂" unit="ppm" color="#00ff88" warningAt={40} criticalAt={60} segments={30} />
-            <SegmentBar value={fossilPct} label="Grid Fossil" unit="%" color="#ff8c00" warningAt={50} criticalAt={80} />
           </div>
         </Section>
 
@@ -942,7 +870,6 @@ function HUDStyles() {
             <VerticalBar value={ramUsage} label="RAM" color="#b388ff" />
             <div className="mx-2 h-[80px] w-px bg-white/10" />
             <VerticalBar value={batteryPct} label="BAT" color="#ffd600" />
-            <VerticalBar value={evBattery} label="EV" color="#ff8c00" />
           </div>
         </Section>
 
@@ -953,33 +880,9 @@ function HUDStyles() {
             <BigNumber value={(houseConsumption / 1000).toFixed(2)} unit="kW" label="House Consumption" color="#ff8c00" />
             <BigNumber value={(gridExport / 1000).toFixed(2)} unit="kW" label="Grid Export" color="#00ff88" />
             <BigNumber value={(batteryPower / 1000).toFixed(2)} unit="kW" label="Battery Power" color={batteryPower > 0 ? '#00e5ff' : '#b388ff'} />
-            <BigNumber value={co2Intensity.toFixed(0)} unit="gCO₂" label="Grid Carbon" color="#00e5ff" />
             <BigNumber value={wifiClients.toFixed(0)} unit="devices" label="Network" color="#b388ff" />
             <BigNumber value={pressure.toFixed(2)} unit="inHg" label="Barometric" color="#00e5ff" size="md" />
             <BigNumber value={pm25.toFixed(0)} unit="μg/m³" label="PM2.5" color="#00ff88" size="md" />
-          </div>
-        </Section>
-
-        {/* Status Grid */}
-        <Section title="Status Grid (Lights)">
-          <StatusGrid items={lightItems} />
-        </Section>
-
-        {/* Mixed: Telemetry + Visual */}
-        <Section title="Mixed Panel (EV)">
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <ArcGauge value={evBattery} label="Charge" color="#ffd600" size={100} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <BigNumber value={evRange.toFixed(0)} unit="mi" label="Range" color="#ffd600" size="md" />
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-[9px] uppercase tracking-wider text-gray-500">Status</span>
-                <span className="text-xs font-bold text-gray-300">
-                  {entities['sensor.polestar_5857_charging_status']?.state ?? '—'}
-                </span>
-              </div>
-            </div>
           </div>
         </Section>
 
