@@ -7,7 +7,7 @@ const QUESTLOG_URL = import.meta.env.VITE_QUESTLOG_URL || 'http://saya:7176/api'
 
 // Types generated from questlog's OpenAPI spec (see package.json `generate:api`).
 type IronMONStats = components['schemas']['IronMONStatsSchema']
-type Run = components['schemas']['RunSchema']
+type Run = components['schemas']['IronMONRunSchema']
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${QUESTLOG_URL}${path}`)

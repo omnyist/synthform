@@ -94,8 +94,159 @@ export interface paths {
         /**
          * Feed
          * @description Unified event feed across all sources, most recent first.
+         *
+         *     Windowed like every other list here, and defaulting to the maximum: the
+         *     feed is what a wall display polls, so an unbounded COUNT over the whole
+         *     event table is a request the browser makes on a timer.
          */
         get: operations["apps_core_api_feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/readings/baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Readings Baseline
+         * @description What "normal" looks like for a metric, so a reading can be judged.
+         *
+         *     A current value alone cannot answer "is this bad?". On 2026-08-27 a local
+         *     model reading 34 degrees C off a battery called it "high... could indicate
+         *     a cooling fault"; the seven-day range is 27-38 with a 32.8 mean, so it was
+         *     dead middle. The model was not wrong to be cautious — it had no way to
+         *     know. Small models feel this hardest, because they are least able to
+         *     supply the missing judgment themselves.
+         *
+         *     `metrics` is comma-separated. Returns min/mean/max/n per metric, plus the
+         *     latest value and a computed verdict, so the caller is told rather than
+         *     left to infer.
+         */
+        get: operations["apps_core_api_readings_baseline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Series
+         * @description Bucketed multi-metric time series for charting.
+         *
+         *     ``m`` is comma-separated ``source:metric`` specs. By default, buckets with
+         *     no samples are absent, not zero — deadbanded metrics are step-holds and a
+         *     line chart should show the gap rather than dive to an invented floor.
+         *
+         *     ``align=locf`` instead returns every series on one shared time grid, values
+         *     carried forward from the last sample (null past the staleness window). A
+         *     stacked chart needs this: stacking series that disagree about x misreports
+         *     the total. Each series reports how many buckets were actually observed
+         *     versus carried, so a caller can tell when it has zoomed past what the write
+         *     cadence can honestly support.
+         */
+        get: operations["apps_core_api_series"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/series/correlate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Correlate
+         * @description Pearson correlation between two series on a shared LOCF grid.
+         *
+         *     This is the query behind every identification this system has made —
+         *     rack-vs-PDU, phantom-circuit-vs-dryer — promoted from ad-hoc shell work
+         *     to plumbing. ``r`` is None when the answer cannot be computed honestly
+         *     (too few aligned buckets, or a constant series).
+         */
+        get: operations["apps_core_api_correlate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rooms
+         * @description The house's spatial model, with what lives in each room.
+         *
+         *     Seeded from the architectural plans and the Lutron areas; vocabulary
+         *     conflicts arrive flagged ``needs_review`` rather than silently merged.
+         */
+        get: operations["apps_core_api_rooms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/outages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Outages
+         * @description Classified gaps in the record, newest first.
+         *
+         *     Defaults to a week because that is the span over which "was that dip real,
+         *     or were we just not looking?" actually gets asked.
+         *
+         *     An outage that STARTED before the window but overlaps it is included: a
+         *     blackout is most interesting while it is still running, and filtering on
+         *     ``started_at`` alone would hide exactly the ongoing one a caller most
+         *     wants.
+         *
+         *     The ongoing clause is deliberately NOT time-bounded, and now that ongoing
+         *     rows are actually produced that is a choice rather than an oversight. A
+         *     source that has been dark for a month is the single most important row this
+         *     endpoint can return, and bounding it by ``started_at`` would drop it out of
+         *     a week's window precisely as it became serious. What keeps the set from
+         *     accumulating is the classifier's reconciliation pass, which closes or
+         *     removes an ongoing row the moment the record has written past it — a stale
+         *     ongoing row is a bug there, not something to hide here.
+         */
+        get: operations["apps_core_api_list_outages"];
         put?: never;
         post?: never;
         delete?: never;
@@ -238,6 +389,15 @@ export interface paths {
          *     Computed as (current CT lifetime counter - today's baseline snapshot).
          *     Requires a DailyBaseline row for today (created by the EnphaseService
          *     midnight rollover loop or on service startup).
+         *
+         *     Every way this can fail to know a number reports None, never 0.0. A
+         *     counter that reset reads hugely negative and used to clamp to zero — "the
+         *     house imported nothing today" — and a counter nobody has written since
+         *     lunchtime used to be served all evening as though the day had simply been
+         *     quiet. A partial day is different in kind and stays a number: the totals
+         *     are true for the window they cover, so the response names the window
+         *     (``partial``, ``baseline_captured_at``) rather than blanking the panel for
+         *     the rest of the day after a restart.
          */
         get: operations["apps_energy_api_energy_today"];
         put?: never;
@@ -260,6 +420,72 @@ export interface paths {
          * @description Per-microinverter state with last reported watts.
          */
         get: operations["apps_energy_api_microinverters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/energy/circuits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Span Circuits
+         * @description SPAN circuits with honest names.
+         *
+         *     ``display_name`` is confirmed_load when an identification has been earned
+         *     (toggle test or cross-source correlation), otherwise the physical breaker
+         *     position. The panel's own labels are exposed only as ``panel_label`` —
+         *     they are electrician-era vanity names, wrong often enough that no surface
+         *     should render them as truth.
+         */
+        get: operations["apps_energy_api_span_circuits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Machines
+         * @description Every registered machine: what it is, what it holds, what is wrong.
+         */
+        get: operations["apps_machines_api_list_machines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{slug}/disks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Disks
+         * @description Disks with their latest SMART attributes and 30-day movement.
+         */
+        get: operations["apps_machines_api_list_disks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -328,10 +554,654 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/network/control/port-forwards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Port Forwards
+         * @description Read the current WAN port-forward rules straight from the controller.
+         */
+        get: operations["apps_network_control_api_list_port_forwards"];
+        put?: never;
+        /** Create Port Forward */
+        post: operations["apps_network_control_api_create_port_forward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/port-forwards/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Port Forward
+         * @description Compute what a create/update/delete would do — no snapshot, no write.
+         */
+        post: operations["apps_network_control_api_preview_port_forward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/port-forwards/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Port Forward */
+        put: operations["apps_network_control_api_update_port_forward"];
+        post?: never;
+        /** Delete Port Forward */
+        delete: operations["apps_network_control_api_delete_port_forward"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/networks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Networks
+         * @description Read the current networks / VLANs straight from the controller.
+         */
+        get: operations["apps_network_control_api_list_networks"];
+        put?: never;
+        /** Create Network */
+        post: operations["apps_network_control_api_create_network"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/networks/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Network */
+        post: operations["apps_network_control_api_preview_network"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/networks/{net_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Network */
+        put: operations["apps_network_control_api_update_network"];
+        post?: never;
+        /** Delete Network */
+        delete: operations["apps_network_control_api_delete_network"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Control Clients
+         * @description Known clients and their VLAN overrides, straight from the controller.
+         */
+        get: operations["apps_network_control_api_list_control_clients"];
+        /**
+         * Move Client
+         * @description Assign a client to a VLAN. Verified means the controller accepted it —
+         *     the device keeps its address until its next DHCP lease.
+         */
+        put: operations["apps_network_control_api_move_client"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/clients/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Client Move */
+        post: operations["apps_network_control_api_preview_client_move"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/clients/reservation/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Client Reservation
+         * @description Read-only. Includes the cross-resource checks a client record alone
+         *     cannot answer: is the address inside the target subnet, and is it inside
+         *     that subnet's DHCP pool.
+         */
+        post: operations["apps_network_control_api_preview_client_reservation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/clients/reservation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Client Reservation
+         * @description Pin a client to an address, and to its VLAN, in one verified write.
+         */
+        put: operations["apps_network_control_api_set_client_reservation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Firewall Rules
+         * @description Read the current legacy firewall rules straight from the controller.
+         */
+        get: operations["apps_network_control_api_list_firewall_rules"];
+        put?: never;
+        /** Create Firewall Rule */
+        post: operations["apps_network_control_api_create_firewall_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall-rules/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Firewall Rule */
+        post: operations["apps_network_control_api_preview_firewall_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Firewall Rule */
+        put: operations["apps_network_control_api_update_firewall_rule"];
+        post?: never;
+        /** Delete Firewall Rule */
+        delete: operations["apps_network_control_api_delete_firewall_rule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture Snapshot
+         * @description Capture a whole-controller backup on demand.
+         */
+        post: operations["apps_network_control_api_capture_snapshot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Audits
+         * @description Recent control-plane mutations (the audit trail).
+         */
+        get: operations["apps_network_control_api_list_audits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Zones */
+        get: operations["apps_network_control_api_list_zones"];
+        put?: never;
+        /** Create Zone */
+        post: operations["apps_network_control_api_create_zone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/zones/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Zone */
+        post: operations["apps_network_control_api_preview_zone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/zones/{zone_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Zone */
+        put: operations["apps_network_control_api_update_zone"];
+        post?: never;
+        /** Delete Zone */
+        delete: operations["apps_network_control_api_delete_zone"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Policies */
+        get: operations["apps_network_control_api_list_policies"];
+        put?: never;
+        /** Create Policy */
+        post: operations["apps_network_control_api_create_policy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/policies/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Policy */
+        post: operations["apps_network_control_api_preview_policy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/firewall/policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Policy */
+        put: operations["apps_network_control_api_update_policy"];
+        post?: never;
+        /** Delete Policy */
+        delete: operations["apps_network_control_api_delete_policy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/devices/{device_id}/ports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Switch Port */
+        post: operations["apps_network_control_api_preview_switch_port"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/devices/{device_id}/ports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Switch Port */
+        put: operations["apps_network_control_api_set_switch_port"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dns Records */
+        get: operations["apps_network_control_api_list_dns_records"];
+        put?: never;
+        /** Create Dns Record */
+        post: operations["apps_network_control_api_create_dns_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/dns/drift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dns Drift Report
+         * @description Which records still resolve to something that exists.
+         *
+         *     A record that outlives its device keeps answering, so nothing fails until
+         *     something downstream does. This is the check that catches it.
+         */
+        get: operations["apps_network_control_api_dns_drift_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/dns/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Dns Record */
+        post: operations["apps_network_control_api_preview_dns_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/dns/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Dns Record */
+        put: operations["apps_network_control_api_update_dns_record"];
+        post?: never;
+        /** Delete Dns Record */
+        delete: operations["apps_network_control_api_delete_dns_record"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/control/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Config Changes
+         * @description Observed config changes, newest first.
+         *
+         *     ``unattributed=true`` narrows to changes no control-plane write explains —
+         *     hand edits in the web UI, or the controller rewriting its own fields.
+         */
+        get: operations["apps_network_control_api_list_config_changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notify/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Devices */
+        get: operations["apps_notify_api_list_devices"];
+        put?: never;
+        /**
+         * Register Device
+         * @description Register (or re-activate) a device for push alerts.
+         *
+         *     Idempotent on the token: iOS hands back the same token across launches, and
+         *     a reinstall issues a new one, so upsert rather than accumulate duplicates.
+         */
+        post: operations["apps_notify_api_register_device"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notify/devices/{device_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deactivate Device */
+        delete: operations["apps_notify_api_deactivate_device"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notify/incident": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Incident
+         * @description Record one incident from a rack module, and page for it once.
+         *
+         *     Thin wrapper: apps.notify.services.record_incident owns the dedupe,
+         *     the Event, and the push. This view's only job is HTTP shape — schema in,
+         *     HttpError on a bad input, dict out.
+         */
+        post: operations["apps_notify_api_record_incident"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stream/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Session
+         * @description Record one closed stream session.
+         *
+         *     Idempotent on session_id: the producer is fail-open and retries, so the
+         *     same summary can arrive twice. The replay answers 200 with its status
+         *     named — and is logged at the same level as a create, because the
+         *     already-existed branch is the outcome that hides.
+         */
+        post: operations["apps_stream_api_record_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Input */
+        Input: {
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+        };
+        /** PagedSourceSchema */
+        PagedSourceSchema: {
+            /** Items */
+            items: components["schemas"]["SourceSchema"][];
+            /** Count */
+            count: number;
+        };
         /** SourceSchema */
         SourceSchema: {
             /** Slug */
@@ -343,7 +1213,23 @@ export interface components {
             /** Is Active */
             is_active: boolean;
         };
-        /** ReadingSchema */
+        /** PagedReadingSchema */
+        PagedReadingSchema: {
+            /** Items */
+            items: components["schemas"]["ReadingSchema"][];
+            /** Count */
+            count: number;
+        };
+        /**
+         * ReadingSchema
+         * @description Reads straight off a Reading row.
+         *
+         *     The resolvers exist so the endpoints can hand `@paginate` a queryset
+         *     instead of a materialized list — that is what moves LIMIT/OFFSET into SQL.
+         *     ``observed_at`` stays a string built by ``.isoformat()`` rather than a
+         *     datetime, because that exact format (microseconds, ``+00:00`` offset) is
+         *     already on the wire and synthform parses it.
+         */
         ReadingSchema: {
             /** Source */
             source: string;
@@ -363,6 +1249,13 @@ export interface components {
             /** Observed At */
             observed_at: string;
         };
+        /** PagedLatestReadingSchema */
+        PagedLatestReadingSchema: {
+            /** Items */
+            items: components["schemas"]["LatestReadingSchema"][];
+            /** Count */
+            count: number;
+        };
         /** EventSchema */
         EventSchema: {
             /** Source */
@@ -375,6 +1268,47 @@ export interface components {
             payload: {
                 [key: string]: unknown;
             };
+        };
+        /** PagedEventSchema */
+        PagedEventSchema: {
+            /** Items */
+            items: components["schemas"]["EventSchema"][];
+            /** Count */
+            count: number;
+        };
+        /**
+         * OutageSchema
+         * @description Why the record has a hole in it.
+         *
+         *     ``start_uncertainty_s`` is carried rather than folded into ``started_at``
+         *     because the two are read differently: a consumer drawing a shaded band on a
+         *     chart needs the width, and one writing "the power went out at 19:02" needs
+         *     to know it is quoting a reconstruction accurate to a few minutes. Hiding
+         *     the width would let a 5-minute sample be rendered to the second.
+         */
+        OutageSchema: {
+            /** Scope */
+            scope: string;
+            /** Cause */
+            cause: string;
+            /** Confidence */
+            confidence: string;
+            /** Started At */
+            started_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            /** Duration S */
+            duration_s: number | null;
+            /** Start Uncertainty S */
+            start_uncertainty_s: number;
+            /** Sources */
+            sources: string[];
+            /** Evidence */
+            evidence: {
+                [key: string]: unknown;
+            };
+            /** Notes */
+            notes: string;
         };
         /** CurrentWeatherSchema */
         CurrentWeatherSchema: {
@@ -403,12 +1337,19 @@ export interface components {
             /** Observed At */
             observed_at: string | null;
         };
+        /** PagedWindReadingSchema */
+        PagedWindReadingSchema: {
+            /** Items */
+            items: components["schemas"]["WindReadingSchema"][];
+            /** Count */
+            count: number;
+        };
         /** WindReadingSchema */
         WindReadingSchema: {
             /** Wind Speed */
             wind_speed: number;
             /** Wind Dir */
-            wind_dir: number;
+            wind_dir: number | null;
             /** Observed At */
             observed_at: string;
         };
@@ -545,12 +1486,23 @@ export interface components {
             /** Temp C */
             temp_c: number | null;
         };
+        /** PagedBatteryDetailSchema */
+        PagedBatteryDetailSchema: {
+            /** Items */
+            items: components["schemas"]["BatteryDetailSchema"][];
+            /** Count */
+            count: number;
+        };
         /** EnergyTodaySchema */
         EnergyTodaySchema: {
             /** Date */
             date: string | null;
             /** Baseline Captured At */
             baseline_captured_at: string | null;
+            /** Observed At */
+            observed_at: string | null;
+            /** Partial */
+            partial: boolean;
             /** Grid Import Today Wh */
             grid_import_today_wh: number | null;
             /** Grid Export Today Wh */
@@ -578,6 +1530,179 @@ export interface components {
             last_seen_at: string | null;
             /** Last W */
             last_w: number | null;
+            /** Plane */
+            plane: string;
+            /** Azimuth Deg */
+            azimuth_deg: number | null;
+            /** Tilt Deg */
+            tilt_deg: number | null;
+            /** Known Dark */
+            known_dark: boolean;
+            /** Note */
+            note: string;
+            /** Conditions */
+            conditions: string[];
+            /** Conditions Changed At */
+            conditions_changed_at: string | null;
+            /** Producing */
+            producing: boolean | null;
+            /** Communicating */
+            communicating: boolean | null;
+            /** Provisioned */
+            provisioned: boolean | null;
+            /** Operating */
+            operating: boolean | null;
+        };
+        /** PagedMicroinverterDetailSchema */
+        PagedMicroinverterDetailSchema: {
+            /** Items */
+            items: components["schemas"]["MicroinverterDetailSchema"][];
+            /** Count */
+            count: number;
+        };
+        /** PagedSpanCircuitSchema */
+        PagedSpanCircuitSchema: {
+            /** Items */
+            items: components["schemas"]["SpanCircuitSchema"][];
+            /** Count */
+            count: number;
+        };
+        /** SpanCircuitSchema */
+        SpanCircuitSchema: {
+            /** Circuit Id */
+            circuit_id: string;
+            /** Panel */
+            panel: string;
+            /** Room */
+            room: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Panel Label */
+            panel_label: string;
+            /** Identified */
+            identified: boolean;
+            /** Confirmed By */
+            confirmed_by: string;
+            /** Shed Priority */
+            shed_priority: string;
+            /** Is Backed Up */
+            is_backed_up: boolean;
+            /** Relay State */
+            relay_state: string;
+            /** Breaker Rating A */
+            breaker_rating_a: number | null;
+            /** Power W */
+            power_w: number | null;
+        };
+        /** FaultSchema */
+        FaultSchema: {
+            /** Kind */
+            kind: string;
+            /** Key */
+            key: string;
+            /** Since */
+            since: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+        };
+        /** MachineSchema */
+        MachineSchema: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Host */
+            host: string;
+            /** Role */
+            role: string;
+            /** State */
+            state: string;
+            profile: components["schemas"]["ProfileSchema"] | null;
+            /** Disk Count */
+            disk_count: number;
+            /** Volumes */
+            volumes: components["schemas"]["VolumeSchema"][];
+            /** Open Faults */
+            open_faults: components["schemas"]["FaultSchema"][];
+            /** Last Seen At */
+            last_seen_at: string | null;
+        };
+        /**
+         * ProfileSchema
+         * @description What the machine IS. Every field nullable: a machine that will not say
+         *     how much RAM it has reads as unknown, never as zero.
+         */
+        ProfileSchema: {
+            /** Cpu Model */
+            cpu_model: string | null;
+            /** Cpu Cores */
+            cpu_cores: number | null;
+            /** Cpu Threads */
+            cpu_threads: number | null;
+            /** Ram Bytes */
+            ram_bytes: number | null;
+            /** Os Name */
+            os_name: string | null;
+            /** Os Version */
+            os_version: string | null;
+            /** Kernel */
+            kernel: string | null;
+            /** Arch */
+            arch: string | null;
+            /** Board Vendor */
+            board_vendor: string | null;
+            /** Board Model */
+            board_model: string | null;
+            /** Gpus */
+            gpus: string[];
+            /** Macs */
+            macs: string[];
+        };
+        /** VolumeSchema */
+        VolumeSchema: {
+            /** Name */
+            name: string;
+            /** Kind */
+            kind: string;
+            /** Redundancy */
+            redundancy: string;
+            /** Mountpoint */
+            mountpoint: string;
+            /** Used Bytes */
+            used_bytes: number | null;
+            /** Free Bytes */
+            free_bytes: number | null;
+            /** Floor Bytes */
+            floor_bytes: number | null;
+            /** Allocatable Bytes */
+            allocatable_bytes: number | null;
+        };
+        /** DiskSchema */
+        DiskSchema: {
+            /** Serial */
+            serial: string;
+            /** Device */
+            device: string;
+            /** Model */
+            model: string;
+            /** Capacity Bytes */
+            capacity_bytes: number | null;
+            /** Role */
+            role: string;
+            /** First Seen At */
+            first_seen_at: string;
+            /** Last Seen At */
+            last_seen_at: string | null;
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            };
+            /** Deltas */
+            deltas: {
+                [key: string]: unknown;
+            };
         };
         /** NetworkCurrentSchema */
         NetworkCurrentSchema: {
@@ -585,10 +1710,6 @@ export interface components {
             wan_rx_bytes_ps: number | null;
             /** Wan Tx Bytes Ps */
             wan_tx_bytes_ps: number | null;
-            /** Wan Latency Avg Ms */
-            wan_latency_avg_ms: number | null;
-            /** Wan Latency Max Ms */
-            wan_latency_max_ms: number | null;
             /** Pdu Total Power W */
             pdu_total_power_w: number | null;
             /** Pdu Power Budget W */
@@ -621,6 +1742,13 @@ export interface components {
             /** Uptime S */
             uptime_s: number | null;
         };
+        /** PagedDeviceDetailSchema */
+        PagedDeviceDetailSchema: {
+            /** Items */
+            items: components["schemas"]["DeviceDetailSchema"][];
+            /** Count */
+            count: number;
+        };
         /** PDUOutletSchema */
         PDUOutletSchema: {
             /** Index */
@@ -640,6 +1768,487 @@ export interface components {
             /** Voltage V */
             voltage_v: number | null;
         };
+        /** PagedPDUOutletSchema */
+        PagedPDUOutletSchema: {
+            /** Items */
+            items: components["schemas"]["PDUOutletSchema"][];
+            /** Count */
+            count: number;
+        };
+        /** AuditOut */
+        AuditOut: {
+            /** Id */
+            id: string;
+            /** Operation */
+            operation: string;
+            /** Status */
+            status: string;
+            /** Verified */
+            verified: boolean;
+            /** Target Id */
+            target_id: string;
+            /** Risk Tier */
+            risk_tier: string;
+            /** Triggered By */
+            triggered_by: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** PortForwardIn */
+        PortForwardIn: {
+            /** Name */
+            name: string;
+            /** Fwd */
+            fwd: string;
+            /** Fwd Port */
+            fwd_port: string;
+            /** Dst Port */
+            dst_port: string;
+            /**
+             * Proto
+             * @default tcp_udp
+             */
+            proto: string;
+            /**
+             * Src
+             * @default any
+             */
+            src: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Pfwd Interface */
+            pfwd_interface?: string | null;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /** Operation */
+            operation: string;
+            /** Risk Tier */
+            risk_tier: string;
+            /** Target Id */
+            target_id: string | null;
+            /** Current */
+            current: {
+                [key: string]: unknown;
+            } | null;
+            /** Resulting */
+            resulting: {
+                [key: string]: unknown;
+            } | null;
+            /** Diff */
+            diff: {
+                [key: string]: unknown;
+            };
+            /** Warnings */
+            warnings: string[];
+        };
+        /** PreviewIn */
+        PreviewIn: {
+            /** Op */
+            op: string;
+            /** Rule Id */
+            rule_id?: string | null;
+            spec?: components["schemas"]["PortForwardIn"] | null;
+        };
+        /** NetworkIn */
+        NetworkIn: {
+            /** Name */
+            name: string;
+            /** Vlan */
+            vlan: number;
+            /** Ip Subnet */
+            ip_subnet: string;
+            /** Dhcp Start */
+            dhcp_start: string;
+            /** Dhcp Stop */
+            dhcp_stop: string;
+            /**
+             * Purpose
+             * @default corporate
+             */
+            purpose: string;
+            /**
+             * Mdns
+             * @default false
+             */
+            mdns: boolean;
+            /**
+             * Isolation
+             * @default false
+             */
+            isolation: boolean;
+        };
+        /** NetworkPreviewIn */
+        NetworkPreviewIn: {
+            /** Op */
+            op: string;
+            /** Rule Id */
+            rule_id?: string | null;
+            spec?: components["schemas"]["NetworkIn"] | null;
+        };
+        /** ClientMoveIn */
+        ClientMoveIn: {
+            /** Mac */
+            mac: string;
+            /** Network Id */
+            network_id?: string | null;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+        };
+        /** ClientMovePreviewIn */
+        ClientMovePreviewIn: {
+            /**
+             * Op
+             * @default update
+             */
+            op: string;
+            /** Client Id */
+            client_id?: string | null;
+            spec?: components["schemas"]["ClientMoveIn"] | null;
+        };
+        /** ClientReservationIn */
+        ClientReservationIn: {
+            /** Mac */
+            mac: string;
+            /** Fixed Ip */
+            fixed_ip?: string | null;
+            /** Network Id */
+            network_id?: string | null;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+        };
+        /** FirewallRuleIn */
+        FirewallRuleIn: {
+            /** Name */
+            name: string;
+            /** Src Networkconf Id */
+            src_networkconf_id: string;
+            /** Dst Networkconf Id */
+            dst_networkconf_id: string;
+            /**
+             * Ruleset
+             * @default LAN_IN
+             */
+            ruleset: string;
+            /**
+             * Action
+             * @default drop
+             */
+            action: string;
+            /**
+             * Rule Index
+             * @default 20000
+             */
+            rule_index: string;
+            /**
+             * Protocol
+             * @default all
+             */
+            protocol: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /** FirewallPreviewIn */
+        FirewallPreviewIn: {
+            /** Op */
+            op: string;
+            /** Rule Id */
+            rule_id?: string | null;
+            spec?: components["schemas"]["FirewallRuleIn"] | null;
+        };
+        /** SnapshotOut */
+        SnapshotOut: {
+            /** Id */
+            id: string;
+            /** Filename */
+            filename: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Reason */
+            reason: string;
+            /** Captured At */
+            captured_at: string;
+        };
+        /** ZoneIn */
+        ZoneIn: {
+            /** Name */
+            name: string;
+            /**
+             * Network Ids
+             * @default []
+             */
+            network_ids: string[];
+        };
+        /** ZonePreviewIn */
+        ZonePreviewIn: {
+            /** Op */
+            op: string;
+            /** Zone Id */
+            zone_id?: string | null;
+            spec?: components["schemas"]["ZoneIn"] | null;
+        };
+        /** PolicyIn */
+        PolicyIn: {
+            /** Name */
+            name: string;
+            /** Source Zone Id */
+            source_zone_id: string;
+            /** Destination Zone Id */
+            destination_zone_id: string;
+            /**
+             * Action
+             * @default BLOCK
+             */
+            action: string;
+            /**
+             * Index
+             * @default 20000
+             */
+            index: number;
+            /**
+             * Protocol
+             * @default all
+             */
+            protocol: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Logging
+             * @default false
+             */
+            logging: boolean;
+            /**
+             * Ip Version
+             * @default BOTH
+             */
+            ip_version: string;
+            /**
+             * Create Allow Respond
+             * @default true
+             */
+            create_allow_respond: boolean;
+        };
+        /** PolicyPreviewIn */
+        PolicyPreviewIn: {
+            /** Op */
+            op: string;
+            /** Policy Id */
+            policy_id?: string | null;
+            spec?: components["schemas"]["PolicyIn"] | null;
+        };
+        /** SwitchPortIn */
+        SwitchPortIn: {
+            /** Port Idx */
+            port_idx: number;
+            /** Native Networkconf Id */
+            native_networkconf_id?: string | null;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+        };
+        /** DnsIn */
+        DnsIn: {
+            /** Key */
+            key: string;
+            /** Value */
+            value: string;
+            /**
+             * Record Type
+             * @default A
+             */
+            record_type: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Ttl
+             * @default 0
+             */
+            ttl: number;
+        };
+        /** DnsPreviewIn */
+        DnsPreviewIn: {
+            /** Op */
+            op: string;
+            /** Record Id */
+            record_id?: string | null;
+            spec?: components["schemas"]["DnsIn"] | null;
+        };
+        /** ChangeOut */
+        ChangeOut: {
+            /** Collection */
+            collection: string;
+            /** Item Id */
+            item_id: string;
+            /** Label */
+            label: string;
+            /** Change */
+            change: string;
+            /** Fields Changed */
+            fields_changed: {
+                [key: string]: unknown;
+            };
+            /** Before */
+            before: {
+                [key: string]: unknown;
+            } | null;
+            /** After */
+            after: {
+                [key: string]: unknown;
+            } | null;
+            /** Attributed */
+            attributed: boolean;
+            /** Operation */
+            operation: string | null;
+            /** Detected At */
+            detected_at: string;
+        };
+        /** DeviceOut */
+        DeviceOut: {
+            /** Id */
+            id: string;
+            /** Platform */
+            platform: string;
+            /** Environment */
+            environment: string;
+            /** Label */
+            label: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** DeviceIn */
+        DeviceIn: {
+            /** Token */
+            token: string;
+            /**
+             * Platform
+             * @default ios
+             */
+            platform: string;
+            /**
+             * Environment
+             * @default sandbox
+             */
+            environment: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+        };
+        /** IncidentOut */
+        IncidentOut: {
+            /** Status */
+            status: string;
+            /** Event Id */
+            event_id: string;
+        };
+        /** IncidentIn */
+        IncidentIn: {
+            /** Source */
+            source: string;
+            /** Severity */
+            severity: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Dedupe Key */
+            dedupe_key: string;
+        };
+        /** SessionOut */
+        SessionOut: {
+            /** Status */
+            status: string;
+            /** Event Id */
+            event_id: string;
+        };
+        /** CongestionStats */
+        CongestionStats: {
+            /** Peak */
+            peak: number;
+            /** Mean */
+            mean: number;
+            /** Samples Over Threshold */
+            samples_over_threshold: number;
+        };
+        /**
+         * GapStats
+         * @description Collector blindness during the session — reported, never interpolated.
+         */
+        GapStats: {
+            /** Null Samples */
+            null_samples: number;
+            /** Longest Run */
+            longest_run: number;
+        };
+        /** SessionIn */
+        SessionIn: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Ended At
+             * Format: date-time
+             */
+            ended_at: string;
+            /** Duration S */
+            duration_s: number;
+            render: components["schemas"]["StageStats"];
+            output: components["schemas"]["StageStats"];
+            stream: components["schemas"]["StageStats"];
+            congestion: components["schemas"]["CongestionStats"];
+            gaps: components["schemas"]["GapStats"];
+            /**
+             * Causes
+             * @default []
+             */
+            causes: string[];
+            /**
+             * Obs Restarts
+             * @default 0
+             */
+            obs_restarts: number;
+        };
+        /**
+         * StageStats
+         * @description One pipeline stage's differenced frame counters.
+         *
+         *     The three-way split IS the diagnosis — render skips are the compositor or
+         *     GPU, output skips are the encoder, stream skips are the network. One
+         *     blended percentage would erase exactly the information a bad night needs.
+         */
+        StageStats: {
+            /** Skipped */
+            skipped: number;
+            /** Total */
+            total: number;
+            /** Drop Pct */
+            drop_pct: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -653,6 +2262,8 @@ export interface operations {
         parameters: {
             query?: {
                 domain?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -666,7 +2277,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SourceSchema"][];
+                    "application/json": components["schemas"]["PagedSourceSchema"];
                 };
             };
         };
@@ -678,6 +2289,8 @@ export interface operations {
                 metric?: string | null;
                 domain?: string | null;
                 hours?: number;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -691,7 +2304,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReadingSchema"][];
+                    "application/json": components["schemas"]["PagedReadingSchema"];
                 };
             };
         };
@@ -700,6 +2313,8 @@ export interface operations {
         parameters: {
             query: {
                 source: string;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -713,7 +2328,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LatestReadingSchema"][];
+                    "application/json": components["schemas"]["PagedLatestReadingSchema"];
                 };
             };
         };
@@ -725,6 +2340,8 @@ export interface operations {
                 kind?: string | null;
                 domain?: string | null;
                 hours?: number;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -738,7 +2355,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventSchema"][];
+                    "application/json": components["schemas"]["PagedEventSchema"];
                 };
             };
         };
@@ -746,7 +2363,9 @@ export interface operations {
     apps_core_api_feed: {
         parameters: {
             query?: {
+                hours?: number;
                 limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -760,7 +2379,120 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventSchema"][];
+                    "application/json": components["schemas"]["PagedEventSchema"];
+                };
+            };
+        };
+    };
+    apps_core_api_readings_baseline: {
+        parameters: {
+            query: {
+                metrics: string;
+                days?: number;
+                source?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_core_api_series: {
+        parameters: {
+            query: {
+                m: string;
+                hours?: number;
+                buckets?: number;
+                align?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_core_api_correlate: {
+        parameters: {
+            query: {
+                a: string;
+                b: string;
+                hours?: number;
+                bucket?: number;
+                points?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_core_api_rooms: {
+        parameters: {
+            query?: {
+                review?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_core_api_list_outages: {
+        parameters: {
+            query?: {
+                hours?: number;
+                scope?: string | null;
+                cause?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutageSchema"][];
                 };
             };
         };
@@ -789,6 +2521,8 @@ export interface operations {
         parameters: {
             query?: {
                 minutes?: number;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -802,7 +2536,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WindReadingSchema"][];
+                    "application/json": components["schemas"]["PagedWindReadingSchema"];
                 };
             };
         };
@@ -871,7 +2605,10 @@ export interface operations {
     };
     apps_energy_api_batteries: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -884,7 +2621,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BatteryDetailSchema"][];
+                    "application/json": components["schemas"]["PagedBatteryDetailSchema"];
                 };
             };
         };
@@ -911,6 +2648,52 @@ export interface operations {
     };
     apps_energy_api_microinverters: {
         parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedMicroinverterDetailSchema"];
+                };
+            };
+        };
+    };
+    apps_energy_api_span_circuits: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedSpanCircuitSchema"];
+                };
+            };
+        };
+    };
+    apps_machines_api_list_machines: {
+        parameters: {
             query?: never;
             header?: never;
             path?: never;
@@ -924,7 +2707,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MicroinverterDetailSchema"][];
+                    "application/json": components["schemas"]["MachineSchema"][];
+                };
+            };
+        };
+    };
+    apps_machines_api_list_disks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiskSchema"][];
                 };
             };
         };
@@ -951,7 +2756,10 @@ export interface operations {
     };
     apps_network_api_devices: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -964,12 +2772,1015 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DeviceDetailSchema"][];
+                    "application/json": components["schemas"]["PagedDeviceDetailSchema"];
                 };
             };
         };
     };
     apps_network_api_pdu_outlets: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedPDUOutletSchema"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_port_forwards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_port_forward: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PortForwardIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_port_forward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_port_forward: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PortForwardIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_port_forward: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_networks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_network: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_network: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_network: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                net_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_network: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                net_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_control_clients: {
+        parameters: {
+            query?: {
+                network_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_move_client: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMoveIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_client_move: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMovePreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_client_reservation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientReservationIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_set_client_reservation: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientReservationIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_firewall_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_firewall_rule: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FirewallRuleIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_firewall_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FirewallPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_firewall_rule: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FirewallRuleIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_firewall_rule: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_capture_snapshot: {
+        parameters: {
+            query?: {
+                reason?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_audits: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"][];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_zones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_zone: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_zone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZonePreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_zone: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                zone_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_zone: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                zone_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_policies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_policy: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_policy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_policy: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_policy: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_preview_switch_port: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwitchPortIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_set_switch_port: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwitchPortIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_dns_records: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_create_dns_record: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DnsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_dns_drift_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_network_control_api_preview_dns_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DnsPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_update_dns_record: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DnsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_delete_dns_record: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOut"];
+                };
+            };
+        };
+    };
+    apps_network_control_api_list_config_changes: {
+        parameters: {
+            query?: {
+                hours?: number;
+                unattributed?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"][];
+                };
+            };
+        };
+    };
+    apps_notify_api_list_devices: {
         parameters: {
             query?: never;
             header?: never;
@@ -984,7 +3795,99 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PDUOutletSchema"][];
+                    "application/json": components["schemas"]["DeviceOut"][];
+                };
+            };
+        };
+    };
+    apps_notify_api_register_device: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceOut"];
+                };
+            };
+        };
+    };
+    apps_notify_api_deactivate_device: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apps_notify_api_record_incident: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+        };
+    };
+    apps_stream_api_record_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
                 };
             };
         };

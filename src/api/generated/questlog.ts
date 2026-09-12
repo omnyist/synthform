@@ -660,6 +660,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/umamusume/halloffame": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hall Of Fame
+         * @description Best run per character, ranked — the Hall of Fame.
+         *
+         *     One entry per character rather than per outfit, so every El Condor Pasa run
+         *     competes for the same slot regardless of which version was trained.
+         */
+        get: operations["apps_profiles_umamusume_api_hall_of_fame"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/umamusume/characters/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Character Detail
+         * @description One character with every outfit and every run, newest first.
+         */
+        get: operations["apps_profiles_umamusume_api_character_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/umamusume/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Runs
+         * @description All career runs, newest first.
+         */
+        get: operations["apps_profiles_umamusume_api_list_runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/umamusume/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stats
+         * @description Aggregate totals across the whole archive.
+         */
+        get: operations["apps_profiles_umamusume_api_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warframe/profile": {
         parameters: {
             query?: never;
@@ -838,6 +921,28 @@ export interface paths {
          *     WFCD catalog. Approximate (see compute_completion docstring).
          */
         get: operations["apps_profiles_warframe_api_get_mastery_completion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warframe/mastery/remaining": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Mastery Remaining
+         * @description What's left to master, ranked by MR payoff — the grind checklist.
+         *
+         *     Defaults to obtainable items (excludes vaulted, which can't be farmed now).
+         */
+        get: operations["apps_profiles_warframe_api_get_mastery_remaining"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1631,15 +1736,8 @@ export interface components {
              */
             offset: number;
         };
-        /** PagedRunSchema */
-        PagedRunSchema: {
-            /** Items */
-            items: components["schemas"]["RunSchema"][];
-            /** Count */
-            count: number;
-        };
-        /** RunSchema */
-        RunSchema: {
+        /** IronMONRunSchema */
+        IronMONRunSchema: {
             /** Seed Number */
             seed_number: number;
             /** Challenge */
@@ -1659,6 +1757,13 @@ export interface components {
              * Format: date-time
              */
             started_at: string;
+        };
+        /** PagedIronMONRunSchema */
+        PagedIronMONRunSchema: {
+            /** Items */
+            items: components["schemas"]["IronMONRunSchema"][];
+            /** Count */
+            count: number;
         };
         /** RunResponseSchema */
         RunResponseSchema: {
@@ -1740,6 +1845,131 @@ export interface components {
              * @default false
              */
             is_wild: boolean;
+        };
+        /**
+         * HallOfFameSchema
+         * @description A character's enshrined entry — their single best run, plus context.
+         */
+        HallOfFameSchema: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Run Count */
+            run_count: number;
+            /** Outfit Count */
+            outfit_count: number;
+            /** Best Rating */
+            best_rating: number | null;
+            /** Best Rank */
+            best_rank: string;
+            /** Best Run Date */
+            best_run_date: string | null;
+            /** Perfect Runs */
+            perfect_runs: number;
+        };
+        /** CharacterDetailSchema */
+        CharacterDetailSchema: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Outfits */
+            outfits: components["schemas"]["OutfitSchema"][];
+            /** Runs */
+            runs: components["schemas"]["RunSchema"][];
+        };
+        /** OutfitSchema */
+        OutfitSchema: {
+            /** Title */
+            title: string;
+            /** Slug */
+            slug: string;
+            /** Run Count */
+            run_count: number;
+            /** Best Rating */
+            best_rating: number | null;
+        };
+        /** RunSchema */
+        RunSchema: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Character */
+            character: string;
+            /** Character Slug */
+            character_slug: string;
+            /** Outfit Title */
+            outfit_title: string;
+            /**
+             * Run Date
+             * Format: date-time
+             */
+            run_date: string;
+            /** Platform */
+            platform: string;
+            /** Rank */
+            rank: string;
+            /** Rating */
+            rating: number | null;
+            /** Earned Title */
+            earned_title: string;
+            /** Speed */
+            speed: number | null;
+            /** Stamina */
+            stamina: number | null;
+            /** Power */
+            power: number | null;
+            /** Guts */
+            guts: number | null;
+            /** Wit */
+            wit: number | null;
+            /** Fans */
+            fans: number | null;
+            /** Races */
+            races: number | null;
+            /** Wins */
+            wins: number | null;
+            /** Is Perfect */
+            is_perfect: boolean;
+            /** Aptitudes */
+            aptitudes: {
+                [key: string]: unknown;
+            };
+            /** Major Wins */
+            major_wins: string[];
+            /** Support Cards */
+            support_cards: string[];
+        };
+        /** PagedRunSchema */
+        PagedRunSchema: {
+            /** Items */
+            items: components["schemas"]["RunSchema"][];
+            /** Count */
+            count: number;
+        };
+        /** StatsSchema */
+        StatsSchema: {
+            /** Characters */
+            characters: number;
+            /** Outfits */
+            outfits: number;
+            /** Runs */
+            runs: number;
+            /** Perfect Runs */
+            perfect_runs: number;
+            /** Best Rating */
+            best_rating: number | null;
+            /** Total Races */
+            total_races: number;
+            /** Total Wins */
+            total_wins: number;
+            /** First Run */
+            first_run: string | null;
+            /** Latest Run */
+            latest_run: string | null;
         };
         /** WarframeProfileSchema */
         WarframeProfileSchema: {
@@ -1929,6 +2159,57 @@ export interface components {
             completion_pct: number;
             /** Categories */
             categories: components["schemas"]["CategoryCompletionSchema"][];
+        };
+        /** AcquisitionGroupSchema */
+        AcquisitionGroupSchema: {
+            /** Acquisition */
+            acquisition: string;
+            /** Count */
+            count: number;
+            /** Mastery Points */
+            mastery_points: number;
+        };
+        /** RemainingItemSchema */
+        RemainingItemSchema: {
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Mastery Req */
+            mastery_req: number;
+            /** Mastery Value */
+            mastery_value: number;
+            /** Is Prime */
+            is_prime: boolean;
+            /** Vaulted */
+            vaulted: boolean;
+            /** Equippable */
+            equippable: boolean;
+            /** Acquisition */
+            acquisition: string;
+            /** Tags */
+            tags: string[];
+            /** Vault Date */
+            vault_date: string;
+            /** Owned */
+            owned: boolean;
+            /** Mastery Progress */
+            mastery_progress: number;
+        };
+        /** RemainingSchema */
+        RemainingSchema: {
+            /** Current Mastery Rank */
+            current_mastery_rank: number;
+            /** Total Remaining */
+            total_remaining: number;
+            /** Total Obtainable */
+            total_obtainable: number;
+            /** Obtainable Mastery Points */
+            obtainable_mastery_points: number;
+            /** By Acquisition */
+            by_acquisition: components["schemas"]["AcquisitionGroupSchema"][];
+            /** Items */
+            items: components["schemas"]["RemainingItemSchema"][];
         };
         /** FrameSchema */
         FrameSchema: {
@@ -2816,7 +3097,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedRunSchema"];
+                    "application/json": components["schemas"]["PagedIronMONRunSchema"];
                 };
             };
         };
@@ -2981,6 +3262,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DefeatResponseSchema"];
+                };
+            };
+        };
+    };
+    apps_profiles_umamusume_api_hall_of_fame: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HallOfFameSchema"][];
+                };
+            };
+        };
+    };
+    apps_profiles_umamusume_api_character_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterDetailSchema"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_profiles_umamusume_api_list_runs: {
+        parameters: {
+            query?: {
+                character?: string | null;
+                platform?: string | null;
+                rank?: string | null;
+                perfect_only?: boolean;
+                min_rating?: number | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedRunSchema"];
+                };
+            };
+        };
+    };
+    apps_profiles_umamusume_api_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatsSchema"];
                 };
             };
         };
@@ -3208,6 +3592,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompletionSchema"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    apps_profiles_warframe_api_get_mastery_remaining: {
+        parameters: {
+            query?: {
+                category?: string | null;
+                acquisition?: string | null;
+                include_vaulted?: boolean;
+                include_primes?: boolean;
+                equippable_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemainingSchema"];
                 };
             };
             /** @description Not Found */
