@@ -21,6 +21,8 @@ export function useWhep(url: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [state, setState] = useState<WhepState>('idle')
   const [error, setError] = useState<string | null>(null)
+  /** The live peer connection, for `getStats()`; null between attempts. */
+  const [peer, setPeer] = useState<RTCPeerConnection | null>(null)
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const resourceRef = useRef<string | null>(null)
   const retryRef = useRef<number | null>(null)
@@ -51,6 +53,7 @@ export function useWhep(url: string | null) {
       setState('error')
       setError(reason)
       setStream(null)
+      setPeer(null)
       pcRef.current?.close()
       pcRef.current = null
       resourceRef.current = null
@@ -69,6 +72,7 @@ export function useWhep(url: string | null) {
         if (disposed) return
         setStream(ev.streams[0] ?? new MediaStream([ev.track]))
         setState('live')
+        setPeer(pc)
         backoffRef.current = BACKOFF_MIN
       }
       pc.onconnectionstatechange = () => {
@@ -113,9 +117,10 @@ export function useWhep(url: string | null) {
       disposed = true
       teardown()
       setStream(null)
+      setPeer(null)
       setState('idle')
     }
   }, [url])
 
-  return { stream, state, error }
+  return { stream, state, error, peer }
 }

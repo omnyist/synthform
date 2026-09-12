@@ -4,6 +4,8 @@ import { useRealtimeStore } from '@/store/realtime'
 import { serverConnection } from '@/hooks/use-server'
 import { useOBSScreenshot } from '@/hooks/use-obs-screenshot'
 import { useWhep } from '@/hooks/use-whep'
+import { useFeedStats } from '@/hooks/use-feed-stats'
+import { STAMP_BAR_HEIGHT, STAMP_BAR_WIDTH, STAMP_REFERENCE_HEIGHT, STAMP_REFERENCE_WIDTH } from '@/lib/frame-stamp'
 import type { TelestratorPoint } from '@/types/telestrator'
 
 export const Route = createFileRoute('/telestrator/')({
@@ -39,7 +41,7 @@ interface LocalStroke {
 function TelestratorInput() {
   const isConnected = useRealtimeStore((s) => s.isConnected)
   const { imageUrl: obsScreenshot, isConnected: obsConnected } = useOBSScreenshot(null, 5000)
-  const { stream: feed, state: feedState } = useWhep(FEED_URL)
+  const { stream: feed, state: feedState, peer } = useWhep(FEED_URL)
   const feedLive = feedState === 'live' && feed !== null
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -48,6 +50,10 @@ function TelestratorInput() {
   const [color, setColor] = useState('#ef4444')
   const [width, setWidth] = useState(6)
   const [showBackground, setShowBackground] = useState(true)
+  const [showDebug, setShowDebug] = useState(false)
+  // Same numbers Scribble shows, the same way, so the two clients can be
+  // compared: latency to source from the burned-in timecode plus getStats().
+  const stats = useFeedStats(peer, videoRef, feedLive)
 
   // The live feed is a MediaStream; it has to be attached imperatively.
   useEffect(() => {
@@ -368,6 +374,20 @@ function TelestratorInput() {
           />
           <span className="text-xs text-shark-400">OBS</span>
         </div>
+
+        {/* Latency to source, from the timecode in the picture (same gauge as Scribble's LAG) */}
+        <span className="font-mono text-xs text-shark-400 tabular-nums" title="latency to source, ms">
+          LAG {stats.lagMs === null ? '—' : Math.round(stats.lagMs)} ms
+        </span>
+
+        <button
+          onClick={() => setShowDebug((v) => !v)}
+          className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+            showDebug ? 'bg-sky/20 text-sky' : 'bg-shark-800 text-shark-400 hover:bg-shark-700'
+          }`}
+        >
+          DBG
+        </button>
       </div>
 
       {/* Canvas area */}
@@ -391,11 +411,43 @@ function TelestratorInput() {
               className="pointer-events-none absolute inset-0 size-full rounded-lg object-cover opacity-40"
             />
           )}
+          {/* Hide the timecode bar ffmpeg burns into the feed's top-left; the
+              stats hook reads it from the video element, not the screen. */}
+          {showBackground && feedLive && (
+            <div
+              className="pointer-events-none absolute top-0 left-0 rounded-tl-lg bg-black"
+              style={{
+                width: `${(STAMP_BAR_WIDTH / STAMP_REFERENCE_WIDTH) * 100}%`,
+                height: `${(STAMP_BAR_HEIGHT / STAMP_REFERENCE_HEIGHT) * 100}%`,
+              }}
+            />
+          )}
           <canvas
             ref={canvasRef}
             className="relative cursor-crosshair rounded-lg"
             style={{ touchAction: 'none' }}
           />
+          {showDebug && (
+            <div className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-2 font-mono text-[11px] leading-5 text-chalk tabular-nums">
+              <div>
+                feed {feedState} · {stats.transport ?? '?'} · rtt{' '}
+                {stats.rttMs === null ? '—' : stats.rttMs.toFixed(1)} ms
+              </div>
+              <div>
+                lag {stats.lagMs === null ? '—' : Math.round(stats.lagMs)} ms (offset{' '}
+                {stats.offsetMs === null ? 'assumed 0' : `${stats.offsetMs.toFixed(1)} ms`}; misreads{' '}
+                {stats.stampMisreads}; frame {stats.frame ?? '—'})
+              </div>
+              <div>buffer {stats.bufferMs === null ? '—' : stats.bufferMs.toFixed(1)} ms over the last second</div>
+              <div>
+                frames {stats.framesReceived} received · {stats.framesDecoded} decoded · {stats.framesDropped}{' '}
+                dropped
+              </div>
+              <div>
+                packets lost {stats.packetsLost} · freezes {stats.freezeCount}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
