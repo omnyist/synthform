@@ -189,7 +189,7 @@ export interface ChatNotificationPayload {
       text: string
       emote?: {
         id: string | null
-        set_id: string | null
+        emote_set_id: string | null
       } | null
     }>
   }
