@@ -244,9 +244,13 @@ Instead:
   something the video rect makes useless. Auto Layout for the video rect and
   ink view so an actual resize (Stage Manager, rotation) recomputes the
   letterbox and the `FrameMapper`.
-- Orientation: landscape only via `supportedInterfaceOrientations`, plus
-  `prefersInterfaceOrientationLocked` (iOS 26+) while the ink view is
-  visible, since a rotation mid-stroke would remap coordinates under the pen.
+- Orientation: all four declared in Info.plist (an iPadOS 26 app that is
+  not full-screen must support all of them, and Xcode warns otherwise), with
+  the landscape lock done in code via `prefersInterfaceOrientationLocked`
+  (iOS 26+) while the ink view is visible, since a rotation mid-stroke would
+  remap coordinates under the pen. Found while scaffolding: the plist-only
+  restriction the first draft of this line described is ignored under the
+  new windowing model.
 - `prefersHomeIndicatorAutoHidden = true`, `prefersStatusBarHidden = true`.
 - `preferredScreenEdgesDeferringSystemGestures = .all` — the fix for Pencil
   strokes near an edge opening Control Center or the Dock. The first swipe
