@@ -1,6 +1,6 @@
 # Telestrator v1.5 — a moving picture on the iPad
 
-> Spec, 2026-09-11. Status: proposed, waiting on Bryan's picks (§8).
+> Spec, 2026-09-11. Status: approved (§8); media-server research + Demi half with the demi session, synthform half in progress.
 > v1.5 is the web telestrator made live and full-screen. v2 is a new native
 > iPad app (not Skiff) and is out of scope here except where v1.5 should
 > avoid painting it into a corner (§9).
@@ -95,11 +95,18 @@ OBS's main output belongs to Twitch, so the feed is a separate path:
 Alternative: the **Aitum Multistream** OBS plugin emitting WHIP directly (one
 hop fewer, one more plugin to babysit across OBS upgrades). Not preferred.
 
-### C. Media server — MediaMTX on Demi
+### C. Media server — WHIP in, WHEP out, on Demi (choice: demi session's research)
 
-`bluenviron/mediamtx` as a docker container on the host network, or the static
-binary under `~/.local/opt/mediamtx` the way Godot lives there (no AUR helper on
-Demi). Config, minimal:
+Requirements the pick must meet, whatever it is: WHIP ingest from ffmpeg and
+WHEP playback to Safari (H.264, no transcoding); single process on Demi (static
+binary under `~/.local/opt` like Godot, or a docker container on the host
+network — there is no AUR helper); bindable to localhost with ICE advertising
+the tailnet address so it never touches the LAN; ICE over TCP available if UDP
+proves awkward through ufw; actively maintained; sub-100 ms internal latency.
+Candidates to weigh, from lightest up: Broadcast Box (Pion authors, WHIP/WHEP
+only), MediaMTX (the prior — general media server with WHIP/WHEP), SRS,
+LiveKit (heavier than this needs). The config sketch below is MediaMTX's shape
+and is illustrative, not a decision:
 
 ```yaml
 webrtc: yes
@@ -171,14 +178,19 @@ Against today's 0–5 s. Measured, not assumed, in §7.
 5. Twitch unaffected: OBS stats show the stream encode untouched with the feed
    running (NVENC sessions: 2).
 
-## 8. Decisions for Bryan
+## 8. Decisions — made 2026-09-11
 
-1. **Origin**: Tailscale Serve on Demi (recommended) — yes/no. And: what URL
-   does the iPad open *today*? Nothing on the rack currently serves the input
-   page off-box, which suggests the dev server on Zelan.
-2. **Feed resolution**: 1080p30 (~6 Mbps) or 720p30 (~3 Mbps). 720p is plenty
-   for aiming strokes and decodes lighter on the iPad.
-3. **Feed source**: Virtual Camera + ffmpeg (recommended) vs Aitum plugin.
+1. **Origin**: Tailscale Serve on Demi. (Bryan: "that could work.")
+2. **Feed resolution**: 1080p30, ~6 Mbps NVENC.
+3. **Feed source**: Virtual Camera + ffmpeg. Bryan: no Aitum, "I'd want it to
+   be 'transparent' and not a 'multistream'" — a second encode of program out
+   that OBS itself never knows about.
+4. **Media server**: not decided here. Bryan asked for the WHIP/WHEP server to
+   be researched, not assumed; that research and the pick are the demi
+   session's (§C). MediaMTX is the prior, not the answer.
+
+Still unanswered, not blocking: what URL the iPad opens today (nothing on the
+rack serves the input page off-box, which suggests the dev server on Zelan).
 
 ## 9. v2 — the native app, so v1.5 doesn't block it
 
