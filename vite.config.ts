@@ -34,7 +34,10 @@ export default defineConfig({
     // direct ws:// paths (see use-server.ts / use-obs-screenshot.ts).
     proxy: {
       '/ws': { target: 'ws://saya:7178', ws: true, changeOrigin: true },
-      '/obs': { target: 'ws://127.0.0.1:4455', ws: true, rewrite: (path) => path.replace(/^\/obs/, '') },
+      // OBS runs on the host; in the prod container that is host.docker.internal
+      // (docker-compose.prod.yml maps it to the host gateway). OBS_WS_TARGET
+      // overrides for a dev server run outside the container.
+      '/obs': { target: process.env.OBS_WS_TARGET || 'ws://host.docker.internal:4455', ws: true, rewrite: (path) => path.replace(/^\/obs/, '') },
     },
   },
 })
