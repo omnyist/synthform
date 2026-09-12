@@ -105,9 +105,10 @@ right choice only if Bryan wants one hostname in the app's settings. Default:
 direct to saya.
 
 **Coordinate frame.** The web page sizes its canvas to a 16:9 box letterboxed
-inside the container and normalizes against that box. The iPad is not 16:9
-(the 13" is 4:3, the 11" is close to 3:2), so the video will be letterboxed
-either way. The drawing surface must be pinned to the **video's rendered
+inside the container and normalizes against that box. The iPad is not 16:9:
+Bryan's 11" iPad Pro is 2420×1668 points-equivalent, about 1.45:1, so a 16:9
+video fills the width and leaves bars top and bottom (a 1080p frame renders
+at roughly 2420×1361 of a 1668-tall screen). The drawing surface must be pinned to the **video's rendered
 rect**, and normalization must divide by that rect, not the view. Touches
 outside the rect are ignored (or clamped; Bryan's call, default ignore).
 
@@ -189,11 +190,17 @@ Pencil interactions, all on top of whichever ink path wins:
 
 - `UIPencilInteraction` double-tap → toggle eraser/undo (respect the user's
   system preference for double-tap, `preferredTapAction`).
-- Squeeze (Pencil Pro, iPadOS 17.5+) → show the palette at the pen.
-- Hover (M2 iPads + Pencil 2/Pro, iPadOS 16.1+) → a width/color cursor
-  under the tip, so Bryan can see where the stroke will land before it does.
-- Whether any of these exist depends on **which iPad and Pencil Bryan has**,
-  which this spec does not know (§9).
+- Squeeze (`UIPencilInteraction` squeeze, iPadOS 17.5+) → show the palette
+  at the pen, with the haptic tick the Pencil Pro gives for free.
+- Hover (`UIHoverGestureRecognizer` with pencil altitude/azimuth, iPadOS
+  16.1+) → a width/color cursor under the tip, so Bryan can see where the
+  stroke will land before it does.
+- Barrel roll (Pencil Pro `rollAngle`) → nothing in v2.0. A telestrator has
+  no calligraphic nib; listed so it is a deliberate skip, not an omission.
+- All of these exist on Bryan's hardware: **11" iPad Pro with Apple Pencil
+  Pro** (stated 2026-09-12). Pencil Pro pairs only with the M4-or-later iPad
+  Pro, so ProMotion at 120 Hz and 240 Hz Pencil sampling are givens; the
+  prediction and coalescing in option 1 have the input rate they need.
 
 ### C. Video — WHEP via libwebrtc (recommended), with the alternatives named
 
@@ -315,15 +322,15 @@ Measured, not assumed, in §7.
    fallback if the number disappoints.
 5. **Socket route.** Direct to `saya:7178`. Not raised as a question; taken
    as the recommended default until said otherwise.
-6. **iPadOS floor: 26.** Bryan's iPad runs the latest iPadOS. Which iPad and
-   Pencil it is, and so whether hover and squeeze exist, is still §9.
+6. **iPadOS floor: 26.** Bryan's iPad runs the latest iPadOS. Hardware is an
+   11" iPad Pro with Apple Pencil Pro, so hover, squeeze, and 120 Hz are all
+   in scope (§5B).
 7. **Touches outside the video rect.** Ignore, the recommended default, until
    said otherwise.
 
 ## 9. Facts this spec needs and does not have
 
-- **Which iPad and which Pencil.** Determines hover, squeeze, ProMotion, and
-  the floor. Bryan can answer in one line.
+- ~~Which iPad and which Pencil.~~ Answered: 11" iPad Pro, Apple Pencil Pro.
 - **OBS Virtual Camera output type on Demi.** If the Virtual Camera outputs
   *Program*, the feed already contains `/telestrator/output` rendered, so
   every stroke arrives on the iPad a second time ~200 ms later, baked into
