@@ -49,15 +49,6 @@ export interface AppleMusicData extends BaseMusicTrack {
 // Union type for all music sources
 export type MusicData = RainwaveData | AppleMusicData
 
-// Type guards
-export function isRainwaveData(data: MusicData): data is RainwaveData {
-  return data.source === 'rainwave'
-}
-
-export function isRainwaveElection(data: any): data is RainwaveElection {
-  return data.event_type === 'Election' && Array.isArray(data.songs)
-}
-
 // Music state for the hook
 export interface MusicState {
   current: MusicData | null

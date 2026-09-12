@@ -24,7 +24,7 @@ const WIDTHS = [3, 6, 10, 16]
 
 const FLUSH_INTERVAL = 50 // ms
 
-// Live feed of OBS program out (docs/telestrator-v1.5.md). Relative by default
+// Live feed of OBS program out (scribble/docs/telestrator-v1.5.md). Relative by default
 // so it resolves against whatever origin serves this page (Tailscale Serve on
 // Demi maps /whep to the media server). Empty string disables the feed.
 const FEED_URL: string | null = (import.meta.env.VITE_TELESTRATOR_FEED_URL ?? '/whep/telestrator/whep') || null

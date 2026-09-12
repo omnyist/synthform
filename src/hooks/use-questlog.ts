@@ -36,28 +36,3 @@ export function useIronMONRuns(challenge?: string, limit = 50) {
     staleTime: 30_000,
   })
 }
-
-// ACNH types — generated from questlog's OpenAPI spec.
-type ACNHVillager = components['schemas']['VillagerSchema']
-type ACNHEncounter = components['schemas']['EncounterSchema']
-type ACNHHunt = components['schemas']['HuntSchema']
-type ACNHHuntResponse = components['schemas']['HuntResponseSchema']
-type ACNHStats = components['schemas']['ACNHStatsSchema']
-
-export type { ACNHVillager, ACNHEncounter, ACNHHunt, ACNHStats }
-
-export function useACNHHunt() {
-  return useQuery<ACNHHuntResponse>({
-    queryKey: ['acnh', 'hunt', 'latest'],
-    queryFn: () => fetchJSON('/acnh/hunts/latest'),
-    refetchInterval: 5_000,
-  })
-}
-
-export function useACNHStats() {
-  return useQuery<ACNHStats>({
-    queryKey: ['acnh', 'stats'],
-    queryFn: () => fetchJSON('/acnh/stats'),
-    staleTime: 30_000,
-  })
-}

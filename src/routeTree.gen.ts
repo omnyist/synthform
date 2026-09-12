@@ -9,31 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AudioRouteImport } from './routes/audio'
 import { Route as LimitbreakRouteImport } from './routes/limitbreak'
-import { Route as MusicRouteImport } from './routes/music'
 import { Route as fullCoworkingRouteImport } from './routes/(full)/coworking'
 import { Route as fullEmoteRainRouteImport } from './routes/(full)/emote-rain'
 import { Route as fullHudRouteImport } from './routes/(full)/hud'
-import { Route as fullIntroRouteImport } from './routes/(full)/intro'
 import { Route as fullOmnibarRouteImport } from './routes/(full)/omnibar'
-import { Route as AcnhVillagerHuntRouteImport } from './routes/acnh/villager-hunt'
 import { Route as DebugEventsRouteImport } from './routes/debug/events'
 import { Route as DebugHudStylesRouteImport } from './routes/debug/hud-styles'
 import { Route as DebugIronmonRouteImport } from './routes/debug/ironmon'
 import { Route as DebugServerRouteImport } from './routes/debug/server'
 import { Route as DebugTranscriptionRouteImport } from './routes/debug/transcription'
-import { Route as SpecialPodcastRouteImport } from './routes/special/podcast'
-import { Route as SpecialUmamusumeRouteImport } from './routes/special/umamusume'
 import { Route as TelestratorIndexRouteImport } from './routes/telestrator/index'
 import { Route as TelestratorOutputRouteImport } from './routes/telestrator/output'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AudioRoute = AudioRouteImport.update({
   id: '/audio',
   path: '/audio',
@@ -42,11 +31,6 @@ const AudioRoute = AudioRouteImport.update({
 const LimitbreakRoute = LimitbreakRouteImport.update({
   id: '/limitbreak',
   path: '/limitbreak',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MusicRoute = MusicRouteImport.update({
-  id: '/music',
-  path: '/music',
   getParentRoute: () => rootRouteImport,
 } as any)
 const fullCoworkingRoute = fullCoworkingRouteImport.update({
@@ -64,19 +48,9 @@ const fullHudRoute = fullHudRouteImport.update({
   path: '/hud',
   getParentRoute: () => rootRouteImport,
 } as any)
-const fullIntroRoute = fullIntroRouteImport.update({
-  id: '/(full)/intro',
-  path: '/intro',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const fullOmnibarRoute = fullOmnibarRouteImport.update({
   id: '/(full)/omnibar',
   path: '/omnibar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AcnhVillagerHuntRoute = AcnhVillagerHuntRouteImport.update({
-  id: '/acnh/villager-hunt',
-  path: '/acnh/villager-hunt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebugEventsRoute = DebugEventsRouteImport.update({
@@ -104,16 +78,6 @@ const DebugTranscriptionRoute = DebugTranscriptionRouteImport.update({
   path: '/debug/transcription',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpecialPodcastRoute = SpecialPodcastRouteImport.update({
-  id: '/special/podcast',
-  path: '/special/podcast',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SpecialUmamusumeRoute = SpecialUmamusumeRouteImport.update({
-  id: '/special/umamusume',
-  path: '/special/umamusume',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TelestratorIndexRoute = TelestratorIndexRouteImport.update({
   id: '/telestrator/',
   path: '/telestrator/',
@@ -126,166 +90,117 @@ const TelestratorOutputRoute = TelestratorOutputRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/audio': typeof AudioRoute
   '/limitbreak': typeof LimitbreakRoute
-  '/music': typeof MusicRoute
   '/coworking': typeof fullCoworkingRoute
   '/emote-rain': typeof fullEmoteRainRoute
   '/hud': typeof fullHudRoute
-  '/intro': typeof fullIntroRoute
   '/omnibar': typeof fullOmnibarRoute
-  '/acnh/villager-hunt': typeof AcnhVillagerHuntRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
-  '/special/podcast': typeof SpecialPodcastRoute
-  '/special/umamusume': typeof SpecialUmamusumeRoute
   '/telestrator/output': typeof TelestratorOutputRoute
   '/telestrator/': typeof TelestratorIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/audio': typeof AudioRoute
   '/limitbreak': typeof LimitbreakRoute
-  '/music': typeof MusicRoute
   '/coworking': typeof fullCoworkingRoute
   '/emote-rain': typeof fullEmoteRainRoute
   '/hud': typeof fullHudRoute
-  '/intro': typeof fullIntroRoute
   '/omnibar': typeof fullOmnibarRoute
-  '/acnh/villager-hunt': typeof AcnhVillagerHuntRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
-  '/special/podcast': typeof SpecialPodcastRoute
-  '/special/umamusume': typeof SpecialUmamusumeRoute
   '/telestrator/output': typeof TelestratorOutputRoute
   '/telestrator': typeof TelestratorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/audio': typeof AudioRoute
   '/limitbreak': typeof LimitbreakRoute
-  '/music': typeof MusicRoute
   '/(full)/coworking': typeof fullCoworkingRoute
   '/(full)/emote-rain': typeof fullEmoteRainRoute
   '/(full)/hud': typeof fullHudRoute
-  '/(full)/intro': typeof fullIntroRoute
   '/(full)/omnibar': typeof fullOmnibarRoute
-  '/acnh/villager-hunt': typeof AcnhVillagerHuntRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
-  '/special/podcast': typeof SpecialPodcastRoute
-  '/special/umamusume': typeof SpecialUmamusumeRoute
   '/telestrator/output': typeof TelestratorOutputRoute
   '/telestrator/': typeof TelestratorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/audio'
     | '/limitbreak'
-    | '/music'
     | '/coworking'
     | '/emote-rain'
     | '/hud'
-    | '/intro'
     | '/omnibar'
-    | '/acnh/villager-hunt'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
     | '/debug/transcription'
-    | '/special/podcast'
-    | '/special/umamusume'
     | '/telestrator/output'
     | '/telestrator/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/audio'
     | '/limitbreak'
-    | '/music'
     | '/coworking'
     | '/emote-rain'
     | '/hud'
-    | '/intro'
     | '/omnibar'
-    | '/acnh/villager-hunt'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
     | '/debug/transcription'
-    | '/special/podcast'
-    | '/special/umamusume'
     | '/telestrator/output'
     | '/telestrator'
   id:
     | '__root__'
-    | '/'
     | '/audio'
     | '/limitbreak'
-    | '/music'
     | '/(full)/coworking'
     | '/(full)/emote-rain'
     | '/(full)/hud'
-    | '/(full)/intro'
     | '/(full)/omnibar'
-    | '/acnh/villager-hunt'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
     | '/debug/transcription'
-    | '/special/podcast'
-    | '/special/umamusume'
     | '/telestrator/output'
     | '/telestrator/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AudioRoute: typeof AudioRoute
   LimitbreakRoute: typeof LimitbreakRoute
-  MusicRoute: typeof MusicRoute
   fullCoworkingRoute: typeof fullCoworkingRoute
   fullEmoteRainRoute: typeof fullEmoteRainRoute
   fullHudRoute: typeof fullHudRoute
-  fullIntroRoute: typeof fullIntroRoute
   fullOmnibarRoute: typeof fullOmnibarRoute
-  AcnhVillagerHuntRoute: typeof AcnhVillagerHuntRoute
   DebugEventsRoute: typeof DebugEventsRoute
   DebugHudStylesRoute: typeof DebugHudStylesRoute
   DebugIronmonRoute: typeof DebugIronmonRoute
   DebugServerRoute: typeof DebugServerRoute
   DebugTranscriptionRoute: typeof DebugTranscriptionRoute
-  SpecialPodcastRoute: typeof SpecialPodcastRoute
-  SpecialUmamusumeRoute: typeof SpecialUmamusumeRoute
   TelestratorOutputRoute: typeof TelestratorOutputRoute
   TelestratorIndexRoute: typeof TelestratorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/audio': {
       id: '/audio'
       path: '/audio'
@@ -298,13 +213,6 @@ declare module '@tanstack/react-router' {
       path: '/limitbreak'
       fullPath: '/limitbreak'
       preLoaderRoute: typeof LimitbreakRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/music': {
-      id: '/music'
-      path: '/music'
-      fullPath: '/music'
-      preLoaderRoute: typeof MusicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(full)/coworking': {
@@ -328,25 +236,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof fullHudRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(full)/intro': {
-      id: '/(full)/intro'
-      path: '/intro'
-      fullPath: '/intro'
-      preLoaderRoute: typeof fullIntroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(full)/omnibar': {
       id: '/(full)/omnibar'
       path: '/omnibar'
       fullPath: '/omnibar'
       preLoaderRoute: typeof fullOmnibarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/acnh/villager-hunt': {
-      id: '/acnh/villager-hunt'
-      path: '/acnh/villager-hunt'
-      fullPath: '/acnh/villager-hunt'
-      preLoaderRoute: typeof AcnhVillagerHuntRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/debug/events': {
@@ -384,20 +278,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugTranscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/special/podcast': {
-      id: '/special/podcast'
-      path: '/special/podcast'
-      fullPath: '/special/podcast'
-      preLoaderRoute: typeof SpecialPodcastRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/special/umamusume': {
-      id: '/special/umamusume'
-      path: '/special/umamusume'
-      fullPath: '/special/umamusume'
-      preLoaderRoute: typeof SpecialUmamusumeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/telestrator/': {
       id: '/telestrator/'
       path: '/telestrator'
@@ -416,23 +296,17 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AudioRoute: AudioRoute,
   LimitbreakRoute: LimitbreakRoute,
-  MusicRoute: MusicRoute,
   fullCoworkingRoute: fullCoworkingRoute,
   fullEmoteRainRoute: fullEmoteRainRoute,
   fullHudRoute: fullHudRoute,
-  fullIntroRoute: fullIntroRoute,
   fullOmnibarRoute: fullOmnibarRoute,
-  AcnhVillagerHuntRoute: AcnhVillagerHuntRoute,
   DebugEventsRoute: DebugEventsRoute,
   DebugHudStylesRoute: DebugHudStylesRoute,
   DebugIronmonRoute: DebugIronmonRoute,
   DebugServerRoute: DebugServerRoute,
   DebugTranscriptionRoute: DebugTranscriptionRoute,
-  SpecialPodcastRoute: SpecialPodcastRoute,
-  SpecialUmamusumeRoute: SpecialUmamusumeRoute,
   TelestratorOutputRoute: TelestratorOutputRoute,
   TelestratorIndexRoute: TelestratorIndexRoute,
 }

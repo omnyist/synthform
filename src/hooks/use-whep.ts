@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 /**
  * Plays a WebRTC stream published through a WHEP endpoint (the telestrator's
- * live feed of OBS program out — see docs/telestrator-v1.5.md).
+ * live feed of OBS program out — see scribble/docs/telestrator-v1.5.md).
  *
  * WHEP is one HTTP exchange: POST an SDP offer, get an SDP answer, then the
  * media flows over the peer connection. The server hands back a resource URL
