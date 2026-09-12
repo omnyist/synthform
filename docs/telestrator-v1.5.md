@@ -43,13 +43,21 @@ iPad (Safari → Home-Screen PWA)                Demi (Hyprland, OBS 32.2.2)
   /telestrator  ── strokes ──► synthfunc ws/overlay ──► /telestrator/output (OBS browser source)
       ▲ picture                                          ▲
       │ v1: GetSourceScreenshot every 5 s ◄──── obs-websocket :4455
-      │ v1.5: WebRTC (WHEP) ◄── MediaMTX ◄── WHIP ◄── ffmpeg/NVENC ◄── OBS Virtual Camera (/dev/video20)
+      │ v1.5: WebRTC (WHEP) ◄── MediaMTX ◄── WHIP ◄── ffmpeg/x264 ◄── OBS Virtual Camera (loopback device TBD, §8)
 ```
 
-Facts checked on Demi 2026-09-11: OBS 32.2.2 with `obs-webrtc.so`, `obs-nvenc.so`;
-`v4l2loopback` 0.15.4 loaded, `/dev/video20` present (OBS Virtual Camera works);
-`ffmpeg` with `h264_nvenc`; `docker` present; no AUR helper; `mediamtx` not in
-the CachyOS repos; nothing on the rack serves WebRTC/RTSP today. Demi's tailnet
+Facts checked on Demi 2026-09-11 (corrected the same night by the demi
+session, which checked live state rather than trusting this list): OBS 32.2.2
+with `obs-webrtc.so`, `obs-nvenc.so`; `ffmpeg` with `h264_nvenc` and `libx264`;
+`docker` present; no AUR helper; `mediamtx` not in the CachyOS repos; nothing on
+the rack served WebRTC/RTSP. **`v4l2loopback` 0.15.4 is loaded with
+`devices=2, video_nr=20,21` and both are taken** — `/dev/video20` is LoopExt
+(relay-ext.service, feeding OBS's External Capture) and `/dev/video21` is
+LoopAlys. There is no free loopback device for OBS's Virtual Camera; the
+first draft of this spec was wrong to say it "works". **NVENC on this RTX 4070
+is the unpatched 3-session cap** and a live stream already uses 2 (Twitch
+H.264 + the AV1 record/replay pair sharing one), so a third NVENC encode
+would sit exactly at the wall. Demi's tailnet
 address is `100.111.202.16` / `demi.tailnet-dffc.ts.net`. Port 8000 on Demi is
 Bitfocus Companion (unrelated).
 
@@ -78,24 +86,37 @@ http. Not the deploy answer.
 
 OBS's main output belongs to Twitch, so the feed is a separate path:
 
-1. **OBS Virtual Camera** → `/dev/video20` (v4l2loopback). Started by
-   obs-websocket `StartVirtualCam` at OBS launch (synthmix's `stream-watch`
-   already watches OBS lifecycle and is the natural place; or a one-shot unit).
-   Program output, canvas resolution.
-2. **`telestrator-feed.service`** (Demi user unit, After= OBS is up):
-   ```
-   ffmpeg -f v4l2 -framerate 30 -video_size 1920x1080 -i /dev/video20 \
-     -c:v h264_nvenc -preset p1 -tune ll -zerolatency 1 -rc cbr -b:v 6M -g 30 -bf 0 \
-     -an -f whip http://127.0.0.1:8889/telestrator/whip
-   ```
-   (exact flags to be tuned on Demi; 1280x720 if the iPad doesn't need 1080p —
-   §8). Restart=on-failure; it simply retries until the virtual camera exists.
-   NVENC on an RTX 4070 has session headroom for this beside the Twitch encode.
+1. **OBS Virtual Camera** → a v4l2loopback device **that does not exist yet**
+   (§8, decision 5: reload the module with `devices=3` in a window Bryan is
+   watching — relay-ext and relay-alys lose their loopbacks for the reload —
+   or add one dynamically through `/dev/v4l2loopback`, which needs
+   `v4l2loopback-ctl` built from source). Started by obs-websocket
+   `StartVirtualCam` at OBS launch (synthmix's `stream-watch` already watches
+   OBS lifecycle and is the natural place; or a one-shot unit). Program output,
+   canvas resolution.
+2. **`telestrator-feed.service`** (Demi user unit, After= OBS is up), drafted
+   by the demi session with **`libx264 -preset ultrafast -tune zerolatency`**,
+   not NVENC: the third NVENC session would be the last one the card has, and
+   the Threadripper 7960X has idle headroom to spare (it already does the
+   stream's audio encodes on CPU for the same reason). 1080p30 per §8.
+   Restart=on-failure; it simply retries until the virtual camera exists.
 
 Alternative: the **Aitum Multistream** OBS plugin emitting WHIP directly (one
 hop fewer, one more plugin to babysit across OBS upgrades). Not preferred.
 
-### C. Media server — WHIP in, WHEP out, on Demi (choice: demi session's research)
+### C. Media server — MediaMTX v1.21.0 (demi session's research, 2026-09-11)
+
+Chosen over Broadcast Box on evidence, not the prior: both satisfy WHIP-in /
+WHEP-out without transcoding, ICE over TCP and a tailnet-advertised address
+(their docs, checked), but Broadcast Box v2.0.2 ships no prebuilt binaries
+(Docker or `go build` only) while MediaMTX ships a static Linux binary,
+checksum-verified against the release, installed the way Godot is
+(`~/.local/opt/mediamtx`). SRS and LiveKit are maintained but far more
+machinery than one publisher and one subscriber need. MediaMTX serves WHEP at
+`POST /telestrator/whep` on `127.0.0.1:8889`; Tailscale Serve fronts it, so the
+page's default `/whep/telestrator/whep` is the final URL.
+
+The requirements the pick had to meet, kept for the record:
 
 Requirements the pick must meet, whatever it is: WHIP ingest from ffmpeg and
 WHEP playback to Safari (H.264, no transcoding); single process on Demi (static
@@ -117,8 +138,12 @@ paths:
   telestrator: {}                    # WHIP publish, WHEP read
 ```
 
-ICE candidates advertise the tailnet address; UDP 8189 must be allowed on ufw
-from the tailnet only. If UDP proves awkward, MediaMTX can do ICE over TCP.
+ICE candidates advertise the tailnet address. **No ufw rule**: Demi's ufw is
+DROP-all with an empty ruleset and the tailnet already reaches ssh, obs-websocket
+and everything else because Tailscale manages its own netfilter rules for
+`tailscale0`, bypassing ufw (documented in synthlore; it is why Concourse
+reaches Demi over the tailnet rather than a LAN hole). Verify the ICE UDP port
+empirically once the feed exists; fall back to ICE-over-TCP if needed.
 Owner: demi session.
 
 ### D. Client — synthform `src/routes/telestrator/index.tsx`
@@ -148,7 +173,7 @@ Owner: this session (synthform); the one-time install is Bryan's.
 | Stage | ms |
 | --- | --- |
 | OBS compositor → virtual camera | ~16–33 |
-| ffmpeg capture + NVENC low-latency | ~30–60 |
+| ffmpeg capture + x264 ultrafast/zerolatency (CPU) | ~30–70 |
 | MediaMTX WHIP→WHEP | ~10–30 |
 | Network (tailnet, same LAN) | ~5–20 |
 | Safari decode + render | ~50–120 |
@@ -160,7 +185,7 @@ Against today's 0–5 s. Measured, not assumed, in §7.
 
 | Piece | Owner |
 | --- | --- |
-| Tailscale Serve, MediaMTX, `telestrator-feed.service`, virtual-cam autostart, ufw UDP rule | demi session (Demi dotfiles) |
+| Tailscale Serve, MediaMTX, `telestrator-feed.service`, virtual-cam autostart | demi session (Demi dotfiles); **enabling/starting the units on the live box is Bryan's own hand** (the demi session's permission guard blocks it, correctly) |
 | WHEP client, video-behind-canvas, fallback, manifest/PWA | this session (synthform) |
 | Add to Home Screen; 720p vs 1080p; the URL the iPad uses today | Bryan |
 
@@ -176,7 +201,7 @@ Against today's 0–5 s. Measured, not assumed, in §7.
 4. PWA: `navigator.standalone === true` on the iPad, no Safari chrome, WebRTC
    plays inside the home-screen app.
 5. Twitch unaffected: OBS stats show the stream encode untouched with the feed
-   running (NVENC sessions: 2).
+   running; NVENC sessions stay at 2 because the feed encodes on the CPU.
 
 ## 8. Decisions — made 2026-09-11
 
@@ -185,9 +210,14 @@ Against today's 0–5 s. Measured, not assumed, in §7.
 3. **Feed source**: Virtual Camera + ffmpeg. Bryan: no Aitum, "I'd want it to
    be 'transparent' and not a 'multistream'" — a second encode of program out
    that OBS itself never knows about.
-4. **Media server**: not decided here. Bryan asked for the WHIP/WHEP server to
-   be researched, not assumed; that research and the pick are the demi
-   session's (§C). MediaMTX is the prior, not the answer.
+4. **Media server**: MediaMTX v1.21.0, by the demi session's research (§C).
+5. **Loopback device for the Virtual Camera — OPEN, Bryan's call, in a window
+   he is watching**: (a) reload `v4l2loopback` with `devices=3` (relay-ext and
+   relay-alys drop for the reload), or (b) build `v4l2loopback-ctl` from source
+   and add a device dynamically via `/dev/v4l2loopback`. Nothing autonomous.
+6. **Feed encoder**: libx264 ultrafast/zerolatency on the CPU, not NVENC (the
+   card's third and last session is not worth spending here). Accepted 2026-09-11
+   unless Bryan objects.
 
 Still unanswered, not blocking: what URL the iPad opens today (nothing on the
 rack serves the input page off-box, which suggests the dev server on Zelan).
