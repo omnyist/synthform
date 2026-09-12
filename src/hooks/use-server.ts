@@ -201,6 +201,8 @@ class ServerConnection {
       'campaign:timer:paused',
       'campaign:timer:tick',
       'telestrator:draw',
+      'telestrator:sticker:place',
+      'telestrator:sticker:move',
       'telestrator:undo',
       'telestrator:clear',
     ]

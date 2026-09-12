@@ -1,9 +1,41 @@
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path'
+
+import { defineConfig, type Plugin } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+
+import { buildStickerManifest } from './tools/stickers.ts'
+
+/**
+ * The telestrator sticker library: every image in `public/stickers/` becomes
+ * an entry in `/stickers/manifest.json`, generated from the directory so a
+ * dropped-in file is the whole job. Both the output page and Scribble (over
+ * Demi's Serve root) read this one list. Emitted at build; served live in
+ * dev so a new file shows up on reload.
+ */
+function stickersManifest(): Plugin {
+  const dir = resolve(import.meta.dirname, 'public/stickers')
+  const render = async () => {
+    const { manifest, skipped } = await buildStickerManifest(dir)
+    for (const name of skipped) console.warn(`[stickers] skipped ${name}: not a readable PNG, WebP or GIF`)
+    return JSON.stringify(manifest, null, 2) + '\n'
+  }
+  return {
+    name: 'synthform:stickers-manifest',
+    configureServer(server) {
+      server.middlewares.use('/stickers/manifest.json', async (_req, res) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.end(await render())
+      })
+    },
+    async generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'stickers/manifest.json', source: await render() })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,6 +45,7 @@ export default defineConfig({
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
+    stickersManifest(),
   ],
   server: {
     allowedHosts: ['saya', 'zelan', 'synthform'],
