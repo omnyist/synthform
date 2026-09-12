@@ -238,4 +238,13 @@ on synthfunc's overlay socket. What it adds is PencilKit (≈9 ms Pencil-to-pixe
 predictive strokes) and a real full-screen surface. Nothing in v1.5 is specific
 to the browser except the WHEP client and the manifest, both disposable.
 
-Spec'd 2026-09-12 in `docs/telestrator-v2-ipados.md`.
+Spec'd 2026-09-12 in `docs/telestrator-v2-ipados.md`; built the same day as
+`omnyist/scribble`. Demi-side changes made for it that this spec's §C and §8
+predate: MediaMTX binds ICE on `100.111.202.16:8189` (a loopback bind plus
+`webrtcAdditionalHosts` never worked; the first live session only connected
+because MediaMTX dialled out over ICE-TCP), the ffmpeg feed runs as
+`paths.telestrator.runOnDemand` (started by the WHEP reader, close after
+30 s) and `telestrator-feed.service` is disabled, Tailscale Serve gained
+`/obs` → `127.0.0.1:4455`, and `/dev/video22` exists as `LoopTelestrator`
+(decision §8.5 made on Demi's side). The iPad had to leave Quarantine (VLAN
+90) for a direct tailnet path; on DERP every hop cost ~50–60 ms.

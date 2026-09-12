@@ -1,7 +1,9 @@
 # Telestrator v2 — a native iPadOS app
 
-> Spec, 2026-09-12. Status: decisions made (§8: Scribble, `omnyist/scribble`);
-> nothing built yet. Written the night v1.5 was two Demi-side fixes from working (ICE bind,
+> Spec, 2026-09-12. Status: **v1 built and working the same day** in
+> `omnyist/scribble` (picture, ink, OBS ask, all three links reconnecting);
+> handed to its own session, see that repo's CLAUDE.md for status and gotchas.
+> Written the night v1.5 was two Demi-side fixes from working (ICE bind,
 > ufw), so everything below assumes v1.5's plumbing is the plumbing.
 > Companion: `docs/telestrator-v1.5.md` (the web version; §9 there points here).
 
