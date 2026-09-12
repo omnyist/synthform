@@ -2,14 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   connectNetwork,
-  fetchNetworkCurrent,
   fetchNetworkDevices,
   fetchPduOutlets,
 } from '@/api/synthhome'
 import type {
   NetworkSnapshot,
   NetworkEvent,
-  NetworkCurrent,
   NetworkDevice,
   PduOutlet,
 } from '@/api/synthhome'
@@ -17,7 +15,6 @@ import type {
 export type {
   NetworkSnapshot,
   NetworkEvent,
-  NetworkCurrent,
   NetworkDevice,
   PduOutlet,
 }
@@ -47,15 +44,6 @@ export function useNetwork() {
   }, [handleEvent])
 
   return { snapshot, events, isConnected, error }
-}
-
-export function useNetworkCurrent() {
-  return useQuery<NetworkCurrent>({
-    queryKey: ['synthhome', 'network', 'current'],
-    queryFn: fetchNetworkCurrent,
-    staleTime: 10_000,
-    refetchInterval: 10_000,
-  })
 }
 
 export function useNetworkDevices() {

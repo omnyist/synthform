@@ -445,12 +445,3 @@ export class TestEventFactory {
 }
 
 // Export some pre-made test events for quick testing
-export const TEST_EVENTS = {
-  follow: TestEventFactory.follow('TestFollower'),
-  sub: TestEventFactory.sub('TestSubscriber', 'Tier 1'),
-  resub: TestEventFactory.resub('LoyalViewer', 24, 'Tier 2'),
-  cheer: TestEventFactory.cheer('BitsCheerer', 1000),
-  raid: TestEventFactory.raid('RaidLeader', 50),
-  subGift: TestEventFactory.subGift('Gifter', 'LuckyRecipient', 'Tier 1'),
-  communityGift: TestEventFactory.communityGift('GenerousGifter', 10, 'Tier 1'),
-}

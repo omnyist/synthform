@@ -6,28 +6,13 @@ export interface RMEMicStatus {
   timestamp: string
 }
 
-export interface RMEState {
-  mic: RMEMicStatus | null
-  isConnected: boolean
-}
-
-export function useRME() {
+export function useMicStatus() {
   const mic = useRealtimeStore((s) => s.rme)
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
   return {
-    mic,
-    isMuted: mic?.muted ?? false,
-    isConnected,
-  }
-}
-
-export function useMicStatus() {
-  const { mic, isMuted, isConnected } = useRME()
-
-  return {
     channel: mic?.channel ?? 0,
-    isMuted,
+    isMuted: mic?.muted ?? false,
     isConnected,
     timestamp: mic?.timestamp,
   }

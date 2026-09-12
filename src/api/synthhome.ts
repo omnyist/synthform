@@ -200,10 +200,6 @@ export async function fetchForecast(): Promise<SynthhomeForecast | null> {
   return fetchJSON('/weather/forecast')
 }
 
-export async function fetchWindHistory(minutes = 30): Promise<SynthhomeWindReading[]> {
-  return fetchAllPages<SynthhomeWindReading>(`/weather/wind?minutes=${minutes}`)
-}
-
 // ---------------------------------------------------------------------------
 // WebSocket: Real-time energy data via Synthhome
 // ---------------------------------------------------------------------------
@@ -427,10 +423,6 @@ export type NetworkCurrent = components['schemas']['NetworkCurrentSchema']
 export type NetworkDevice = components['schemas']['DeviceDetailSchema']
 
 export type PduOutlet = components['schemas']['PDUOutletSchema']
-
-export async function fetchNetworkCurrent(): Promise<NetworkCurrent> {
-  return fetchJSON('/network/current')
-}
 
 export async function fetchNetworkDevices(): Promise<NetworkDevice[]> {
   return fetchAllPages<NetworkDevice>('/network/devices')

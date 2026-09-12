@@ -417,36 +417,3 @@ export type TimelineEvent =
   | ChannelRaidEvent
   | ChatNotificationEvent
   | CommunityGiftBundleEvent
-
-// Type guard functions
-export function isFollowEvent(event: TimelineEvent): event is ChannelFollowEvent {
-  return event.type === 'twitch.channel.follow'
-}
-
-export function isSubscribeEvent(event: TimelineEvent): event is ChannelSubscribeEvent {
-  return event.type === 'twitch.channel.subscribe'
-}
-
-export function isSubscriptionGiftEvent(event: TimelineEvent): event is SubscriptionGiftEvent {
-  return event.type === 'twitch.channel.subscription.gift'
-}
-
-export function isSubscriptionMessageEvent(event: TimelineEvent): event is SubscriptionMessageEvent {
-  return event.type === 'twitch.channel.subscription.message'
-}
-
-export function isCheerEvent(event: TimelineEvent): event is CheerEvent {
-  return event.type === 'twitch.channel.cheer'
-}
-
-export function isPointsRedemptionEvent(event: TimelineEvent): event is ChannelPointsRedemptionEvent {
-  return event.type === 'twitch.channel.channel_points_custom_reward_redemption.add'
-}
-
-export function isRaidEvent(event: TimelineEvent): event is ChannelRaidEvent {
-  return event.type === 'twitch.channel.raid'
-}
-
-export function isChatNotificationEvent(event: TimelineEvent): event is ChatNotificationEvent {
-  return event.type === 'twitch.channel.chat.notification'
-}

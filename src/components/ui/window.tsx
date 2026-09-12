@@ -36,26 +36,4 @@ const Circle = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string
 )
 Circle.displayName = 'Circle'
 
-const Toolbar = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string }>>(
-  ({ children, className }, ref) => {
-    return (
-      <div ref={ref} className={cn('flex items-center gap-2 py-2', className)}>
-        {children}
-      </div>
-    )
-  },
-)
-Toolbar.displayName = 'Toolbar'
-
-const Slot = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string }>>(
-  ({ children, className }, ref) => {
-    return (
-      <div ref={ref} className={cn('slot', className)}>
-        {children}
-      </div>
-    )
-  },
-)
-Slot.displayName = 'Slot'
-
-export { Circle, Frame, Toolbar, Slot }
+export { Circle, Frame }

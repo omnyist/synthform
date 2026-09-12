@@ -4,7 +4,6 @@ import {
   connectWeather,
   fetchForecast,
   fetchCurrentWeather,
-  fetchWindHistory,
 } from '@/api/synthhome'
 import type {
   WeatherObservation,
@@ -12,7 +11,6 @@ import type {
   WeatherLightningStrike,
   SynthhomeForecast,
   SynthhomeCurrentWeather,
-  SynthhomeWindReading,
 } from '@/api/synthhome'
 
 export type {
@@ -21,7 +19,6 @@ export type {
   WeatherLightningStrike,
   SynthhomeForecast,
   SynthhomeCurrentWeather,
-  SynthhomeWindReading,
 }
 
 export function useTempest() {
@@ -67,11 +64,3 @@ export function useTempestCurrent() {
   })
 }
 
-export function useTempestWindHistory(minutes = 30) {
-  return useQuery<SynthhomeWindReading[]>({
-    queryKey: ['synthhome', 'wind', minutes],
-    queryFn: () => fetchWindHistory(minutes),
-    staleTime: 30_000,
-    refetchInterval: 30_000,
-  })
-}

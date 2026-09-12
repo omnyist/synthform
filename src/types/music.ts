@@ -54,10 +54,6 @@ export function isRainwaveData(data: MusicData): data is RainwaveData {
   return data.source === 'rainwave'
 }
 
-export function isAppleMusicData(data: MusicData): data is AppleMusicData {
-  return data.source === 'apple'
-}
-
 export function isRainwaveElection(data: any): data is RainwaveElection {
   return data.event_type === 'Election' && Array.isArray(data.songs)
 }

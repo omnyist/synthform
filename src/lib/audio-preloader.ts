@@ -119,9 +119,3 @@ export function getPreloadedAudio(soundPath: string): HTMLAudioElement | null {
   return audio
 }
 
-/**
- * Check if audio preloader is ready
- */
-export function isPreloadComplete(): boolean {
-  return preloadComplete
-}

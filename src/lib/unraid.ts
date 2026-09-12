@@ -17,7 +17,7 @@ function pct(used: number, total: number): number {
   return Math.min(100, Math.max(0, (used / total) * 100))
 }
 
-export function formatUptime(seconds: number): string {
+function formatUptime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return '—'
   const days = Math.floor(seconds / 86_400)
   const hours = Math.floor((seconds % 86_400) / 3_600)

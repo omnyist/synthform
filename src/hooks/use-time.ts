@@ -9,7 +9,7 @@ interface UseTimeOptions {
   customFormat?: (date: Date) => string // Custom formatting function
 }
 
-export function useTime(options: UseTimeOptions = {}) {
+function useTime(options: UseTimeOptions = {}) {
   const {
     interval = 1000,
     format = 'time',
@@ -91,18 +91,6 @@ export function useTime(options: UseTimeOptions = {}) {
     dayName: time.toLocaleDateString(locale, { weekday: 'long' }),
     dayShort: time.toLocaleDateString(locale, { weekday: 'short' }),
   }
-}
-
-// Convenience hook for just the date string
-export function useCurrentDate(options?: Omit<UseTimeOptions, 'format'>) {
-  const { formatted } = useTime({ ...options, format: 'date' })
-  return formatted
-}
-
-// Convenience hook for just the time string
-export function useCurrentTime(options?: Omit<UseTimeOptions, 'format'>) {
-  const { formatted } = useTime({ ...options, format: 'time' })
-  return formatted
 }
 
 // Hook for building custom time displays
