@@ -43,7 +43,7 @@ iPad (Safari → Home-Screen PWA)                Demi (Hyprland, OBS 32.2.2)
   /telestrator  ── strokes ──► synthfunc ws/overlay ──► /telestrator/output (OBS browser source)
       ▲ picture                                          ▲
       │ v1: GetSourceScreenshot every 5 s ◄──── obs-websocket :4455
-      │ v1.5: WebRTC (WHEP) ◄── MediaMTX ◄── WHIP ◄── ffmpeg/x264 ◄── OBS Virtual Camera (loopback device TBD, §8)
+      │ v1.5: WebRTC (WHEP) ◄── MediaMTX ◄── RTSP (loopback, TCP) ◄── ffmpeg/x264 ◄── OBS Virtual Camera
 ```
 
 Facts checked on Demi 2026-09-11 (corrected the same night by the demi
@@ -94,12 +94,20 @@ OBS's main output belongs to Twitch, so the feed is a separate path:
    `StartVirtualCam` at OBS launch (synthmix's `stream-watch` already watches
    OBS lifecycle and is the natural place; or a one-shot unit). Program output,
    canvas resolution.
-2. **`telestrator-feed.service`** (Demi user unit, After= OBS is up), drafted
-   by the demi session with **`libx264 -preset ultrafast -tune zerolatency`**,
-   not NVENC: the third NVENC session would be the last one the card has, and
-   the Threadripper 7960X has idle headroom to spare (it already does the
-   stream's audio encodes on CPU for the same reason). 1080p30 per §8.
-   Restart=on-failure; it simply retries until the virtual camera exists.
+2. **`telestrator-feed.service`** (Demi user unit, After= OBS is up), by the
+   demi session: **`libx264 -preset ultrafast -tune zerolatency`** with
+   `keyint=30:min-keyint=30:scenecut=0:nal-hrd=cbr`, Baseline 4:2:0, single
+   slice — not NVENC, because the third NVENC session would be the last one
+   the card has and the Threadripper 7960X has idle headroom to spare. 1080p30
+   per §8. Restart=on-failure; it simply retries until the virtual camera exists.
+
+   **Ingest is RTSP into MediaMTX, not WHIP.** ffmpeg's native WHIP muxer
+   (new in 2025) produced invalid FU-A packets and frame drops every 10–20 s
+   that no UDP buffer change fixed; publishing the same encode as
+   `-f rtsp rtsp://127.0.0.1:8554/telestrator` (TCP, loopback only — the RTSP
+   listener never reaches the tailnet) let MediaMTX packetize itself: a clean
+   60 s window showed zero RTP loss and zero FU-A errors. WHEP out is
+   unchanged; the hop costs a few ms.
 
 Alternative: the **Aitum Multistream** OBS plugin emitting WHIP directly (one
 hop fewer, one more plugin to babysit across OBS upgrades). Not preferred.
@@ -174,7 +182,7 @@ Owner: this session (synthform); the one-time install is Bryan's.
 | --- | --- |
 | OBS compositor → virtual camera | ~16–33 |
 | ffmpeg capture + x264 ultrafast/zerolatency (CPU) | ~30–70 |
-| MediaMTX WHIP→WHEP | ~10–30 |
+| MediaMTX RTSP→WHEP | ~15–40 |
 | Network (tailnet, same LAN) | ~5–20 |
 | Safari decode + render | ~50–120 |
 | **Total** | **~0.15–0.3 s** |
