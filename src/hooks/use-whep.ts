@@ -85,8 +85,21 @@ export function useWhep(url: string | null) {
           body: offer.sdp,
         })
         if (!res.ok) throw new Error(`WHEP ${res.status}`)
+        // MediaMTX answers `Location: /<path>/whep/<id>` relative to ITS root,
+        // and the endpoint is reached through a Tailscale Serve prefix
+        // (`/whep`) it knows nothing about. Resolving that absolute path
+        // against the endpoint drops the prefix and the DELETE 404s, so the
+        // resource is <endpoint>/<last segment>; a fully qualified Location
+        // is trusted as-is.
         const location = res.headers.get('Location')
-        if (location) resourceRef.current = new URL(location, url as string).toString()
+        if (location) {
+          const id = location.split('/').filter(Boolean).pop()
+          resourceRef.current = /^https?:\/\//.test(location)
+            ? location
+            : id
+              ? `${(url as string).replace(/\/$/, '')}/${id}`
+              : null
+        }
         const answer = await res.text()
         if (disposed) return
         await pc.setRemoteDescription({ type: 'answer', sdp: answer })
