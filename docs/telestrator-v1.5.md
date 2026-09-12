@@ -237,3 +237,5 @@ the same WHEP stream from MediaMTX and sends the same `telestrator:*` messages
 on synthfunc's overlay socket. What it adds is PencilKit (≈9 ms Pencil-to-pixel,
 predictive strokes) and a real full-screen surface. Nothing in v1.5 is specific
 to the browser except the WHEP client and the manifest, both disposable.
+
+Spec'd 2026-09-12 in `docs/telestrator-v2-ipados.md`.
