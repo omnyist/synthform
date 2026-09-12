@@ -1,7 +1,7 @@
 # Telestrator v2 — a native iPadOS app
 
-> Spec, 2026-09-12. Status: draft for Bryan's review; nothing built, no repo, no
-> name. Written the night v1.5 was two Demi-side fixes from working (ICE bind,
+> Spec, 2026-09-12. Status: decisions made (§8: Scribble, `omnyist/scribble`);
+> nothing built yet. Written the night v1.5 was two Demi-side fixes from working (ICE bind,
 > ufw), so everything below assumes v1.5's plumbing is the plumbing.
 > Companion: `docs/telestrator-v1.5.md` (the web version; §9 there points here).
 
@@ -118,7 +118,7 @@ outside the rect are ignored (or clamped; Bryan's call, default ignore).
 Mirrors Skiff's functional-core / imperative-shell split, which is the one
 Swift pattern the suite has:
 
-- **`<Name>Core/`** — a local Swift package, no UIKit, tested with plain
+- **`ScribbleCore/`** — a local Swift package, no UIKit, tested with plain
   `swift test` on macOS:
   - `StrokeEncoder` — turns `(id, color, width, [points], done)` into the
     exact JSON above; `undo`/`clear` builders. Golden-file tests against
@@ -132,11 +132,11 @@ Swift pattern the suite has:
     so it is testable without the binary framework.
   - `OverlaySocket` — envelope framing, reconnect/backoff policy, the
     `base:sync` handshake the server sends first. `URLSessionWebSocketTask`.
-- **`<Name>/`** — the app target, glue only: the video view, the ink view,
+- **`Scribble/`** — the app target, glue only: the video view, the ink view,
   the toolbar, settings, lifecycle.
 
 XcodeGen `project.yml` is the source of truth (Skiff's rule: anything set only
-in Xcode is wiped on regeneration). Bundle id `studio.synthrack.<name>`.
+in Xcode is wiped on regeneration). Bundle id `studio.synthrack.scribble`.
 Build number stamped from `git rev-list --count HEAD` by the same post-build
 script. CI on the Saya runner via GitHub Actions like Skiff (`swift test` on
 the Core package + an unsigned generic-iOS `xcodebuild`); Concourse's Linux
@@ -298,24 +298,27 @@ Measured, not assumed, in §7.
    the truth throughout.
 7. **Twitch unaffected**, as v1.5 §7.5.
 
-## 8. Decisions — Bryan's, none made
+## 8. Decisions — made by Bryan, 2026-09-12
 
-1. **Name.** The rack's apps are nautical-ish (Skiff). Not choosing one here;
-   three to react to, or none of them: *Slate*, *Grease* (grease pencil, the
-   original telestrator tool), *Madden* (what everyone actually calls the
-   thing, and a joke he may not want on a Home Screen).
-2. **Repo org.** bonk went to `omnypro` (private); Skiff lives in `omnyist`.
-   Either; the CI runner on Saya serves both.
-3. **Ink path.** §5B: custom ink view (recommended), PencilKit + shadow
-   recognizer, or a protocol extension later.
-4. **Video transport.** §5C: libwebrtc/WHEP (recommended), or raw H.264 if
-   measurements say WebRTC on the iPad is not good enough.
-5. **Socket route.** Direct to `saya:7178` (recommended) or via Demi's proxy.
-6. **iPadOS floor.** Depends on the iPad in hand (§9). iPadOS 17 matches
-   Skiff and covers hover; 17.5 for Pencil Pro squeeze; 26 for the
-   orientation-lock API and to be honest about the windowing model. Leaning
-   26, since it is a one-device app on a device Bryan keeps current.
-7. **Touches outside the video rect.** Ignore (recommended) or clamp.
+1. **Name: Scribble.** Bundle id `studio.synthrack.scribble`. (Apple uses
+   "Scribble" for Pencil handwriting-to-text; irrelevant for a sideloaded
+   app, noted only so nobody is surprised by the search results.)
+2. **Repo: `omnyist/scribble`.** Bryan: "omnyist since the display portion
+   is intrinsically tied to Synthform." Same org as Skiff; the Saya runner
+   serves it.
+3. **Ink path: start simple, extend later if unhappy.** §5B option 1, the
+   custom ink view with the same constant-width polyline both ends. The
+   protocol extension (option 3) is the "extend later" door, opened only if
+   Bryan wants pressure on stream.
+4. **Video transport: libwebrtc/WHEP, tested before trusted.** Bryan: "we'll
+   have to test." §7.3 measures it; raw H.264 (§5C option 3) stays the
+   fallback if the number disappoints.
+5. **Socket route.** Direct to `saya:7178`. Not raised as a question; taken
+   as the recommended default until said otherwise.
+6. **iPadOS floor: 26.** Bryan's iPad runs the latest iPadOS. Which iPad and
+   Pencil it is, and so whether hover and squeeze exist, is still §9.
+7. **Touches outside the video rect.** Ignore, the recommended default, until
+   said otherwise.
 
 ## 9. Facts this spec needs and does not have
 
@@ -336,7 +339,37 @@ Measured, not assumed, in §7.
   with the synthfunc session before the first connection from a native
   `User-Agent` surprises anyone.
 
-## 10. What this spec is not
+## 10. Considered and parked: the iPad as the source
+
+Bryan, 2026-09-12: "We could make this more self contained if the iPad
+somehow outputted a browser view or OBS thing but yeah not sure."
+
+The idea is that Scribble composites picture + ink itself and OBS takes the
+result as a source, so synthfunc's relay and `/telestrator/output` drop out.
+Ways it could be done, and why each loses to strokes-as-data:
+
+- **iPad publishes its ink layer as video (WHIP back into MediaMTX, OBS pulls
+  it).** WebRTC video has no alpha channel, so the ink would arrive on a
+  solid or chroma-keyed background; keying a thin anti-aliased line is how
+  telestrators looked in 1985. It also adds an encode on the iPad and a second
+  network hop before the stroke reaches the stream, so the ink OBS shows would
+  lag Bryan's pen by more than today's 50 ms flush. And OBS has no built-in
+  WHEP source; it would need a plugin on Demi.
+- **iPad publishes picture + ink composited.** Same alpha and latency problems,
+  plus the stream would now carry a re-encoded copy of program out drawn from
+  a 6 Mbps x264 feed, in place of OBS's own compositor. A quality loss for
+  every viewer to save one relay.
+- **Screen mirroring the iPad into OBS (AirPlay/USB).** Sidecar-style capture
+  needs a Mac; Demi is Linux. Same alpha problem regardless.
+
+What strokes-as-data buys, and why it stays: OBS renders the ink itself at
+canvas resolution with real alpha, the stream sees a stroke within one relay
+hop of the pen, and the iPad does no encoding. The relay through synthfunc is
+already there and costs nothing to keep. If "self-contained" is about the
+number of moving parts on Demi, the v1.5 feed (Virtual Camera, ffmpeg,
+MediaMTX) is the part worth simplifying later, not the stroke path.
+
+## 11. What this spec is not
 
 Not a build order, not a repo, not a name. When Bryan has picked from §8 the
 next artifact is the XcodeGen `project.yml` and the Core package with the
