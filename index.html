@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Synthform Overlay Service</title>
+    <!-- Home-Screen web app on the iPad (the telestrator): full screen, no Safari chrome.
+         Harmless for the OBS browser sources, which never see these. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Telestrator" />
+    <link rel="apple-touch-icon" href="/icons/telestrator-180.png" />
   </head>
   <body>
     <div id="root"></div>

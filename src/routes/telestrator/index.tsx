@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRealtimeStore } from '@/store/realtime'
 import { serverConnection } from '@/hooks/use-server'
 import { useOBSScreenshot } from '@/hooks/use-obs-screenshot'
+import { useWhep } from '@/hooks/use-whep'
 import type { TelestratorPoint } from '@/types/telestrator'
 
 export const Route = createFileRoute('/telestrator/')({
@@ -23,6 +24,11 @@ const WIDTHS = [3, 6, 10, 16]
 
 const FLUSH_INTERVAL = 50 // ms
 
+// Live feed of OBS program out (docs/telestrator-v1.5.md). Relative by default
+// so it resolves against whatever origin serves this page (Tailscale Serve on
+// Demi maps /whep to the media server). Empty string disables the feed.
+const FEED_URL: string | null = (import.meta.env.VITE_TELESTRATOR_FEED_URL ?? '/whep/telestrator/whep') || null
+
 interface LocalStroke {
   id: string
   points: TelestratorPoint[]
@@ -33,12 +39,23 @@ interface LocalStroke {
 function TelestratorInput() {
   const isConnected = useRealtimeStore((s) => s.isConnected)
   const { imageUrl: obsScreenshot, isConnected: obsConnected } = useOBSScreenshot(null, 5000)
+  const { stream: feed, state: feedState } = useWhep(FEED_URL)
+  const feedLive = feedState === 'live' && feed !== null
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [color, setColor] = useState('#ef4444')
   const [width, setWidth] = useState(6)
   const [showBackground, setShowBackground] = useState(true)
+
+  // The live feed is a MediaStream; it has to be attached imperatively.
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.srcObject = feed
+    if (feed) void video.play().catch(() => {})
+  }, [feed])
 
   // Drawing state (refs to avoid re-renders during drawing)
   const isDrawingRef = useRef(false)
@@ -254,7 +271,7 @@ function TelestratorInput() {
   }, [redraw])
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-shark-950 text-chalk select-none">
+    <div className="flex h-screen w-screen flex-col bg-shark-950 text-chalk select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* Toolbar */}
       <div className="flex items-center gap-4 border-b border-shark-800 px-4 py-3">
         {/* Connection indicator */}
@@ -327,13 +344,22 @@ function TelestratorInput() {
         <button
           onClick={() => setShowBackground((v) => !v)}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            showBackground && obsConnected
+            showBackground && (feedLive || obsConnected)
               ? 'bg-sky/20 text-sky'
               : 'bg-shark-800 text-shark-400 hover:bg-shark-700'
           }`}
         >
-          BG {showBackground && obsConnected ? 'ON' : 'OFF'}
+          BG {showBackground && (feedLive || obsConnected) ? 'ON' : 'OFF'}
         </button>
+
+        {/* Live feed status: LIVE when WebRTC is flowing, otherwise the page
+            falls back to the 5 s OBS screenshot */}
+        <div className="flex items-center gap-2" title={feedState}>
+          <span
+            className={`inline-block h-2.5 w-2.5 rounded-full ${feedLive ? 'bg-sky' : feedState === 'connecting' ? 'animate-pulse bg-shark-500' : 'bg-shark-600'}`}
+          />
+          <span className="text-xs text-shark-400">FEED</span>
+        </div>
 
         {/* OBS status */}
         <div className="flex items-center gap-2">
@@ -350,7 +376,15 @@ function TelestratorInput() {
         className="relative flex flex-1 items-center justify-center bg-shark-920 p-4"
       >
         <div className="relative">
-          {showBackground && obsScreenshot && (
+          {/* Live feed underneath the canvas; the screenshot only when the feed isn't there. */}
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className={`pointer-events-none absolute inset-0 size-full rounded-lg object-cover opacity-40 ${showBackground && feedLive ? '' : 'hidden'}`}
+          />
+          {showBackground && !feedLive && obsScreenshot && (
             <img
               src={obsScreenshot}
               alt=""
