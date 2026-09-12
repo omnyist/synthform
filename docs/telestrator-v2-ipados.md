@@ -331,15 +331,26 @@ Measured, not assumed, in §7.
 ## 9. Facts this spec needs and does not have
 
 - ~~Which iPad and which Pencil.~~ Answered: 11" iPad Pro, Apple Pencil Pro.
-- **OBS Virtual Camera output type on Demi.** If the Virtual Camera outputs
-  *Program*, the feed already contains `/telestrator/output` rendered, so
-  every stroke arrives on the iPad a second time ~200 ms later, baked into
-  the picture under the live ink. The fix is Demi-side (Virtual Camera set to
-  a scene or source that excludes the telestrator browser source) and it is
-  needed for v1.5 too, not just v2. **Not yet checked**: Demi stopped
-  answering SSH at 00:50 on 2026-09-12 before the probe ran. First thing in
-  the morning: read `virtual-camera` out of the active scene collection in
-  `~/.config/obs-studio/basic/scenes/` on Demi and confirm the source.
+- **OBS Virtual Camera output type on Demi.** Bryan, 2026-09-12: "It's
+  configurable. Defaults to Program." With *Program*, the feed already
+  contains `/telestrator/output` rendered, so every stroke arrives on the iPad
+  a second time ~200 ms later, baked into the picture under the live ink.
+  This bites v1.5 the same way, so it is a morning item there, not a v2 one.
+  The output-type choice is a real tradeoff, not a bug fix:
+  - *Program* follows scene switches, which a stream needs, and echoes the
+    ink. The echo is also confirmation that a stroke reached the broadcast,
+    which some people want from a telestrator.
+  - *Scene* or *Source* can exclude the telestrator browser source but is
+    pinned to that one scene; the feed stops following what is live.
+  - The shape that gets both, if the echo turns out to be disorienting: keep
+    `/telestrator/output` out of the content scenes and put it only in the
+    top-level scene OBS streams, with the Virtual Camera pointed at whatever
+    the content scenes nest into. Whether Demi's scene collection is already
+    built that way is the thing to read off the box in the morning
+    (`virtual-camera` in the active collection under
+    `~/.config/obs-studio/basic/scenes/`, and where the telestrator source
+    sits). Bryan's call with the demi session, after v1.5 is seen working
+    as-is, so the echo is judged by eye before anything is restructured.
 - **Whether synthfunc's overlay socket wants an origin or any auth** from a
   non-browser client. Reading `overlays/consumers.py` it is a passthrough
   relay keyed on tenant slug, tailnet-only; nothing suggests it does. Confirm
