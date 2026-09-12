@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import OBSWebSocket from 'obs-websocket-js'
 
-const OBS_WS_URL = import.meta.env.VITE_OBS_WS_URL || 'ws://saya:4455'
+// Over https (the iPad) OBS's websocket is reached same-origin through the
+// preview server's /obs proxy; otherwise directly (the OBS browser sources).
+const OBS_WS_URL =
+  typeof window !== 'undefined' && window.location.protocol === 'https:'
+    ? `wss://${window.location.host}/obs`
+    : import.meta.env.VITE_OBS_WS_URL || 'ws://saya:4455'
 const OBS_WS_PASSWORD = import.meta.env.VITE_OBS_WS_PASSWORD || ''
 
 /**

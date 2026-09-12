@@ -36,11 +36,16 @@ class ServerConnection {
   }
 
   private getWebSocketUrl(): string {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const slug = import.meta.env.VITE_TENANT_SLUG || 'avalonstar'
+    // Served over https (the telestrator on the iPad via Tailscale Serve), a
+    // page cannot open ws:// to synthfunc directly -- mixed content. Go
+    // same-origin and let the preview server's /ws proxy carry it.
+    if (window.location.protocol === 'https:') {
+      return `wss://${window.location.host}/ws/overlay/${slug}/`
+    }
     const host = import.meta.env.VITE_WS_HOST || 'saya'
     const port = import.meta.env.VITE_WS_PORT || '7178'
-    const slug = import.meta.env.VITE_TENANT_SLUG || 'avalonstar'
-    return `${protocol}//${host}:${port}/ws/overlay/${slug}/`
+    return `ws://${host}:${port}/ws/overlay/${slug}/`
   }
 
   private startCacheCleanup() {

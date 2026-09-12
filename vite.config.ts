@@ -25,5 +25,16 @@ export default defineConfig({
   // the page 403s with "Blocked request" (docs/telestrator-v1.5.md, §4A).
   preview: {
     allowedHosts: ['demi', 'demi.tailnet-dffc.ts.net'],
+    // Same-origin WebSocket paths for the HTTPS case. A page served over
+    // https cannot open ws:// (mixed content), so on the iPad the overlay
+    // socket and OBS's websocket go through the preview server instead:
+    //   wss://<origin>/ws/overlay/<slug>/ -> ws://saya:7178/ws/overlay/<slug>/
+    //   wss://<origin>/obs                -> ws://127.0.0.1:4455 (OBS on Demi)
+    // The OBS browser sources load http://localhost:8008 and keep their
+    // direct ws:// paths (see use-server.ts / use-obs-screenshot.ts).
+    proxy: {
+      '/ws': { target: 'ws://saya:7178', ws: true, changeOrigin: true },
+      '/obs': { target: 'ws://127.0.0.1:4455', ws: true, rewrite: (path) => path.replace(/^\/obs/, '') },
+    },
   },
 })
