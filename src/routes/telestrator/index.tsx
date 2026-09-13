@@ -24,7 +24,11 @@ const COLORS = [
 
 const WIDTHS = [3, 6, 10, 16]
 
-const FLUSH_INTERVAL = 50 // ms
+// One batch per display frame. OBS composites at 60 fps and the telestrator
+// browser source runs at 60, so anything shorter is invisible on the canvas;
+// 50 ms (the original value) cost up to two frames for nothing. Scribble
+// uses the same cadence. Bryan, 2026-09-12.
+const FLUSH_INTERVAL = 16 // ms
 
 // Live feed of OBS program out (scribble/docs/telestrator-v1.5.md). Relative by default
 // so it resolves against whatever origin serves this page (Tailscale Serve on
