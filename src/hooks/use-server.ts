@@ -12,8 +12,11 @@ const MAX_CACHE_SIZE = 100
 const CACHE_CLEANUP_INTERVAL = 60 * 1000 // 1 minute
 
 // Connection configuration
+// Reconnect forever, backing off to 30 s. These pages are OBS browser sources
+// that nobody reloads; a synthfunc deploy-server restart drops every overlay
+// socket, and the old 10-attempt budget (~3 minutes) meant a slow restart
+// left the stream's overlays dead until someone noticed. Found 2026-09-12.
 const DEFAULT_RECONNECT_DELAY = 1000
-const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10
 const MAX_RECONNECT_DELAY = 30000
 
 // Special key for connection state subscribers
@@ -25,7 +28,6 @@ class ServerConnection {
   private cache = new Map<MessageType, CacheEntry>()
   private connectionState: ConnectionState = ConnectionState.Disconnected
   private reconnectAttempts = 0
-  private maxReconnectAttempts = DEFAULT_MAX_RECONNECT_ATTEMPTS
   private reconnectDelay = DEFAULT_RECONNECT_DELAY
   private cacheCleanupTimer: NodeJS.Timeout | null = null
   private reconnectTimer: NodeJS.Timeout | null = null
@@ -210,18 +212,13 @@ class ServerConnection {
   }
 
   private scheduleReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('❌ Max reconnection attempts reached')
-      return
-    }
-
     // Only reconnect if we have active subscribers
     if (this.subscribers.size === 0) {
       return
     }
 
     const delay = Math.min(
-      this.reconnectDelay * Math.pow(2, this.reconnectAttempts),
+      this.reconnectDelay * Math.pow(2, Math.min(this.reconnectAttempts, 10)),
       MAX_RECONNECT_DELAY,
     )
     this.reconnectAttempts++
