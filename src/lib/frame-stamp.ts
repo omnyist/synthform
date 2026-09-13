@@ -12,9 +12,14 @@
  * first, white for 1.
  */
 
+// Layout revision 2026-09-12 (Bryan, via the demi session: smaller is
+// better, top-left stays): 8 px squares at an 8 px origin, a 224×24 bar.
+// Changed in all three readers together — Scribble fd124cf, Demi's
+// stamp.filter, and here — or the odd one out reads nothing and falls back
+// to showing the jitter buffer.
 const STAMP_BITS = 24
-const STAMP_BLOCK = 16
-const STAMP_ORIGIN = 16
+const STAMP_BLOCK = 8
+const STAMP_ORIGIN = 8
 export const STAMP_BAR_WIDTH = STAMP_ORIGIN * 2 + STAMP_BLOCK * (STAMP_BITS + 2)
 export const STAMP_BAR_HEIGHT = STAMP_ORIGIN * 2 + STAMP_BLOCK
 export const STAMP_REFERENCE_WIDTH = 1920
