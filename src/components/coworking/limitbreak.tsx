@@ -135,6 +135,10 @@ export const LimitBreak = () => {
       <audio ref={audioRef} preload="auto" className="hidden">
         <source src="/sounds/limit-break.ogg" type="audio/ogg" />
       </audio>
+      {/* Plays on limitbreak:executed. bonk (omnypro/bonk) fires its volley on
+          the same event after a delay in its triggers.cfg that is tuned to
+          this file's length (3.82 s as of 2026-09-12). Nothing links the
+          two: swap or re-cut this file and bonk's delay needs updating too. */}
       <audio ref={executionAudioRef} preload="auto" className="hidden">
         <source src="/sounds/limit-break-executed.ogg" type="audio/ogg" />
       </audio>
