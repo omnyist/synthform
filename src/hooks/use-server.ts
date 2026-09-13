@@ -202,6 +202,8 @@ class ServerConnection {
       'campaign:timer:started',
       'campaign:timer:paused',
       'campaign:timer:tick',
+      'redemptions:push',
+      'redemptions:fulfilled',
       'telestrator:draw',
       'telestrator:sticker:place',
       'telestrator:sticker:move',

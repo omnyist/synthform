@@ -356,6 +356,21 @@ export interface AlertData {
 }
 
 // Ticker types (for bottom bar messages)
+/**
+ * A channel-point redemption as synthfunc relays it (`redemptions:push`,
+ * `redemptions:fulfilled`). The inner `payload` is the raw EventSub payload;
+ * typed loosely because nothing here reads it yet.
+ */
+export interface RedemptionEvent {
+  id: string
+  type: string
+  data: {
+    timestamp: string
+    payload: Record<string, unknown>
+    user_name?: string
+  }
+}
+
 export interface TickerData {
   messages: string[]
   current_index: number
@@ -442,6 +457,13 @@ export interface MessagePayloadMap {
   'campaign:timer:started': TimerUpdatePayload
   'campaign:timer:paused': TimerUpdatePayload
   'campaign:timer:tick': TimerUpdatePayload
+  // Channel-point redemptions, as synthfunc relays them: `push` when someone
+  // redeems, `fulfilled` when a mod approves one (possibly months later; the
+  // payload's `redeemed_at` is creation time). Known here so the socket does
+  // not warn on every frame; nothing in synthform renders them. bonk is the
+  // consumer that wants `fulfilled`.
+  'redemptions:push': RedemptionEvent
+  'redemptions:fulfilled': RedemptionEvent
   // Telestrator
   'telestrator:draw': TelestratorDrawData
   'telestrator:sticker:place': TelestratorStickerPlaceData
