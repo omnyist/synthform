@@ -20,7 +20,7 @@ import {
 } from '@/types/server'
 import type { TimelineEvent } from '@/types/events'
 import type { MusicData } from '@/types/music'
-import type { RMEMicStatus } from '@/hooks/use-rme'
+import type { SynthmixMicStatus } from '@/hooks/use-synthmix'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -124,8 +124,8 @@ interface RealtimeStore {
   // Stream info (title, category from Twitch)
   stream: StreamInfo | null
 
-  // RME audio state
-  rme: RMEMicStatus | null
+  // Mic status from synthmix (relayed via synthmult, see mic-status-adapter.ts)
+  synthmix: SynthmixMicStatus | null
 
   // OBS state
   obs: {
@@ -214,7 +214,7 @@ export const useRealtimeStore = create<RealtimeStore>()(
     music: null,
     status: null,
     stream: null,
-    rme: null,
+    synthmix: null,
     obs: {
       scene: null,
       stream: null,
@@ -381,10 +381,10 @@ export const useRealtimeStore = create<RealtimeStore>()(
           set({ stream: payload as StreamInfo })
           break
 
-        // RME messages
+        // Mic status from synthmix, via synthmult (see mic-status-adapter.ts)
         case 'audio:rme:status':
         case 'audio:rme:update':
-          set({ rme: payload as RMEMicStatus })
+          set({ synthmix: payload as SynthmixMicStatus })
           break
 
         // OBS messages

@@ -1,4 +1,4 @@
-import { useMicStatus } from '@/hooks/use-rme'
+import { useMicStatus } from '@/hooks/use-synthmix'
 import { useStatus } from '@/hooks/use-status'
 import { cn } from '@/lib/utils'
 

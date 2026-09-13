@@ -1,13 +1,13 @@
 import { useRealtimeStore } from '@/store/realtime'
 
-export interface RMEMicStatus {
+export interface SynthmixMicStatus {
   channel: number
   muted: boolean
   timestamp: string
 }
 
 export function useMicStatus() {
-  const mic = useRealtimeStore((s) => s.rme)
+  const mic = useRealtimeStore((s) => s.synthmix)
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
   return {

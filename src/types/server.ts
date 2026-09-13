@@ -14,7 +14,7 @@ import type {
   RefreshBrowserSourceCommand,
   SetSceneCommand,
 } from './obs'
-import type { RMEMicStatus } from '@/hooks/use-rme'
+import type { SynthmixMicStatus } from '@/hooks/use-synthmix'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -425,8 +425,8 @@ export interface MessagePayloadMap {
   'stream:update': StreamInfo
   'chat:message': ChatMessage
   'chat:sync': ChatMessage[]
-  'audio:rme:status': RMEMicStatus
-  'audio:rme:update': RMEMicStatus
+  'audio:rme:status': SynthmixMicStatus
+  'audio:rme:update': SynthmixMicStatus
   // FFBot game events
   'ffbot:stats': FFBotStatsMessage
   'ffbot:hire': FFBotHireMessage

@@ -8,7 +8,7 @@ import { Timeline } from '@/components/shared/timeline'
 import { Canvas } from '@/components/ui/canvas'
 import { useAlertQueue } from '@/hooks/use-alerts'
 import { useCampaign } from '@/hooks/use-campaign'
-import { useMicStatus } from '@/hooks/use-rme'
+import { useMicStatus } from '@/hooks/use-synthmix'
 import { cn } from '@/lib/utils'
 
 const BAR_HEIGHT = 64

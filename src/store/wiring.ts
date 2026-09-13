@@ -30,8 +30,6 @@ const MESSAGE_TYPES: MessageType[] = [
   'status:update',
   'stream:sync',
   'stream:update',
-  'audio:rme:status',
-  'audio:rme:update',
   'obs:sync',
   'obs:update',
 ]

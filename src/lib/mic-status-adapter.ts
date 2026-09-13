@@ -1,5 +1,5 @@
 import type { MessageType } from '@/types/server'
-import type { RMEMicStatus } from '@/hooks/use-rme'
+import type { SynthmixMicStatus } from '@/hooks/use-synthmix'
 import { useRealtimeStore } from '@/store/realtime'
 
 const HOST = import.meta.env.VITE_SYNTHMULT_WS_HOST || 'demi'
@@ -51,7 +51,7 @@ export function connectMicStatus(): void {
     try {
       const envelope = JSON.parse(event.data) as {
         event_type: string
-        data: RMEMicStatus
+        data: SynthmixMicStatus
         timestamp: string
       }
       if (
