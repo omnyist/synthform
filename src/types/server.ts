@@ -411,7 +411,6 @@ export interface MessagePayloadMap {
   'obs:record:start': Record<string, never>
   'obs:record:stop': Record<string, never>
   'ticker:sync': TickerData
-  'alert:show': AlertData
   'alerts:sync': AlertData[]
   'alerts:push': AlertData
   'limitbreak:executed': LimitBreakExecutedData

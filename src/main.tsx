@@ -9,6 +9,7 @@ import { routeTree } from './routeTree.gen'
 import { preloadSounds } from './lib/audio-preloader'
 import { connectRealtime } from './store/wiring'
 import { connectMicStatus } from './lib/mic-status-adapter'
+import { startAlertStackStubDriver } from './lib/alert-stack-stub-driver'
 
 import './index.css'
 
@@ -32,6 +33,7 @@ preloadSounds()
 // store import pure (and testable).
 connectRealtime()
 connectMicStatus()
+startAlertStackStubDriver()
 
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {

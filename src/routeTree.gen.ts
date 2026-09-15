@@ -15,6 +15,7 @@ import { Route as fullCoworkingRouteImport } from './routes/(full)/coworking'
 import { Route as fullEmoteRainRouteImport } from './routes/(full)/emote-rain'
 import { Route as fullHudRouteImport } from './routes/(full)/hud'
 import { Route as fullOmnibarRouteImport } from './routes/(full)/omnibar'
+import { Route as DebugAlertStackRouteImport } from './routes/debug/alert-stack'
 import { Route as DebugEventsRouteImport } from './routes/debug/events'
 import { Route as DebugHudStylesRouteImport } from './routes/debug/hud-styles'
 import { Route as DebugIronmonRouteImport } from './routes/debug/ironmon'
@@ -51,6 +52,11 @@ const fullHudRoute = fullHudRouteImport.update({
 const fullOmnibarRoute = fullOmnibarRouteImport.update({
   id: '/(full)/omnibar',
   path: '/omnibar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugAlertStackRoute = DebugAlertStackRouteImport.update({
+  id: '/debug/alert-stack',
+  path: '/debug/alert-stack',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebugEventsRoute = DebugEventsRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/emote-rain': typeof fullEmoteRainRoute
   '/hud': typeof fullHudRoute
   '/omnibar': typeof fullOmnibarRoute
+  '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/emote-rain': typeof fullEmoteRainRoute
   '/hud': typeof fullHudRoute
   '/omnibar': typeof fullOmnibarRoute
+  '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/(full)/emote-rain': typeof fullEmoteRainRoute
   '/(full)/hud': typeof fullHudRoute
   '/(full)/omnibar': typeof fullOmnibarRoute
+  '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/emote-rain'
     | '/hud'
     | '/omnibar'
+    | '/debug/alert-stack'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/emote-rain'
     | '/hud'
     | '/omnibar'
+    | '/debug/alert-stack'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/(full)/emote-rain'
     | '/(full)/hud'
     | '/(full)/omnibar'
+    | '/debug/alert-stack'
     | '/debug/events'
     | '/debug/hud-styles'
     | '/debug/ironmon'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   fullEmoteRainRoute: typeof fullEmoteRainRoute
   fullHudRoute: typeof fullHudRoute
   fullOmnibarRoute: typeof fullOmnibarRoute
+  DebugAlertStackRoute: typeof DebugAlertStackRoute
   DebugEventsRoute: typeof DebugEventsRoute
   DebugHudStylesRoute: typeof DebugHudStylesRoute
   DebugIronmonRoute: typeof DebugIronmonRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/omnibar'
       fullPath: '/omnibar'
       preLoaderRoute: typeof fullOmnibarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug/alert-stack': {
+      id: '/debug/alert-stack'
+      path: '/debug/alert-stack'
+      fullPath: '/debug/alert-stack'
+      preLoaderRoute: typeof DebugAlertStackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/debug/events': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   fullEmoteRainRoute: fullEmoteRainRoute,
   fullHudRoute: fullHudRoute,
   fullOmnibarRoute: fullOmnibarRoute,
+  DebugAlertStackRoute: DebugAlertStackRoute,
   DebugEventsRoute: DebugEventsRoute,
   DebugHudStylesRoute: DebugHudStylesRoute,
   DebugIronmonRoute: DebugIronmonRoute,

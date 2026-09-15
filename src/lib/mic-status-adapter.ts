@@ -1,4 +1,3 @@
-import type { MessageType } from '@/types/server'
 import type { SynthmixMicStatus } from '@/hooks/use-synthmix'
 import { useRealtimeStore } from '@/store/realtime'
 
@@ -32,12 +31,20 @@ export function connectMicStatus(): void {
     reconnectTimer = null
   }
 
+  // A no-op the first time (the machine starts in 'connecting' already);
+  // moves 'reconnecting' -> 'connecting' on every retry after that.
+  useRealtimeStore.getState().dispatchMicStatus('connection:retry')
+
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const url = `${protocol}//${HOST}:${PORT}/ws/audio/${SLUG}/`
 
   try {
     ws = new WebSocket(url)
   } catch {
+    // Never reached onopen/onclose, so the machine would otherwise get
+    // stuck in 'connecting' with nothing left to move it — 'retry' only
+    // fires from 'reconnecting'.
+    useRealtimeStore.getState().dispatchMicStatus('connection:closed')
     scheduleReconnect()
     return
   }
@@ -45,6 +52,7 @@ export function connectMicStatus(): void {
   ws.onopen = () => {
     attempts = 0
     console.log('[mic-status] connected to synthmult')
+    useRealtimeStore.getState().dispatchMicStatus('connection:opened')
   }
 
   ws.onmessage = (event: MessageEvent) => {
@@ -60,7 +68,7 @@ export function connectMicStatus(): void {
       ) {
         useRealtimeStore
           .getState()
-          .updateMessage(envelope.event_type as MessageType, envelope.data)
+          .dispatchMicStatus(envelope.data.muted ? 'mute:muted' : 'mute:unmuted')
       }
     } catch {
       // malformed message — skip
@@ -74,6 +82,7 @@ export function connectMicStatus(): void {
   ws.onclose = () => {
     ws = null
     console.log('[mic-status] disconnected')
+    useRealtimeStore.getState().dispatchMicStatus('connection:closed')
     scheduleReconnect()
   }
 }

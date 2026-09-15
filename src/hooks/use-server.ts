@@ -159,7 +159,6 @@ class ServerConnection {
       'obs:update',
       'obs:sync',
       'ticker:sync',
-      'alert:show',
       'alerts:sync',
       'alerts:push',
       'limitbreak:executed',

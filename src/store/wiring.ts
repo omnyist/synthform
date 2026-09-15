@@ -4,7 +4,6 @@ import { useRealtimeStore } from './realtime'
 
 // Message types the overlays subscribe to from ServerConnection.
 const MESSAGE_TYPES: MessageType[] = [
-  'alert:show',
   'alerts:sync',
   'alerts:push',
   'ffbot:stats',

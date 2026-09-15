@@ -20,7 +20,18 @@ import {
 } from '@/types/server'
 import type { TimelineEvent } from '@/types/events'
 import type { MusicData } from '@/types/music'
-import type { SynthmixMicStatus } from '@/hooks/use-synthmix'
+import {
+  INITIAL_MIC_STATUS_STATE,
+  micStatusReducer,
+  type MicStatusEvent,
+  type MicStatusState,
+} from '@/machines/mic-status'
+import {
+  alertStackReducer,
+  createAlertStack,
+  type AlertStackAction,
+  type AlertStackState,
+} from '@/machines/alert-stack'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -93,6 +104,11 @@ interface RealtimeStore {
   // Alert queue state
   alerts: AlertQueueState
 
+  // Alert-stack machinery (machines/alert-stack.ts). Runs alongside `alerts`
+  // above, observing the same wire events — not yet driving anything
+  // rendered. See debug/alert-stack.tsx.
+  alertStack: AlertStackState<AlertData>
+
   // FFBot state
   ffbot: FFBotState
 
@@ -124,8 +140,9 @@ interface RealtimeStore {
   // Stream info (title, category from Twitch)
   stream: StreamInfo | null
 
-  // Mic status from synthmix (relayed via synthmult, see mic-status-adapter.ts)
-  synthmix: SynthmixMicStatus | null
+  // Mic status from synthmix (relayed via synthmult, see mic-status-adapter.ts
+  // and machines/mic-status.ts)
+  synthmix: MicStatusState
 
   // OBS state
   obs: {
@@ -136,6 +153,7 @@ interface RealtimeStore {
   // Actions
   updateMessage: <T extends MessageType>(messageType: T, payload: PayloadType<T>) => void
   setConnectionStatus: (connected: boolean, state: ConnectionState) => void
+  dispatchMicStatus: (event: MicStatusEvent) => void
 
   // Alert queue actions (from use-alerts logic)
   addAlert: (alert: AlertData) => void
@@ -143,6 +161,10 @@ interface RealtimeStore {
   clearAlertQueue: () => void
   setAlertAnimating: (isAnimating: boolean) => void
   setPausedState: (isPaused: boolean) => void
+
+  // Alert-stack machinery actions
+  dispatchAlertStack: (action: AlertStackAction<AlertData>) => void
+  setAlertStackCapacity: (maxConcurrent: number) => void
 
   // FFBot actions (from use-ffbot logic)
   addFFBotEvent: (event: FFBotMessage) => void
@@ -175,6 +197,11 @@ export const useRealtimeStore = create<RealtimeStore>()(
       isPaused: false,
       displayDuration: 5000,
     },
+
+    // Alert-stack machinery initial state. maxConcurrent here is a
+    // placeholder — real capacity is set once at startup by whatever reads
+    // VITE_ALERT_STACK_MAX (see lib/alert-stack-adapter.ts).
+    alertStack: createAlertStack<AlertData>(1),
 
     // FFBot initial state
     ffbot: {
@@ -214,7 +241,7 @@ export const useRealtimeStore = create<RealtimeStore>()(
     music: null,
     status: null,
     stream: null,
-    synthmix: null,
+    synthmix: INITIAL_MIC_STATUS_STATE,
     obs: {
       scene: null,
       stream: null,
@@ -226,15 +253,24 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
       switch (messageType) {
         // Alert messages
-        case 'alert:show':
-          state.addAlert(payload as AlertData)
+        case 'alerts:sync': {
+          // synthfunc always sends [] here by design — the alert layer
+          // starts empty on connect, no replay (consumers.py:604, confirmed
+          // 2026-09-15). This loop is correct but will never run in
+          // practice; kept for whenever that changes rather than assumed.
+          const queue = payload as AlertData[]
+          set({ alerts: { ...state.alerts, queue } })
+          queue.forEach((alert) => {
+            state.dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
+          })
           break
-        case 'alerts:sync':
-          set({ alerts: { ...state.alerts, queue: payload as AlertData[] } })
+        }
+        case 'alerts:push': {
+          const alert = payload as AlertData
+          state.addAlert(alert)
+          state.dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
           break
-        case 'alerts:push':
-          state.addAlert(payload as AlertData)
-          break
+        }
 
         // FFBot messages
         case 'ffbot:stats':
@@ -381,12 +417,6 @@ export const useRealtimeStore = create<RealtimeStore>()(
           set({ stream: payload as StreamInfo })
           break
 
-        // Mic status from synthmix, via synthmult (see mic-status-adapter.ts)
-        case 'audio:rme:status':
-        case 'audio:rme:update':
-          set({ synthmix: payload as SynthmixMicStatus })
-          break
-
         // OBS messages
         case 'obs:sync':
           {
@@ -420,6 +450,18 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
     setConnectionStatus: (connected, connectionState) => {
       set({ isConnected: connected, connectionState })
+    },
+
+    dispatchMicStatus: (event) => {
+      set((state) => ({ synthmix: micStatusReducer(state.synthmix, event) }))
+    },
+
+    dispatchAlertStack: (action) => {
+      set((state) => ({ alertStack: alertStackReducer(state.alertStack, action) }))
+    },
+
+    setAlertStackCapacity: (maxConcurrent) => {
+      set((state) => ({ alertStack: { ...state.alertStack, maxConcurrent } }))
     },
 
     // Alert queue actions (copied from use-alerts)

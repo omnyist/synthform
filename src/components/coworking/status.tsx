@@ -1,4 +1,4 @@
-import { useMicStatus } from '@/hooks/use-synthmix'
+import { MicStatusBadge } from '@/components/shared/mic-status-badge'
 import { useStatus } from '@/hooks/use-status'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +31,6 @@ const STATUSES = {
 }
 
 export function Status() {
-  const { isMuted, isConnected } = useMicStatus()
   const { status } = useStatus()
 
   // Default to online if status is not in config
@@ -53,15 +52,7 @@ export function Status() {
         <span>
           Bryan is <span className={cn('font-bold', config.textColor)}>{displayMessage}</span>.
         </span>
-        {isConnected && (
-          <div
-            className={cn(
-              { 'opacity-100': isMuted, 'opacity-0': !isMuted },
-              'font-caps ring-shark-960 rounded-md bg-gradient-to-b from-rose-500 to-rose-700 px-2 ring-4 inset-ring-1 inset-ring-rose-400 transition-opacity duration-300 ease-in-out text-shadow-none',
-            )}>
-            MUTED
-          </div>
-        )}
+        <MicStatusBadge />
       </div>
     </div>
   )

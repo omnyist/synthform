@@ -4,12 +4,11 @@ import { useRef } from 'react'
 
 import { Alert } from '@/components/shared/alert'
 import { Campaign } from '@/components/shared/campaign'
+import { MicStatusBadge } from '@/components/shared/mic-status-badge'
 import { Timeline } from '@/components/shared/timeline'
 import { Canvas } from '@/components/ui/canvas'
 import { useAlertQueue } from '@/hooks/use-alerts'
 import { useCampaign } from '@/hooks/use-campaign'
-import { useMicStatus } from '@/hooks/use-synthmix'
-import { cn } from '@/lib/utils'
 
 const BAR_HEIGHT = 64
 const ANIMATION_DURATION = 0.4
@@ -18,7 +17,6 @@ export const Omnibar = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
   const { currentAlert, onAlertComplete, soundEnabled } = useAlertQueue({ soundEnabled: false })
-  const { isMuted, isConnected } = useMicStatus()
   const { isActive: isCampaignActive } = useCampaign()
 
   const hasInitialized = useRef(false)
@@ -55,15 +53,7 @@ export const Omnibar = () => {
             <Campaign />
 
             <div className="text-shark-240 bg-shark-960 flex h-16 items-center px-6 font-sans text-lg text-shadow-sm/50">
-              {isConnected && (
-                <div
-                  className={cn(
-                    { 'opacity-100': isMuted, 'opacity-0': !isMuted },
-                    'font-caps ring-shark-960 rounded-md bg-gradient-to-b from-rose-500 to-rose-700 px-2 ring-4 inset-ring-1 inset-ring-rose-400 transition-opacity duration-300 ease-in-out text-shadow-none',
-                  )}>
-                  MUTED
-                </div>
-              )}
+              <MicStatusBadge />
             </div>
           </div>
 
