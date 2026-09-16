@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
+
+import { whepReducer } from '@/machines/whep-connection'
+import type { WhepPhase } from '@/machines/whep-connection'
 
 /**
  * Plays a WebRTC stream published through a WHEP endpoint (the telestrator's
@@ -12,14 +15,14 @@ import { useEffect, useRef, useState } from 'react'
  * feed isn't there yet or drops, so the page can be open before the feed is.
  */
 
-export type WhepState = 'idle' | 'connecting' | 'live' | 'error'
+export type WhepState = WhepPhase
 
 const BACKOFF_MIN = 1_000
 const BACKOFF_MAX = 15_000
 
 export function useWhep(url: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [state, setState] = useState<WhepState>('idle')
+  const [state, dispatch] = useReducer(whepReducer, 'idle')
   const [error, setError] = useState<string | null>(null)
   /** The live peer connection, for `getStats()`; null between attempts. */
   const [peer, setPeer] = useState<RTCPeerConnection | null>(null)
@@ -30,7 +33,7 @@ export function useWhep(url: string | null) {
 
   useEffect(() => {
     if (!url) {
-      setState('idle')
+      dispatch('whep:reset')
       return
     }
     let disposed = false
@@ -50,7 +53,7 @@ export function useWhep(url: string | null) {
 
     const scheduleRetry = (reason: string) => {
       if (disposed) return
-      setState('error')
+      dispatch('whep:failed')
       setError(reason)
       setStream(null)
       setPeer(null)
@@ -63,7 +66,7 @@ export function useWhep(url: string | null) {
 
     async function connect() {
       if (disposed) return
-      setState('connecting')
+      dispatch('whep:connect')
       setError(null)
       const pc = new RTCPeerConnection()
       pcRef.current = pc
@@ -71,7 +74,7 @@ export function useWhep(url: string | null) {
       pc.ontrack = (ev) => {
         if (disposed) return
         setStream(ev.streams[0] ?? new MediaStream([ev.track]))
-        setState('live')
+        dispatch('whep:track')
         setPeer(pc)
         backoffRef.current = BACKOFF_MIN
       }
@@ -118,7 +121,7 @@ export function useWhep(url: string | null) {
       teardown()
       setStream(null)
       setPeer(null)
-      setState('idle')
+      dispatch('whep:reset')
     }
   }, [url])
 
