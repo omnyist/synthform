@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useRealtimeStore } from '@/store/realtime'
 
 const MAXED_SOUND = '/sounds/limit-break.ogg'
@@ -18,35 +18,35 @@ const EXECUTED_FALLBACK_MS = 5000
 // drives the machine's own exit back to 'charging' via audio:ended —
 // same pattern as alert-lifecycle's holding phase, not a re-guessed
 // timer duration.
+//
+// No fired-ref guards here — `volume` is a static literal at every call
+// site, so [phase, volume] already gates each effect to run exactly once
+// per phase entry. A ref guard was tried here once and broke under
+// StrictMode's dev-only mount->cleanup->remount: the guard survived the
+// simulated unmount (nothing reset it), so the remount's early return
+// left the first mount's Audio object playing with its 'ended' listener
+// and fallback timer already torn down — permanently stuck at
+// 'executing' until reload.
 export function useLimitBreakAudio(volume = 0.2) {
-  const phase = useRealtimeStore((s) => s.limitBreakPhase)
+  const phase = useRealtimeStore((s) => s.limitBreak.phase)
   const dispatchLimitBreak = useRealtimeStore((s) => s.dispatchLimitBreak)
 
-  const firedMaxedRef = useRef(false)
-  const firedExecutingRef = useRef(false)
-
   useEffect(() => {
-    if (phase !== 'maxed') {
-      firedMaxedRef.current = false
-      return
-    }
-    if (firedMaxedRef.current) return
-    firedMaxedRef.current = true
+    if (phase !== 'maxed') return
 
     const audio = new Audio(MAXED_SOUND)
     audio.volume = volume
     audio.play().catch((error) => {
       console.warn('Could not play limit break sound:', error)
     })
+
+    return () => {
+      audio.pause()
+    }
   }, [phase, volume])
 
   useEffect(() => {
-    if (phase !== 'executing') {
-      firedExecutingRef.current = false
-      return
-    }
-    if (firedExecutingRef.current) return
-    firedExecutingRef.current = true
+    if (phase !== 'executing') return
 
     const audio = new Audio(EXECUTED_SOUND)
     audio.volume = volume
@@ -69,6 +69,7 @@ export function useLimitBreakAudio(volume = 0.2) {
     return () => {
       clearTimeout(fallbackTimer)
       audio.removeEventListener('ended', complete)
+      audio.pause()
     }
   }, [phase, volume, dispatchLimitBreak])
 }

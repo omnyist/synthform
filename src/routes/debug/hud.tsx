@@ -12,6 +12,7 @@ import { useSparkline } from '@/hooks/use-sparkline'
 import { useStatus } from '@/hooks/use-status'
 import { useMusic } from '@/hooks/use-music'
 import { useLimitbreak } from '@/hooks/use-limitbreak'
+import { useLimitBreakAudio } from '@/hooks/use-limitbreak-audio'
 import { unraidStats } from '@/lib/unraid'
 
 export const Route = createFileRoute('/debug/hud')({
@@ -25,6 +26,9 @@ function HUD() {
   const { status } = useStatus()
   const { current: musicTrack, source: musicSource, isPlaying } = useMusic()
   const limitbreak = useLimitbreak()
+  // Without this, this page's own store instance can never exit
+  // 'executing' — same reason AlertAudioDriver is mounted below.
+  useLimitBreakAudio(0)
 
   // ---------------------------------------------------------------------------
   // House telemetry (Synthhome REST, polled)

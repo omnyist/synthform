@@ -9,7 +9,7 @@ export type { LimitBreakData }
 // raw data comparisons rather than a real machine.
 export function useLimitbreak() {
   const data = useRealtimeStore((s) => s.limitbreak)
-  const phase = useRealtimeStore((s) => s.limitBreakPhase)
+  const phase = useRealtimeStore((s) => s.limitBreak.phase)
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
   const filledBars = {
