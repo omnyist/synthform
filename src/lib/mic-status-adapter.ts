@@ -66,9 +66,18 @@ export function connectMicStatus(): void {
         envelope.event_type === 'audio:rme:update' ||
         envelope.event_type === 'audio:rme:status'
       ) {
-        useRealtimeStore
-          .getState()
-          .dispatchMicStatus(envelope.data.muted ? 'mute:muted' : 'mute:unmuted')
+        // Guard the boundary the way mic-status.ts's own comment
+        // promises: 'unknown' exists so this widget never lies about a
+        // mute state it can't actually confirm. A cast alone doesn't
+        // check that — if synthmult's payload shape ever drifts and
+        // `muted` is missing, `undefined ? x : y` would silently
+        // dispatch 'unmuted' with full confidence. Skip the dispatch
+        // instead and stay unknown.
+        if (typeof envelope.data.muted === 'boolean') {
+          useRealtimeStore
+            .getState()
+            .dispatchMicStatus(envelope.data.muted ? 'mute:muted' : 'mute:unmuted')
+        }
       }
     } catch {
       // malformed message — skip

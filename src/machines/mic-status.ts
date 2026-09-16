@@ -42,7 +42,12 @@ export type MicStatusEvent = MicConnectionEvent | MicMuteEvent
 // from is gone, so is the value — regardless of how fast synthmult replays
 // the last-known state on reconnect.
 export function micStatusReducer(state: MicStatusState, event: MicStatusEvent): MicStatusState {
-  if (event === 'mute:muted' || event === 'mute:unmuted') {
+  // mute:reset included here too — it's a real member of MicMuteEvent, so
+  // a direct dispatchMicStatus('mute:reset') must actually reset mute
+  // status, not fall through and get silently misrouted through the
+  // connection transition table below, which has no entry for it and
+  // would just leave connection (and therefore mute) unchanged.
+  if (event === 'mute:muted' || event === 'mute:unmuted' || event === 'mute:reset') {
     return { ...state, mute: transition(MIC_MUTE_TRANSITIONS, state.mute, event) }
   }
 

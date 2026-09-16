@@ -52,6 +52,15 @@ describe('micStatusReducer', () => {
     const state = micStatusReducer({ connection: 'connected', mute: 'muted' }, 'connection:retry')
     expect(state).toEqual({ connection: 'connected', mute: 'muted' })
   })
+
+  // mute:reset is a real MicMuteEvent, not only an internal detail of the
+  // connection-loss coupling — a direct dispatch must actually reset
+  // mute, not get misrouted through the connection transition table
+  // (which has no entry for it and would silently no-op).
+  test('mute:reset works when dispatched directly, not only via connection loss', () => {
+    const state = micStatusReducer({ connection: 'connected', mute: 'muted' }, 'mute:reset')
+    expect(state).toEqual({ connection: 'connected', mute: 'unknown' })
+  })
 })
 
 describe('toMermaid', () => {
