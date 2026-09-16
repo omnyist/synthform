@@ -87,10 +87,9 @@ interface RealtimeStore {
   connectionState: ConnectionState
 
   // Alert-stack machinery (machines/alert-stack.ts) — the source of truth
-  // for alerts. Retired the old ad-hoc alerts queue (use-alerts.ts) and its
-  // client-side community-gift bundling, since synthfunc suppresses
-  // individual gift-sub events server-side and sends one alert per bundle
-  // already. See debug/alert-stack.tsx.
+  // for alerts. No client-side community-gift bundling: synthfunc
+  // suppresses individual gift-sub events server-side and sends one
+  // alert per bundle already. See debug/alert-stack.tsx.
   alertStack: AlertStackState<AlertData>
 
   // Timeline-admission machinery (machines/timeline-admission.ts). Runs
@@ -182,7 +181,7 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
     // Alert-stack machinery initial state. maxConcurrent here is a
     // placeholder — real capacity is set once at startup by whatever reads
-    // VITE_ALERT_STACK_MAX (see lib/alert-stack-adapter.ts).
+    // VITE_ALERT_STACK_MAX (see lib/alert-stack-stub-driver.ts).
     alertStack: createAlertStack<AlertData>(1),
 
     // Timeline-admission machinery initial state.
@@ -276,20 +275,39 @@ export const useRealtimeStore = create<RealtimeStore>()(
           // Alert-stack machinery (machines/timeline-admission.ts), fed
           // additively — same idea as the block above, gated on the new
           // alertStack instead of the old alerts queue. Not yet driving
-          // anything rendered; see debug/alert-stack.tsx.
+          // anything rendered; see debug/alert-stack.tsx. Transformed the
+          // same way addTimelineEvent/holdTimelineEvent above already do
+          // — every other timeline write path normalizes the raw event
+          // first, this one shouldn't be the exception.
+          const transformedEvent = transformTimelineEvent(timelineEvent as RawEvent | TimelineEvent)
           const isAlertActive =
-            state.alertStack.active.some((instance) => instance.id === timelineEvent.id) ||
-            state.alertStack.backlog.some((item) => item.id === timelineEvent.id)
+            state.alertStack.active.some((instance) => instance.id === transformedEvent.id) ||
+            state.alertStack.backlog.some((item) => item.id === transformedEvent.id)
           state.dispatchTimelineAdmission(
             isAlertActive
-              ? { type: 'timeline:queued', id: timelineEvent.id, event: timelineEvent }
-              : { type: 'timeline:admitted', id: timelineEvent.id, event: timelineEvent },
+              ? { type: 'timeline:queued', id: transformedEvent.id, event: transformedEvent }
+              : { type: 'timeline:admitted', id: transformedEvent.id, event: transformedEvent },
           )
           break
         }
-        case 'timeline:sync':
-          state.syncTimeline(payload as TimelineEvent[])
+        case 'timeline:sync': {
+          const rawEvents = payload as TimelineEvent[]
+          state.syncTimeline(rawEvents)
+
+          // Not gated against alertStack like timeline:push above — a
+          // sync batch is a snapshot of already-settled history (the old
+          // syncTimeline doesn't gate per-event either), so every synced
+          // event goes straight to visible.
+          rawEvents.forEach((event) => {
+            const transformedEvent = transformTimelineEvent(event as RawEvent | TimelineEvent)
+            state.dispatchTimelineAdmission({
+              type: 'timeline:admitted',
+              id: transformedEvent.id,
+              event: transformedEvent,
+            })
+          })
           break
+        }
 
         // Chat messages
         case 'chat:message':

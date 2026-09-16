@@ -10,8 +10,9 @@ import type { AlertData } from '@/types/server'
 // finishing before entering/revealing do, so this component doesn't need
 // to know or care what phase it's in, only report when audio is done.
 //
-// soundEnabled mirrors the existing useAlertQueue({ soundEnabled }) split:
-// every OBS browser source runs its own independent copy of this app, and
+// soundEnabled mirrors the old useAlertQueue({ soundEnabled }) split
+// (that hook is retired): every OBS browser source runs its own
+// independent copy of this app, and
 // only the dedicated audio-only source (routes/audio.tsx) actually plays
 // sound — everything else would double (or N-tuple) it up if it played
 // too. When disabled, useAlertSound's own fallback-timer hold still fires
