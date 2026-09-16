@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react'
 import Matter from 'matter-js'
 
+import { EMOTE_QUEUE_MAX_CONCURRENT } from '@/config/emote-rain'
 import { useChatMessages } from '@/hooks/use-chat-messages'
+import { useEmoteQueue } from '@/hooks/use-emote-queue'
 import { useEmoteSpriteSheet } from '@/hooks/use-emote-sprite-sheet'
-
-import { emoteManager } from './emote-manager'
+import type { EmoteQueueEntry } from '@/machines/emote-queue'
 
 interface EmoteBody {
   id: string
@@ -16,6 +17,14 @@ interface EmoteBody {
   isFromSpriteSheet: boolean
 }
 
+// Global emotes (IDs below the numeric threshold Twitch channel-emote IDs
+// start at) are filtered out before ever reaching the queue — a business
+// rule about which emotes are eligible, not the queue's concern.
+function isChannelEmote(emoteId: string): boolean {
+  const emoteIdNum = parseInt(emoteId)
+  return isNaN(emoteIdNum) || emoteIdNum >= 1000000
+}
+
 export const EmoteRain = memo(function EmoteRain() {
   const sceneRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<Matter.Engine | null>(null)
@@ -23,6 +32,7 @@ export const EmoteRain = memo(function EmoteRain() {
   const emoteImagesRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const timeoutIdsRef = useRef<Set<NodeJS.Timeout>>(new Set())
   const abortControllerRef = useRef<AbortController | null>(null)
+  const reapRef = useRef<(id: string) => void>(() => {})
   const [debugInfo, setDebugInfo] = useState({ emoteCount: 0 })
 
   const { spriteImage, getEmoteData, isLoaded: spriteLoaded } = useEmoteSpriteSheet()
@@ -129,6 +139,9 @@ export const EmoteRain = memo(function EmoteRain() {
             const emoteBody = emoteBodiesRef.current.get(id)
             if (emoteBody) {
               emoteBodiesRef.current.delete(id)
+              // Free this id's queue slot now that its body has actually
+              // left the simulation — admits the next backlog entry, if any.
+              reapRef.current(id)
               return emoteBody.body
             }
             return null
@@ -264,8 +277,10 @@ export const EmoteRain = memo(function EmoteRain() {
     return existingImg
   }, [getEmoteData, spriteLoaded])
 
-  // Spawn an emote
-  const spawnEmote = useCallback((emoteId: string) => {
+  // Spawn an emote. id is the queue entry's id (use-emote-queue.ts) — using
+  // it as this body's tracking id too keeps the two 1:1, so reap(id) below
+  // always frees the right slot.
+  const spawnEmote = useCallback((id: string, emoteId: string) => {
     if (!engineRef.current) return
 
     // Random position across top
@@ -321,7 +336,7 @@ export const EmoteRain = memo(function EmoteRain() {
 
     // Track emote
     const emoteBody: EmoteBody = {
-      id: `${emoteId}-${Date.now()}-${Math.random()}`,
+      id,
       emoteId,
       body,
       imageLoaded: false,
@@ -384,6 +399,25 @@ export const EmoteRain = memo(function EmoteRain() {
     timeoutIdsRef.current.add(timeoutId)
   }, [preloadEmote, getEmoteData, spriteLoaded])
 
+  // Fires once per queue entry the moment it's actually promoted into an
+  // active slot — the only call site for spawnEmote.
+  const handleAdmit = useCallback(
+    (entry: EmoteQueueEntry) => {
+      spawnEmote(entry.id, entry.emoteId)
+    },
+    [spawnEmote],
+  )
+
+  const {
+    queueEmote,
+    reap,
+    backlog: queueBacklog,
+  } = useEmoteQueue(EMOTE_QUEUE_MAX_CONCURRENT, handleAdmit)
+
+  useEffect(() => {
+    reapRef.current = reap
+  }, [reap])
+
   // Update debug info
   useEffect(() => {
     const interval = setInterval(() => {
@@ -406,27 +440,16 @@ export const EmoteRain = memo(function EmoteRain() {
       return
     }
 
-    emoteManager.queueEmote(emoteId)
-  }, [])
+    if (!isChannelEmote(emoteId)) {
+      return
+    }
+
+    queueEmote(emoteId)
+  }, [queueEmote])
 
   useChatMessages({
     onEmote: handleEmote
   })
-
-  // Listen for emotes from the manager
-  useEffect(() => {
-    const handleEmote = (emoteId: string) => {
-      console.log('[EmoteRain] Manager emitted emote:', emoteId)
-      spawnEmote(emoteId)
-    }
-
-    emoteManager.on('emote', handleEmote)
-    console.log('[EmoteRain] Registered listener with emoteManager')
-
-    return () => {
-      emoteManager.off('emote', handleEmote)
-    }
-  }, [spawnEmote])
 
   // Debug UI
   const isDev = import.meta.env.DEV
@@ -442,7 +465,8 @@ export const EmoteRain = memo(function EmoteRain() {
       {isDev && (
         <div className="fixed bottom-4 right-4 z-[10000] space-y-2 rounded bg-black/80 p-3 text-xs text-white">
           <div className="font-bold text-yellow-400">🎮 Emote Rain Debug</div>
-          <div>Active: {debugInfo.emoteCount}/300</div>
+          <div>Active: {debugInfo.emoteCount}/{EMOTE_QUEUE_MAX_CONCURRENT}</div>
+          <div>Backlog: {queueBacklog.length}</div>
           <div className="flex gap-2">
             <button
               className="rounded bg-blue-600 px-2 py-1 hover:bg-blue-700"
@@ -454,7 +478,7 @@ export const EmoteRain = memo(function EmoteRain() {
                   '300359180',
                   '300488581'
                 ]
-                testEmotes.forEach(id => emoteManager.queueEmote(id))
+                testEmotes.forEach(id => queueEmote(id))
               }}>
               Spawn Test Emotes
             </button>
@@ -462,7 +486,7 @@ export const EmoteRain = memo(function EmoteRain() {
               className="rounded bg-purple-600 px-2 py-1 hover:bg-purple-700"
               onClick={() => {
                 for (let i = 0; i < 20; i++) {
-                  emoteManager.queueEmote('300354391')
+                  queueEmote('300354391')
                 }
               }}>
               Emote Bomb!
