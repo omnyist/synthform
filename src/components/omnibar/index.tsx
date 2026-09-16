@@ -1,5 +1,3 @@
-import { useGSAP } from '@gsap/react'
-import { gsap } from 'gsap'
 import { useRef } from 'react'
 
 import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
@@ -8,35 +6,20 @@ import { MicStatusBadge } from '@/components/shared/mic-status-badge'
 import { Timeline } from '@/components/shared/timeline'
 import { Canvas } from '@/components/ui/canvas'
 import { useCampaign } from '@/hooks/use-campaign'
+import { EASE_POWER3_IN, EASE_POWER3_OUT } from '@/lib/animations'
 
 const BAR_HEIGHT = 64
 const ANIMATION_DURATION = 0.4
 
 export const Omnibar = () => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const barRef = useRef<HTMLDivElement>(null)
   const { isActive: isCampaignActive } = useCampaign()
 
-  const hasInitialized = useRef(false)
-
-  useGSAP(() => {
-    if (!barRef.current) return
-
-    const targetY = isCampaignActive ? 0 : BAR_HEIGHT
-
-    if (!hasInitialized.current) {
-      // Set initial position without animation
-      gsap.set(barRef.current, { y: targetY })
-      hasInitialized.current = true
-    } else {
-      // Animate on subsequent changes
-      gsap.to(barRef.current, {
-        y: targetY,
-        duration: ANIMATION_DURATION,
-        ease: isCampaignActive ? 'power3.out' : 'power3.in',
-      })
-    }
-  }, [isCampaignActive])
+  // A plain CSS transition on transform gets the same "no animation on
+  // first paint, animate on later changes" behavior gsap.set/gsap.to were
+  // hand-coding around hasInitialized — the browser paints the initial
+  // value directly on mount, with nothing to transition from.
+  const targetY = isCampaignActive ? 0 : BAR_HEIGHT
 
   return (
     <Canvas>
@@ -45,7 +28,12 @@ export const Omnibar = () => {
 
       <div ref={containerRef} className="h-canvas grid grid-rows-[1fr_64px]">
         <div className="h-full"></div>
-        <div ref={barRef} className="relative flex items-center">
+        <div
+          className="relative flex items-center"
+          style={{
+            transform: `translateY(${targetY}px)`,
+            transition: `transform ${ANIMATION_DURATION}s ${isCampaignActive ? EASE_POWER3_OUT : EASE_POWER3_IN}`,
+          }}>
           {/* Base layer: Campaign */}
           <div className="relative z-10 flex w-full items-center">
             <Campaign />

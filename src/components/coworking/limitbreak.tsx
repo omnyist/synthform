@@ -1,6 +1,4 @@
-import { useRef, useCallback, forwardRef, type FC, type PropsWithChildren } from 'react'
-import { useGSAP } from '@gsap/react'
-import { gsap } from 'gsap'
+import { useEffect, useRef, useCallback, forwardRef, type FC, type PropsWithChildren } from 'react'
 
 import { useLimitbreak } from '@/hooks/use-limitbreak'
 import { useLimitBreakAudio } from '@/hooks/use-limitbreak-audio'
@@ -42,22 +40,24 @@ export const LimitBreak = () => {
   const hasAnimatedEntrance = useRef(false)
 
   // Animate execution
-  useGSAP(() => {
-    if (phase === 'executing' && containerRef.current) {
-      animateLimitBreakExecute(containerRef.current)
-    }
+  useEffect(() => {
+    if (phase !== 'executing' || !containerRef.current) return
+    const animation = animateLimitBreakExecute(containerRef.current)
+    return () => animation.cancel()
   }, [phase])
 
   // Simple entrance animation when data loads
-  useGSAP(() => {
-    if (data && containerRef.current && !hasAnimatedEntrance.current) {
-      gsap.fromTo(
-        containerRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-      )
-      hasAnimatedEntrance.current = true
-    }
+  useEffect(() => {
+    if (!data || !containerRef.current || hasAnimatedEntrance.current) return
+    const animation = containerRef.current.animate(
+      [
+        { transform: 'translateY(20px)', opacity: 0 },
+        { transform: 'translateY(0)', opacity: 1 },
+      ],
+      { duration: 600, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' },
+    )
+    hasAnimatedEntrance.current = true
+    return () => animation.cancel()
   }, [data])
 
   // Create reusable ref setter

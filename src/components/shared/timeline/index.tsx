@@ -1,5 +1,3 @@
-import { useGSAP } from '@gsap/react'
-import { gsap } from 'gsap'
 import { useRef, useEffect } from 'react'
 
 import { getEventComponent } from '@/components/shared/timeline/events'
@@ -7,6 +5,7 @@ import { Frame, Item } from '@/components/ui/chyron'
 import { Chevron } from '@/components/ui/icons'
 import { useTimeline } from '@/hooks/use-timeline'
 import { usePipelineTest } from '@/hooks/use-pipeline-test'
+import { EASE_POWER2_IN, EASE_POWER2_OUT, EASE_POWER3_OUT } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 import type { TimelineEvent } from '@/types/events'
 import {
@@ -38,63 +37,82 @@ export const Timeline = () => {
 
 
   // Show/hide timeline based on lastPushTime
-  useGSAP(() => {
-    if (containerRef.current) {
-      if (lastPushTime > 0 && timelineEvents.length > 0) {
-        // Show timeline
-        if (!isVisible.current) {
-          isVisible.current = true
+  useEffect(() => {
+    if (!containerRef.current) return
+    const animations: Animation[] = []
 
-          // First, hide all current items to prevent flash
-          const items = Array.from(eventRefs.current.values())
-          items.forEach(item => {
-            gsap.set(item, { opacity: 0, y: TIMELINE_ITEM_INITIAL_Y })
-          })
+    if (lastPushTime > 0 && timelineEvents.length > 0) {
+      // Show timeline
+      if (!isVisible.current) {
+        isVisible.current = true
 
-          // Animate container appearing
-          gsap.to(containerRef.current, {
-            y: 0,
-            duration: TIMELINE_SHOW_DURATION,
-            ease: 'power3.out',
-            onComplete: () => {
-              // After container is visible, cascade in existing items
-              items.forEach((item, index) => {
-                gsap.to(item, {
-                  opacity: 1,
-                  y: 0,
-                  duration: TIMELINE_ITEM_FADE_DURATION,
-                  delay: index * TIMELINE_ITEM_CASCADE_DELAY,
-                  ease: 'power2.out',
-                })
-              })
-            }
-          })
-        }
+        // First, hide all current items to prevent flash. No Animation
+        // object holds this yet, so it has to be an imperative set, same
+        // as gsap.set was under the hood.
+        const items = Array.from(eventRefs.current.values())
+        items.forEach((item) => {
+          item.style.opacity = '0'
+          item.style.transform = `translateY(${TIMELINE_ITEM_INITIAL_Y}px)`
+        })
 
-        // Reset hide timer
-        if (hideTimeoutRef.current) {
-          clearTimeout(hideTimeoutRef.current)
-        }
-        hideTimeoutRef.current = setTimeout(() => {
-          isVisible.current = false
-          if (containerRef.current) {
-            gsap.to(containerRef.current, {
-              y: TIMELINE_HIDDEN_Y,
-              duration: TIMELINE_HIDE_DURATION,
-              ease: 'power2.in',
-              onComplete: () => {
-                // Clear animated events when timeline is fully hidden
-                // So next time it shows, all items cascade in together
-                animatedEvents.current.clear()
-              }
+        // Animate container appearing
+        const showAnimation = containerRef.current.animate(
+          [{ transform: `translateY(${TIMELINE_HIDDEN_Y}px)` }, { transform: 'translateY(0)' }],
+          { duration: TIMELINE_SHOW_DURATION * 1000, easing: EASE_POWER3_OUT, fill: 'forwards' },
+        )
+        animations.push(showAnimation)
+
+        showAnimation.finished
+          .then(() => {
+            // After container is visible, cascade in existing items
+            items.forEach((item, index) => {
+              animations.push(
+                item.animate(
+                  [
+                    { opacity: 0, transform: `translateY(${TIMELINE_ITEM_INITIAL_Y}px)` },
+                    { opacity: 1, transform: 'translateY(0)' },
+                  ],
+                  {
+                    duration: TIMELINE_ITEM_FADE_DURATION * 1000,
+                    delay: index * TIMELINE_ITEM_CASCADE_DELAY * 1000,
+                    easing: EASE_POWER2_OUT,
+                    fill: 'both',
+                  },
+                ),
+              )
             })
-          }
-        }, TIMELINE_AUTO_HIDE_DELAY)
+          })
+          .catch(() => {})
       }
+
+      // Reset hide timer
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current)
+      }
+      hideTimeoutRef.current = setTimeout(() => {
+        isVisible.current = false
+        if (containerRef.current) {
+          const hideAnimation = containerRef.current.animate(
+            [{ transform: 'translateY(0)' }, { transform: `translateY(${TIMELINE_HIDDEN_Y}px)` }],
+            { duration: TIMELINE_HIDE_DURATION * 1000, easing: EASE_POWER2_IN, fill: 'forwards' },
+          )
+          hideAnimation.finished
+            .then(() => {
+              // Clear animated events when timeline is fully hidden
+              // So next time it shows, all items cascade in together
+              animatedEvents.current.clear()
+            })
+            .catch(() => {})
+        }
+      }, TIMELINE_AUTO_HIDE_DELAY)
+    }
+
+    return () => {
+      animations.forEach((animation) => animation.cancel())
     }
   }, [lastPushTime, timelineEvents.length])
 
-  useGSAP(() => {
+  useEffect(() => {
     // Only handle new items when timeline is already visible
     if (!isVisible.current) return
 
@@ -109,66 +127,65 @@ export const Timeline = () => {
           animatedEvents.current.add(event.id)
         } else {
           // Reset any previous transforms on existing elements
-          gsap.set(element, { x: 0 })
+          element.style.transform = 'translateX(0)'
           existingElements.push(element!)
         }
       }
     })
 
-    if (newElements.length === 0) return
+    const animations: Animation[] = []
 
-    const timeline = gsap.timeline()
+    if (newElements.length > 0) {
+      // For the slide effect, we need to handle flex reflow
+      newElements.forEach(({ element }, index) => {
+        // Hide new element initially (no reflow yet)
+        element.style.display = 'none'
 
-    // For the slide effect, we need to handle flex reflow
-    newElements.forEach(({ element }, index) => {
-      // Hide new element initially (no reflow yet)
-      gsap.set(element, { display: 'none' })
+        // Capture current positions of existing elements
+        const oldPositions = existingElements.map((el) => el.getBoundingClientRect().left)
 
-      // Capture current positions of existing elements
-      const oldPositions = existingElements.map((el) => el.getBoundingClientRect().left)
+        // Show new element (causes reflow); fill: 'both' on its own
+        // animate() call below holds it invisible until that starts.
+        element.style.display = 'block'
 
-      // Show new element (causes reflow) but keep it invisible
-      gsap.set(element, { display: 'block', opacity: 0, y: TIMELINE_HIDDEN_Y })
+        // Capture new positions after reflow
+        const newPositions = existingElements.map((el) => el.getBoundingClientRect().left)
 
-      // Capture new positions after reflow
-      const newPositions = existingElements.map((el) => el.getBoundingClientRect().left)
+        // Calculate how much each element moved due to reflow
+        existingElements.forEach((el, i) => {
+          const oldPos = oldPositions[i]
+          const newPos = newPositions[i]
+          if (oldPos === undefined || newPos === undefined) return
 
-      // Calculate how much each element moved due to reflow
-      existingElements.forEach((el, i) => {
-        const oldPos = oldPositions[i]
-        const newPos = newPositions[i]
-        if (oldPos === undefined || newPos === undefined) return
+          const shift = newPos - oldPos
+          if (shift !== 0) {
+            // Animate from the old (pre-reflow) position back to identity
+            animations.push(
+              el.animate(
+                [{ transform: `translateX(${-shift}px)` }, { transform: 'translateX(0)' }],
+                { duration: TIMELINE_SLIDE_DURATION * 1000, easing: EASE_POWER3_OUT, fill: 'forwards' },
+              ),
+            )
+          }
+        })
 
-        const shift = newPos - oldPos
-        if (shift !== 0) {
-          // Put element back to old position
-          gsap.set(el, { x: -shift })
-          // Animate to new position
-          timeline.to(
-            el,
+        // Animate new element appearing
+        animations.push(
+          element.animate(
+            [
+              { opacity: 0, transform: `translateY(${TIMELINE_HIDDEN_Y}px)` },
+              { opacity: 1, transform: 'translateY(0)' },
+            ],
             {
-              x: 0,
-              duration: TIMELINE_SLIDE_DURATION,
-              ease: 'power3.out',
+              duration: TIMELINE_NEW_ITEM_DURATION * 1000,
+              delay: index * TIMELINE_ITEM_CASCADE_DELAY * 1000,
+              easing: EASE_POWER3_OUT,
+              fill: 'both',
             },
-            0,
-          )
-        }
+          ),
+        )
       })
-
-      // Animate new element appearing
-      timeline.to(
-        element,
-        {
-          y: 0,
-          opacity: 1,
-          duration: TIMELINE_NEW_ITEM_DURATION,
-          delay: index * TIMELINE_ITEM_CASCADE_DELAY,
-          ease: 'power3.out',
-        },
-        0,
-      )
-    })
+    }
 
     const currentEventIds = new Set(timelineEvents.map((e) => e.id))
     animatedEvents.current.forEach((id) => {
@@ -177,6 +194,10 @@ export const Timeline = () => {
         eventRefs.current.delete(id)
       }
     })
+
+    return () => {
+      animations.forEach((animation) => animation.cancel())
+    }
   }, [timelineEvents])
 
   // Cleanup timeout on unmount

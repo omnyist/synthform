@@ -1,5 +1,4 @@
-import { useGSAP } from '@gsap/react'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
 import { LimitBreak } from '@/components/coworking/limitbreak'
@@ -14,10 +13,10 @@ export const Coworking = () => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Animate entire overlay on mount
-  useGSAP(() => {
-    if (containerRef.current) {
-      animateOverlayEntrance(containerRef.current)
-    }
+  useEffect(() => {
+    if (!containerRef.current) return
+    const animations = animateOverlayEntrance(containerRef.current)
+    return () => animations.forEach((animation) => animation.cancel())
   }, [])
 
   return (
