@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAlertSound } from '@/config/sounds'
 import { getPreloadedAudio } from '@/lib/audio-preloader'
-import type { Alert } from './use-alerts'
+import type { AlertData } from '@/types/server'
 
 interface UseAlertSoundOptions {
   enabled?: boolean
@@ -16,7 +16,7 @@ interface UseAlertSoundReturn {
 }
 
 export function useAlertSound(
-  alert: Alert | null,
+  alert: AlertData | null,
   options: UseAlertSoundOptions = {},
 ): UseAlertSoundReturn {
   const { enabled = true, volume = 0.2, onComplete, fallbackDuration = 10000 } = options

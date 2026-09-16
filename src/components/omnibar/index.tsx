@@ -2,12 +2,11 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from 'gsap'
 import { useRef } from 'react'
 
-import { Alert } from '@/components/shared/alert'
+import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
 import { Campaign } from '@/components/shared/campaign'
 import { MicStatusBadge } from '@/components/shared/mic-status-badge'
 import { Timeline } from '@/components/shared/timeline'
 import { Canvas } from '@/components/ui/canvas'
-import { useAlertQueue } from '@/hooks/use-alerts'
 import { useCampaign } from '@/hooks/use-campaign'
 
 const BAR_HEIGHT = 64
@@ -16,7 +15,6 @@ const ANIMATION_DURATION = 0.4
 export const Omnibar = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
-  const { currentAlert, onAlertComplete, soundEnabled } = useAlertQueue({ soundEnabled: false })
   const { isActive: isCampaignActive } = useCampaign()
 
   const hasInitialized = useRef(false)
@@ -42,8 +40,8 @@ export const Omnibar = () => {
 
   return (
     <Canvas>
-      {/* Invisible alert sound handler */}
-      <Alert currentAlert={currentAlert} onComplete={onAlertComplete} soundEnabled={soundEnabled} />
+      {/* Invisible alert sound handler — soundEnabled: false, routes/audio.tsx is the dedicated audio source */}
+      <AlertAudioDriver soundEnabled={false} />
 
       <div ref={containerRef} className="h-canvas grid grid-rows-[1fr_64px]">
         <div className="h-full"></div>

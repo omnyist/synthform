@@ -9,7 +9,7 @@ import { ALERT_PROCESS_DELAY, TEST_EVENT_STAGGER_DELAY } from '@/config/timeline
  * Press 'P' for single event, 'Shift+P' for multiple events, 'O' for timeline-only.
  */
 export function usePipelineTest() {
-  const addAlert = useRealtimeStore((state) => state.addAlert)
+  const dispatchAlertStack = useRealtimeStore((state) => state.dispatchAlertStack)
   const updateMessage = useRealtimeStore((state) => state.updateMessage)
 
   // Trigger a single random test event
@@ -27,14 +27,15 @@ export function usePipelineTest() {
     })
 
     // Add alert first (will be processed)
-    addAlert(alert)
+    dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
 
-    // Need a small delay for alert to move from queue to currentAlert
-    // Otherwise hasAlertWithId won't find it
+    // Need a small delay for the alert to actually be active — otherwise
+    // updateMessage's own alertStack-gating check for timeline:push won't
+    // find it yet.
     setTimeout(() => {
       updateMessage('timeline:push', timeline)
     }, ALERT_PROCESS_DELAY)
-  }, [addAlert, updateMessage])
+  }, [dispatchAlertStack, updateMessage])
 
   // Trigger multiple test events
   const triggerMultipleEvents = useCallback(() => {
@@ -60,14 +61,14 @@ export function usePipelineTest() {
         })
 
         // Add alert first
-        addAlert(alert)
+        dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
         // Small delay for alert to process before timeline event
         setTimeout(() => {
           updateMessage('timeline:push', timeline)
         }, ALERT_PROCESS_DELAY)
       }, index * TEST_EVENT_STAGGER_DELAY) // Stagger events to allow natural completion
     })
-  }, [addAlert, updateMessage])
+  }, [dispatchAlertStack, updateMessage])
 
   // Trigger timeline-only event (no alert orchestration)
   const triggerTimelineOnly = useCallback(() => {

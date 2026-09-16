@@ -32,6 +32,13 @@ import {
   type AlertStackAction,
   type AlertStackState,
 } from '@/machines/alert-stack'
+import {
+  createTimelineAdmission,
+  timelineAdmissionReducer,
+  type TimelineAdmissionAction,
+  type TimelineAdmissionState,
+} from '@/machines/timeline-admission'
+import { TIMELINE_MAX_EVENTS } from '@/config/timeline'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -40,19 +47,6 @@ import type {
 } from '@/types/campaign'
 import { serverConnection } from '@/hooks/use-server'
 import { transformTimelineEvent, type RawEvent } from './normalize'
-
-// Constants for gift aggregation
-const COMMUNITY_GIFT_DEBOUNCE_MS = 750
-const COMMUNITY_GIFT_GC_MS = 30000
-
-// Alert queue state from use-alerts
-interface AlertQueueState {
-  currentAlert: AlertData | null
-  queue: AlertData[]
-  isAnimating: boolean
-  isPaused: boolean
-  displayDuration: number
-}
 
 // FFBot state from use-ffbot
 type FFBotMessage = FFBotStatsMessage | FFBotHireMessage | FFBotChangeMessage | FFBotSaveMessage
@@ -86,28 +80,23 @@ interface ChatState {
   maxMessages: number
 }
 
-// Community gift aggregation state
-interface PendingCommunityGift {
-  gifterEvent: AlertData | null
-  individualGifts: AlertData[]
-  count: number
-  timeoutId: NodeJS.Timeout | null
-  gcTimeoutId: NodeJS.Timeout | null
-}
-
 // Complete store interface
 interface RealtimeStore {
   // Connection state
   isConnected: boolean
   connectionState: ConnectionState
 
-  // Alert queue state
-  alerts: AlertQueueState
-
-  // Alert-stack machinery (machines/alert-stack.ts). Runs alongside `alerts`
-  // above, observing the same wire events — not yet driving anything
-  // rendered. See debug/alert-stack.tsx.
+  // Alert-stack machinery (machines/alert-stack.ts) — the source of truth
+  // for alerts. Retired the old ad-hoc alerts queue (use-alerts.ts) and its
+  // client-side community-gift bundling, since synthfunc suppresses
+  // individual gift-sub events server-side and sends one alert per bundle
+  // already. See debug/alert-stack.tsx.
   alertStack: AlertStackState<AlertData>
+
+  // Timeline-admission machinery (machines/timeline-admission.ts). Runs
+  // alongside `timeline` above, gated on alertStack — not yet driving
+  // anything rendered.
+  timelineAdmission: TimelineAdmissionState<TimelineEvent>
 
   // FFBot state
   ffbot: FFBotState
@@ -117,9 +106,6 @@ interface RealtimeStore {
 
   // Chat state
   chat: ChatState
-
-  // Community gift aggregation
-  pendingCommunityGifts: Map<string, PendingCommunityGift>
 
   // Campaign state
   campaign: Campaign | null
@@ -155,16 +141,12 @@ interface RealtimeStore {
   setConnectionStatus: (connected: boolean, state: ConnectionState) => void
   dispatchMicStatus: (event: MicStatusEvent) => void
 
-  // Alert queue actions (from use-alerts logic)
-  addAlert: (alert: AlertData) => void
-  removeCurrentAlert: () => void
-  clearAlertQueue: () => void
-  setAlertAnimating: (isAnimating: boolean) => void
-  setPausedState: (isPaused: boolean) => void
-
   // Alert-stack machinery actions
   dispatchAlertStack: (action: AlertStackAction<AlertData>) => void
   setAlertStackCapacity: (maxConcurrent: number) => void
+
+  // Timeline-admission machinery actions
+  dispatchTimelineAdmission: (action: TimelineAdmissionAction<TimelineEvent>) => void
 
   // FFBot actions (from use-ffbot logic)
   addFFBotEvent: (event: FFBotMessage) => void
@@ -189,19 +171,13 @@ export const useRealtimeStore = create<RealtimeStore>()(
     isConnected: serverConnection.isConnected(),
     connectionState: serverConnection.getConnectionState(),
 
-    // Alert queue initial state
-    alerts: {
-      currentAlert: null,
-      queue: [],
-      isAnimating: false,
-      isPaused: false,
-      displayDuration: 5000,
-    },
-
     // Alert-stack machinery initial state. maxConcurrent here is a
     // placeholder — real capacity is set once at startup by whatever reads
     // VITE_ALERT_STACK_MAX (see lib/alert-stack-adapter.ts).
     alertStack: createAlertStack<AlertData>(1),
+
+    // Timeline-admission machinery initial state.
+    timelineAdmission: createTimelineAdmission<TimelineEvent>(TIMELINE_MAX_EVENTS),
 
     // FFBot initial state
     ffbot: {
@@ -225,9 +201,6 @@ export const useRealtimeStore = create<RealtimeStore>()(
       messages: [],
       maxMessages: 50,
     },
-
-    // Community gift aggregation initial state
-    pendingCommunityGifts: new Map(),
 
     // Campaign initial state
     campaign: null,
@@ -259,7 +232,6 @@ export const useRealtimeStore = create<RealtimeStore>()(
           // 2026-09-15). This loop is correct but will never run in
           // practice; kept for whenever that changes rather than assumed.
           const queue = payload as AlertData[]
-          set({ alerts: { ...state.alerts, queue } })
           queue.forEach((alert) => {
             state.dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
           })
@@ -267,7 +239,6 @@ export const useRealtimeStore = create<RealtimeStore>()(
         }
         case 'alerts:push': {
           const alert = payload as AlertData
-          state.addAlert(alert)
           state.dispatchAlertStack({ type: 'stack:arrive', id: alert.id, alert })
           break
         }
@@ -292,6 +263,19 @@ export const useRealtimeStore = create<RealtimeStore>()(
             // No matching alert, add directly to timeline
             state.addTimelineEvent(timelineEvent)
           }
+
+          // Alert-stack machinery (machines/timeline-admission.ts), fed
+          // additively — same idea as the block above, gated on the new
+          // alertStack instead of the old alerts queue. Not yet driving
+          // anything rendered; see debug/alert-stack.tsx.
+          const isAlertActive =
+            state.alertStack.active.some((instance) => instance.id === timelineEvent.id) ||
+            state.alertStack.backlog.some((item) => item.id === timelineEvent.id)
+          state.dispatchTimelineAdmission(
+            isAlertActive
+              ? { type: 'timeline:queued', id: timelineEvent.id, event: timelineEvent }
+              : { type: 'timeline:admitted', id: timelineEvent.id, event: timelineEvent },
+          )
           break
         }
         case 'timeline:sync':
@@ -458,189 +442,27 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
     dispatchAlertStack: (action) => {
       set((state) => ({ alertStack: alertStackReducer(state.alertStack, action) }))
+
+      // Cross-machine coupling lives here, not in either pure machine —
+      // alert-stack.ts and timeline-admission.ts never import each other.
+      // A reaped alert is the signal that releases its matching timeline
+      // event, if it was ever held (a safe no-op if not) — for both the
+      // new machinery and the old holdTimelineEvent/releaseTimelineEvent
+      // mechanism above, which is still what actually drives the
+      // rendered Timeline and used to be released from use-alerts.ts's
+      // onAlertComplete.
+      if (action.type === 'stack:reap') {
+        get().dispatchTimelineAdmission({ type: 'timeline:released', id: action.id })
+        get().releaseTimelineEvent(action.id)
+      }
     },
 
     setAlertStackCapacity: (maxConcurrent) => {
       set((state) => ({ alertStack: { ...state.alertStack, maxConcurrent } }))
     },
 
-    // Alert queue actions (copied from use-alerts)
-    addAlert: (alert) => {
-      const { community_gift_id, type } = alert
-
-      // Skip bundling for community_sub_gift - total already included, recipients suppressed
-      if (type === 'community_sub_gift') {
-        set((state) => ({
-          alerts: {
-            ...state.alerts,
-            queue: [...state.alerts.queue, alert],
-          },
-        }))
-        return
-      }
-
-      // Legacy bundling for individual gifts with community_gift_id
-      if (community_gift_id) {
-        set((state) => {
-          const pendingGifts = new Map(state.pendingCommunityGifts)
-          const bundle = pendingGifts.get(community_gift_id) || {
-            gifterEvent: null,
-            individualGifts: [],
-            count: 0,
-            timeoutId: null,
-            gcTimeoutId: null,
-          }
-
-          // Clear existing timeouts to prevent memory leaks
-          if (bundle.timeoutId) {
-            clearTimeout(bundle.timeoutId)
-          }
-          if (bundle.gcTimeoutId) {
-            clearTimeout(bundle.gcTimeoutId)
-          }
-
-          // Clear existing timeout
-          if (bundle.timeoutId) {
-            clearTimeout(bundle.timeoutId)
-          }
-
-          // Store the appropriate event
-          if (type === 'community_sub_gift') {
-            bundle.gifterEvent = alert
-          } else if (type === 'sub_gift') {
-            bundle.individualGifts.push(alert)
-            bundle.count += alert.amount || 1
-          }
-
-          // Set timeout to process the bundle
-          bundle.timeoutId = setTimeout(() => {
-            set((currentState) => {
-              const currentPendingGifts = new Map(currentState.pendingCommunityGifts)
-              const completedBundle = currentPendingGifts.get(community_gift_id)
-
-              if (completedBundle) {
-                const gifter = completedBundle.gifterEvent?.user_name || 'A kind stranger'
-                const totalGifts = completedBundle.individualGifts.length || completedBundle.count
-
-                // Create consolidated alert
-                const consolidatedAlert: AlertData = {
-                  id: `community-gift-${community_gift_id}`,
-                  type: 'community_gift_bundle',
-                  message: `${gifter} gifted ${totalGifts} sub${totalGifts !== 1 ? 's' : ''}!`,
-                  user_name: gifter,
-                  amount: totalGifts,
-                  timestamp: completedBundle.gifterEvent?.timestamp || new Date().toISOString(),
-                  community_gift_id: community_gift_id,
-                  tier:
-                    completedBundle.gifterEvent?.tier || completedBundle.individualGifts[0]?.tier,
-                }
-
-                // Add to alert queue
-                currentPendingGifts.delete(community_gift_id)
-
-                // Also add to timeline as consolidated event
-                const timelineEvent: TimelineEvent = {
-                  id: consolidatedAlert.id,
-                  type: 'twitch.channel.subscription.gift.bundle',
-                  data: {
-                    timestamp: consolidatedAlert.timestamp,
-                    payload: {
-                      gifter: gifter,
-                      total: totalGifts,
-                      tier: consolidatedAlert.tier!,
-                    },
-                    user_name: gifter,
-                  },
-                }
-
-                return {
-                  alerts: {
-                    ...currentState.alerts,
-                    queue: [...currentState.alerts.queue, consolidatedAlert],
-                  },
-                  pendingCommunityGifts: currentPendingGifts,
-                  timeline: {
-                    ...currentState.timeline,
-                    events: [timelineEvent, ...currentState.timeline.events].slice(
-                      0,
-                      currentState.timeline.maxEvents,
-                    ),
-                    latestEvent: timelineEvent,
-                    lastPushTime: Date.now(),
-                  },
-                }
-              }
-              return currentState
-            })
-          }, COMMUNITY_GIFT_DEBOUNCE_MS)
-
-          // Set garbage collection timeout to clean up orphaned bundles
-          bundle.gcTimeoutId = setTimeout(() => {
-            set((currentState) => {
-              const currentPendingGifts = new Map(currentState.pendingCommunityGifts)
-              if (currentPendingGifts.has(community_gift_id)) {
-                console.warn(
-                  `Garbage collecting incomplete community gift bundle: ${community_gift_id}`,
-                )
-                currentPendingGifts.delete(community_gift_id)
-                return { pendingCommunityGifts: currentPendingGifts }
-              }
-              return currentState
-            })
-          }, COMMUNITY_GIFT_GC_MS)
-
-          pendingGifts.set(community_gift_id, bundle)
-
-          return {
-            pendingCommunityGifts: pendingGifts,
-          }
-        })
-      } else {
-        // Non-community gift, add directly
-        set((state) => ({
-          alerts: {
-            ...state.alerts,
-            queue: [...state.alerts.queue, alert],
-          },
-        }))
-      }
-    },
-
-    removeCurrentAlert: () => {
-      set((state) => ({
-        alerts: {
-          ...state.alerts,
-          currentAlert: null,
-        },
-      }))
-    },
-
-    clearAlertQueue: () => {
-      set((state) => ({
-        alerts: {
-          ...state.alerts,
-          queue: [],
-          currentAlert: null,
-        },
-      }))
-    },
-
-    setAlertAnimating: (isAnimating) => {
-      set((state) => ({
-        alerts: {
-          ...state.alerts,
-          isAnimating,
-        },
-      }))
-    },
-
-    setPausedState: (isPaused) => {
-      set((state) => ({
-        alerts: {
-          ...state.alerts,
-          isPaused,
-        },
-      }))
+    dispatchTimelineAdmission: (action) => {
+      set((state) => ({ timelineAdmission: timelineAdmissionReducer(state.timelineAdmission, action) }))
     },
 
     // FFBot actions (copied from use-ffbot)
@@ -800,10 +622,13 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
     hasAlertWithId: (eventId) => {
       const state = get()
-      // Check if alert with this ID is in queue or current
+      // Sourced from alertStack, not the old alerts queue — the old
+      // holdTimelineEvent/releaseTimelineEvent mechanism above is still
+      // live (still driving the real rendered Timeline), just now gated
+      // on the real source of truth for "is there a matching alert".
       return (
-        state.alerts.currentAlert?.id === eventId ||
-        state.alerts.queue.some((alert) => alert.id === eventId)
+        state.alertStack.active.some((instance) => instance.id === eventId) ||
+        state.alertStack.backlog.some((item) => item.id === eventId)
       )
     },
 

@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
 import { Canvas } from '@/components/ui/canvas'
 import { useLatestReadings } from '@/hooks/use-latest-readings'
 import { useTempest, useTempestForecast, useTempestCurrent } from '@/hooks/use-tempest'
@@ -8,7 +9,6 @@ import { useNetwork, useNetworkDevices, usePduOutlets } from '@/hooks/use-networ
 import { useGitHubCommits } from '@/hooks/use-github'
 import { useSteamPlayer, useSteamRecentGames } from '@/hooks/use-steam'
 import { useSparkline } from '@/hooks/use-sparkline'
-import { useAlertQueue } from '@/hooks/use-alerts'
 import { useStatus } from '@/hooks/use-status'
 import { useMusic } from '@/hooks/use-music'
 import { useLimitbreak } from '@/hooks/use-limitbreak'
@@ -22,7 +22,6 @@ function HUD() {
   // ---------------------------------------------------------------------------
   // Synthfunc (existing overlay data)
   // ---------------------------------------------------------------------------
-  useAlertQueue({ soundEnabled: false })
   const { status } = useStatus()
   const { current: musicTrack, source: musicSource, isPlaying } = useMusic()
   const limitbreak = useLimitbreak()
@@ -178,6 +177,8 @@ function HUD() {
 
   return (
     <Canvas>
+      {/* Invisible alert sound handler — soundEnabled: false, routes/audio.tsx is the dedicated audio source */}
+      <AlertAudioDriver soundEnabled={false} />
       <div className="size-full overflow-auto bg-[#0a0e14] p-4 font-mono text-[11px] text-gray-200">
         <pre className="whitespace-pre-wrap break-words text-gray-400">
           {JSON.stringify(debugPayloads, null, 2)}

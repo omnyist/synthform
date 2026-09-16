@@ -1,7 +1,7 @@
 import { useGSAP } from '@gsap/react'
 import { useRef } from 'react'
 
-import { Alert } from '@/components/shared/alert'
+import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
 import { LimitBreak } from '@/components/coworking/limitbreak'
 import { Timeline } from '@/components/shared/timeline'
 import { Status } from '@/components/coworking/status'
@@ -9,11 +9,9 @@ import { Campaign } from '@/components/shared/campaign'
 import { Canvas } from '@/components/ui/canvas'
 import { Circle, Frame } from '@/components/ui/window'
 import { animateOverlayEntrance } from '@/lib/animations'
-import { useAlertQueue } from '@/hooks/use-alerts'
 
 export const Coworking = () => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentAlert, onAlertComplete, soundEnabled } = useAlertQueue({ soundEnabled: false })
 
   // Animate entire overlay on mount
   useGSAP(() => {
@@ -24,8 +22,9 @@ export const Coworking = () => {
 
   return (
     <Canvas>
-      {/* Invisible alert sound handler */}
-      <Alert currentAlert={currentAlert} onComplete={onAlertComplete} soundEnabled={soundEnabled} />
+      {/* Invisible alert sound handler — soundEnabled: false, this scene is
+          visual-only, routes/audio.tsx is the dedicated audio source */}
+      <AlertAudioDriver soundEnabled={false} />
 
       <div ref={containerRef} className="grid grid-rows-[auto_64px]">
         {/* Main Content */}
