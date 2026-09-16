@@ -37,6 +37,14 @@ export function alertLifecycleReducer(
   state: AlertInstanceState,
   event: AlertLifecycleEvent,
 ): AlertInstanceState {
+  // exiting is terminal here — the Stack reaps the instance separately
+  // (alert-stack.ts's stack:reap), never through this reducer. Without
+  // this, a duplicate audio:ended (use-alert-sound.ts's fallback timer
+  // and its 'ended' listener can both fire for the same playback) would
+  // fall into the branch below and set audioEndedEarly back to true with
+  // nothing left to ever clear it.
+  if (state.phase === 'exiting') return state
+
   if (event === 'audio:ended' && state.phase !== 'holding') {
     return { ...state, audioEndedEarly: true }
   }

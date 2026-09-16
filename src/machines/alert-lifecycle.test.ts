@@ -69,4 +69,19 @@ describe('alertLifecycleReducer', () => {
     state = alertLifecycleReducer(state, 'enter:complete')
     expect(state).toEqual({ phase: 'exiting', audioEndedEarly: false })
   })
+
+  // use-alert-sound.ts's fallback timer and its 'ended' listener can both
+  // fire for the same playback. A duplicate audio:ended arriving after a
+  // card has already exited must not resurrect audioEndedEarly — exiting
+  // has no way to ever clear it again once set.
+  test('a duplicate audio:ended after exiting does not set audioEndedEarly', () => {
+    let state = newAlertInstance()
+    state = alertLifecycleReducer(state, 'enter:complete')
+    state = alertLifecycleReducer(state, 'reveal:complete')
+    state = alertLifecycleReducer(state, 'audio:ended')
+    expect(state).toEqual({ phase: 'exiting', audioEndedEarly: false })
+
+    state = alertLifecycleReducer(state, 'audio:ended')
+    expect(state).toEqual({ phase: 'exiting', audioEndedEarly: false })
+  })
 })
