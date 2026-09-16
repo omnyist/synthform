@@ -39,6 +39,7 @@ import {
   type TimelineAdmissionState,
 } from '@/machines/timeline-admission'
 import { TIMELINE_MAX_EVENTS } from '@/config/timeline'
+import { limitBreakReducer, type LimitBreakEvent, type LimitBreakPhase } from '@/machines/limitbreak'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -113,9 +114,16 @@ interface RealtimeStore {
   milestoneUnlocked: MilestoneUnlockedPayload | null
   timerUpdate: TimerUpdatePayload | null
 
-  // Limit break state
+  // Limit break state (modeled on FFXIV's limit break gauge — fills as the
+  // redemption queue grows, executes on mod approval, drains to empty)
   limitbreak: LimitBreakData | null
   limitbreakExecuted: LimitBreakExecutedData | null
+
+  // Limit-break machinery (machines/limitbreak.ts) — charging/maxed/
+  // executing. isMaxed on the raw data above is level-triggered (true on
+  // every update while the queue sits at/above threshold); this phase is
+  // the edge-triggered version, derived in updateMessage below.
+  limitBreakPhase: LimitBreakPhase
 
   // Music state
   music: MusicData | null
@@ -147,6 +155,9 @@ interface RealtimeStore {
 
   // Timeline-admission machinery actions
   dispatchTimelineAdmission: (action: TimelineAdmissionAction<TimelineEvent>) => void
+
+  // Limit-break machinery actions
+  dispatchLimitBreak: (event: LimitBreakEvent) => void
 
   // FFBot actions (from use-ffbot logic)
   addFFBotEvent: (event: FFBotMessage) => void
@@ -211,6 +222,7 @@ export const useRealtimeStore = create<RealtimeStore>()(
     // Other states
     limitbreak: null,
     limitbreakExecuted: null,
+    limitBreakPhase: 'charging',
     music: null,
     status: null,
     stream: null,
@@ -376,11 +388,21 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
         // Limit break messages
         case 'limitbreak:sync':
-        case 'limitbreak:update':
-          set({ limitbreak: payload as LimitBreakData })
+        case 'limitbreak:update': {
+          const limitBreakData = payload as LimitBreakData
+          // isMaxed is level-triggered (true on every update while the
+          // queue sits at/above threshold) — derive the charging->maxed
+          // edge here, before this update overwrites the previous value.
+          const wasMaxed = state.limitbreak?.isMaxed ?? false
+          set({ limitbreak: limitBreakData })
+          if (!wasMaxed && limitBreakData.isMaxed) {
+            state.dispatchLimitBreak('bars:maxed')
+          }
           break
+        }
         case 'limitbreak:executed':
           set({ limitbreakExecuted: payload as LimitBreakExecutedData })
+          state.dispatchLimitBreak('limitbreak:executed')
           break
 
         // Music messages
@@ -463,6 +485,21 @@ export const useRealtimeStore = create<RealtimeStore>()(
 
     dispatchTimelineAdmission: (action) => {
       set((state) => ({ timelineAdmission: timelineAdmissionReducer(state.timelineAdmission, action) }))
+    },
+
+    dispatchLimitBreak: (event) => {
+      set((state) => ({ limitBreakPhase: limitBreakReducer(state.limitBreakPhase, event) }))
+
+      // Catch-up: a new redemption can re-cross the threshold while the
+      // previous execution's audio is still playing (bars:maxed arriving
+      // mid-executing is correctly ignored above). If the real level is
+      // already back at/above threshold the instant we return to
+      // charging, there's no future update left to re-toggle isMaxed and
+      // fire a fresh edge — without this, the phase would silently stay
+      // stuck in 'charging' indefinitely.
+      if (event === 'audio:ended' && get().limitbreak?.isMaxed) {
+        set((state) => ({ limitBreakPhase: limitBreakReducer(state.limitBreakPhase, 'bars:maxed') }))
+      }
     },
 
     // FFBot actions (copied from use-ffbot)

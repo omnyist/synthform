@@ -1,63 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
 import { useRealtimeStore } from '@/store/realtime'
-import type { LimitBreakData, LimitBreakExecutedData } from '@/types/server'
+import type { LimitBreakData } from '@/types/server'
 
 export type { LimitBreakData }
 
+// Sound and animation triggers read `phase` directly (see
+// machines/limitbreak.ts and use-limitbreak-audio.ts) instead of the old
+// hasJustMaxed/hasJustExecuted booleans, which were edge-triggered off
+// raw data comparisons rather than a real machine.
 export function useLimitbreak() {
   const data = useRealtimeStore((s) => s.limitbreak)
-  const executedEvent = useRealtimeStore((s) => s.limitbreakExecuted)
+  const phase = useRealtimeStore((s) => s.limitBreakPhase)
   const isConnected = useRealtimeStore((s) => s.isConnected)
-
-  const [hasJustMaxed, setHasJustMaxed] = useState(false)
-  const [hasJustExecuted, setHasJustExecuted] = useState(false)
-  const [lastExecutionTime, setLastExecutionTime] = useState<string | null>(null)
-  const [previousData, setPreviousData] = useState<LimitBreakData | null>(null)
-
-  const previousIsMaxedRef = useRef<boolean>(false)
-  const previousDataRef = useRef<LimitBreakData | null>(null)
-  const lastExecutionEventRef = useRef<LimitBreakExecutedData | null>(null)
-
-  // Detect transition to maxed state
-  useEffect(() => {
-    if (!data) return
-
-    const wasMaxed = previousIsMaxedRef.current
-    const isNowMaxed = data.isMaxed
-
-    if (!wasMaxed && isNowMaxed) {
-      setHasJustMaxed(true)
-    } else {
-      setHasJustMaxed(false)
-    }
-
-    previousIsMaxedRef.current = isNowMaxed
-    setPreviousData(previousDataRef.current)
-    previousDataRef.current = data
-  }, [data])
-
-  // Detect execution events
-  useEffect(() => {
-    if (executedEvent && executedEvent !== lastExecutionEventRef.current) {
-      lastExecutionEventRef.current = executedEvent
-
-      setHasJustExecuted(true)
-      setHasJustMaxed(false)
-      setLastExecutionTime(new Date().toISOString())
-
-      setTimeout(() => {
-        setHasJustExecuted(false)
-      }, 1000)
-    }
-  }, [executedEvent])
-
-  // Computed values
-  const isReady = data?.isMaxed || false
-  const progress = {
-    bar1: (data?.bar1 || 0) * 100,
-    bar2: (data?.bar2 || 0) * 100,
-    bar3: (data?.bar3 || 0) * 100,
-  }
 
   const filledBars = {
     bar1: (data?.bar1 || 0) >= 1,
@@ -65,20 +18,11 @@ export function useLimitbreak() {
     bar3: (data?.bar3 || 0) >= 1,
   }
 
-  const totalBars = [filledBars.bar1, filledBars.bar2, filledBars.bar3].filter(Boolean).length
-
   return {
     data,
-    previousData,
     count: data?.count || 0,
-    isReady,
-    progress,
+    phase,
     filledBars,
-    totalBars,
-    hasJustMaxed,
-    hasJustExecuted,
-    lastExecutionTime,
-    lastUpdateTime: null,
     isConnected,
   }
 }

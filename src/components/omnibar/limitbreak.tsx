@@ -1,6 +1,7 @@
-import { useEffect, useRef, type FC, type PropsWithChildren } from 'react'
+import type { FC, PropsWithChildren } from 'react'
 
 import { useLimitbreak } from '@/hooks/use-limitbreak'
+import { useLimitBreakAudio } from '@/hooks/use-limitbreak-audio'
 
 const Bar: FC<PropsWithChildren> = ({ children }) => {
   return <div className="relative h-3 w-16 overflow-hidden rounded-xs bg-[#1E3246]">{children}</div>
@@ -20,35 +21,8 @@ const Progress: FC<{ bar: number; isFilled: boolean }> = ({ bar, isFilled }) => 
 }
 
 export const LimitBreak = () => {
-  const { data, count, filledBars, hasJustMaxed, hasJustExecuted, isConnected } = useLimitbreak()
-  
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const executionAudioRef = useRef<HTMLAudioElement>(null)
-
-  // Play sound when limit break becomes maxed
-  useEffect(() => {
-    if (hasJustMaxed && audioRef.current) {
-      audioRef.current.volume = 0.1
-      audioRef.current.play().catch((error) => {
-        console.warn('Could not play limit break sound:', error)
-      })
-    }
-  }, [hasJustMaxed])
-
-  // Play sound when limit break is executed
-  useEffect(() => {
-    if (hasJustExecuted && executionAudioRef.current) {
-      executionAudioRef.current.volume = 0.1
-      executionAudioRef.current
-        .play()
-        .then(() => {
-          console.log('Limit break execution sound played')
-        })
-        .catch((error) => {
-          console.error('Could not play limit break execution sound:', error)
-        })
-    }
-  }, [hasJustExecuted])
+  const { data, count, filledBars, isConnected } = useLimitbreak()
+  useLimitBreakAudio(0.1)
 
   if (!data) {
     return (
@@ -74,12 +48,6 @@ export const LimitBreak = () => {
         </Bar>
         <div className="font-sans font-bold text-[#0096ff]">{count}</div>
       </div>
-      <audio ref={audioRef} preload="auto" className="hidden">
-        <source src="/sounds/limit-break.ogg" type="audio/ogg" />
-      </audio>
-      <audio ref={executionAudioRef} preload="auto" className="hidden">
-        <source src="/sounds/limit-break-executed.ogg" type="audio/ogg" />
-      </audio>
     </div>
   )
 }

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useCallback, forwardRef, type FC, type PropsWithChildren } from 'react'
+import { useRef, useCallback, forwardRef, type FC, type PropsWithChildren } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from 'gsap'
 
 import { useLimitbreak } from '@/hooks/use-limitbreak'
+import { useLimitBreakAudio } from '@/hooks/use-limitbreak-audio'
 import { animateLimitBreakExecute } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 
@@ -33,60 +34,19 @@ const Progress: FC<{ bar: number; isFilled: boolean }> = ({ bar, isFilled }) => 
 }
 
 export const LimitBreak = () => {
-  const { data, count, filledBars, hasJustMaxed, hasJustExecuted, isReady } = useLimitbreak()
+  const { data, count, filledBars, phase } = useLimitbreak()
+  useLimitBreakAudio(0.2)
 
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const executionAudioRef = useRef<HTMLAudioElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const barsRef = useRef<HTMLDivElement[]>([])
   const hasAnimatedEntrance = useRef(false)
 
-  // Play sound when limit break becomes maxed
-  useEffect(() => {
-    if (hasJustMaxed && audioRef.current) {
-      audioRef.current.volume = 0.2
-      audioRef.current.play().catch((error) => {
-        console.warn('Could not play limit break sound:', error)
-      })
-    }
-  }, [hasJustMaxed])
-
-  // Play sound when limit break is executed
-  useEffect(() => {
-    if (hasJustExecuted && executionAudioRef.current) {
-      executionAudioRef.current.volume = 0.2
-      executionAudioRef.current
-        .play()
-        .then(() => {
-          console.log('Limit break execution sound played')
-        })
-        .catch((error) => {
-          console.error('Could not play limit break execution sound:', error)
-        })
-    }
-  }, [hasJustExecuted])
-
-  // Animate maxed state
-  useGSAP(() => {
-    const animations: (gsap.core.Timeline & { shimmer?: HTMLElement })[] = []
-
-    return () => {
-      animations.forEach((anim) => {
-        anim.kill()
-        // Remove shimmer element if it exists
-        if (anim.shimmer && anim.shimmer.parentElement) {
-          anim.shimmer.remove()
-        }
-      })
-    }
-  }, [isReady])
-
   // Animate execution
   useGSAP(() => {
-    if (hasJustExecuted && containerRef.current) {
+    if (phase === 'executing' && containerRef.current) {
       animateLimitBreakExecute(containerRef.current)
     }
-  }, [hasJustExecuted])
+  }, [phase])
 
   // Simple entrance animation when data loads
   useGSAP(() => {
@@ -132,16 +92,6 @@ export const LimitBreak = () => {
           <Progress bar={bar3} isFilled={filledBars.bar3} />
         </Bar>
       </div>
-      <audio ref={audioRef} preload="auto" className="hidden">
-        <source src="/sounds/limit-break.ogg" type="audio/ogg" />
-      </audio>
-      {/* Plays on limitbreak:executed. bonk (omnypro/bonk) fires its volley on
-          the same event after a delay in its triggers.cfg that is tuned to
-          this file's length (3.82 s as of 2026-09-12). Nothing links the
-          two: swap or re-cut this file and bonk's delay needs updating too. */}
-      <audio ref={executionAudioRef} preload="auto" className="hidden">
-        <source src="/sounds/limit-break-executed.ogg" type="audio/ogg" />
-      </audio>
     </div>
   )
 }
