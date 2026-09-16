@@ -22,15 +22,6 @@ import type {
   TimerUpdatePayload,
 } from './campaign'
 
-// Connection state
-export const ConnectionState = {
-  Disconnected: 'disconnected',
-  Connecting: 'connecting',
-  Connected: 'connected',
-} as const
-
-export type ConnectionState = typeof ConnectionState[keyof typeof ConnectionState]
-
 // Stream status types
 export interface StreamStatus {
   status: 'online' | 'away' | 'busy' | 'brb' | 'focus'

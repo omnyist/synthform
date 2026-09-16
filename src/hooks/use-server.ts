@@ -1,4 +1,4 @@
-import { ConnectionState } from '@/types/server'
+import { serverConnectionReducer, type ServerConnectionPhase } from '@/machines/server-connection'
 import type {
   MessageType,
   PayloadType,
@@ -26,7 +26,7 @@ class ServerConnection {
   private ws: WebSocket | null = null
   private subscribers = new Map<SubscriberKey, Set<(data: unknown) => void>>()
   private cache = new Map<MessageType, CacheEntry>()
-  private connectionState: ConnectionState = ConnectionState.Disconnected
+  private phase: ServerConnectionPhase = 'disconnected'
   private reconnectAttempts = 0
   private reconnectDelay = DEFAULT_RECONNECT_DELAY
   private cacheCleanupTimer: NodeJS.Timeout | null = null
@@ -75,18 +75,20 @@ class ServerConnection {
   }
 
   connect() {
-    if (this.connectionState !== ConnectionState.Disconnected) {
+    const next = serverConnectionReducer(this.phase, 'connection:connect')
+    // Already connecting or connected — the transition table says so, so
+    // trust it instead of re-deriving the same check here.
+    if (next === this.phase) {
       return
     }
-
-    this.connectionState = ConnectionState.Connecting
+    this.phase = next
 
     try {
       this.ws = new WebSocket(this.getWebSocketUrl())
 
       this.ws.onopen = () => {
         console.log('🔌 WebSocket connected to server')
-        this.connectionState = ConnectionState.Connected
+        this.phase = serverConnectionReducer(this.phase, 'connection:opened')
         this.reconnectAttempts = 0
         this.notifyConnectionChange(true)
       }
@@ -97,19 +99,22 @@ class ServerConnection {
 
       this.ws.onclose = () => {
         console.log('🔌 WebSocket disconnected from server')
-        this.connectionState = ConnectionState.Disconnected
+        this.phase = serverConnectionReducer(this.phase, 'connection:closed')
         this.ws = null
         this.notifyConnectionChange(false)
         this.scheduleReconnect()
       }
 
       this.ws.onerror = (error) => {
+        // onclose always follows, per the WebSocket spec, for both a
+        // dropped connection and a failed attempt — it owns the actual
+        // phase transition and the reconnect schedule. This handler only
+        // logs, so the two don't race to write conflicting phases.
         console.error('❌ WebSocket error:', error)
-        this.connectionState = ConnectionState.Disconnected
       }
     } catch (error) {
       console.error('❌ Failed to create WebSocket connection:', error)
-      this.connectionState = ConnectionState.Disconnected
+      this.phase = serverConnectionReducer(this.phase, 'connection:closed')
       this.scheduleReconnect()
     }
   }
@@ -230,7 +235,7 @@ class ServerConnection {
     }
 
     this.reconnectTimer = setTimeout(() => {
-      if (this.connectionState === ConnectionState.Disconnected && this.subscribers.size > 0) {
+      if (this.phase === 'reconnecting' && this.subscribers.size > 0) {
         this.connect()
       }
     }, delay)
@@ -248,10 +253,10 @@ class ServerConnection {
     // Add callback to subscribers
     this.subscribers.get(messageType)!.add(callback as (data: unknown) => void)
 
-    // Auto-connect if not already connected/connecting
-    if (this.connectionState === ConnectionState.Disconnected) {
-      this.connect()
-    }
+    // connect() is its own no-op when already connecting/connected, so
+    // it's safe to call unconditionally here — covers a fresh subscriber
+    // arriving idle, or mid-backoff-wait during a reconnect.
+    this.connect()
 
     // Return cached data if available
     const cached = this.cache.get(messageType)
@@ -275,11 +280,11 @@ class ServerConnection {
   }
 
   isConnected(): boolean {
-    return this.connectionState === ConnectionState.Connected
+    return this.phase === 'connected'
   }
 
-  getConnectionState(): ConnectionState {
-    return this.connectionState
+  getConnectionState(): ServerConnectionPhase {
+    return this.phase
   }
 
   private notifyConnectionChange(connected: boolean) {
@@ -307,7 +312,7 @@ class ServerConnection {
       this.ws = null
     }
 
-    this.connectionState = ConnectionState.Disconnected
+    this.phase = serverConnectionReducer(this.phase, 'connection:disconnect')
   }
 
   clearCache() {

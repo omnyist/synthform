@@ -2,7 +2,6 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import {
-  ConnectionState,
   type MessageType,
   type PayloadType,
   type AlertData,
@@ -39,6 +38,7 @@ import {
 } from '@/machines/timeline-admission'
 import { TIMELINE_MAX_EVENTS } from '@/config/timeline'
 import { limitBreakReducer, newLimitBreakState, type LimitBreakEvent, type LimitBreakState } from '@/machines/limitbreak'
+import type { ServerConnectionPhase } from '@/machines/server-connection'
 import type {
   Campaign,
   CampaignUpdatePayload,
@@ -84,7 +84,7 @@ interface ChatState {
 interface RealtimeStore {
   // Connection state
   isConnected: boolean
-  connectionState: ConnectionState
+  connectionState: ServerConnectionPhase
 
   // Alert-stack machinery (machines/alert-stack.ts) — the source of truth
   // for alerts. No client-side community-gift bundling: synthfunc
@@ -143,7 +143,7 @@ interface RealtimeStore {
 
   // Actions
   updateMessage: <T extends MessageType>(messageType: T, payload: PayloadType<T>) => void
-  setConnectionStatus: (connected: boolean, state: ConnectionState) => void
+  setConnectionStatus: (connected: boolean, state: ServerConnectionPhase) => void
   dispatchMicStatus: (event: MicStatusEvent) => void
 
   // Alert-stack machinery actions

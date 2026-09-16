@@ -1,4 +1,4 @@
-import { ConnectionState, type MessageType } from '@/types/server'
+import type { MessageType } from '@/types/server'
 import { serverConnection } from '@/hooks/use-server'
 import { useRealtimeStore } from './realtime'
 
@@ -54,7 +54,7 @@ export function connectRealtime(): void {
   })
 
   // Ensure connection is established
-  if (serverConnection.getConnectionState() === ConnectionState.Disconnected) {
+  if (serverConnection.getConnectionState() === 'disconnected') {
     serverConnection.connect()
   }
 }
