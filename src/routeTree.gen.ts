@@ -13,10 +13,10 @@ import { Route as AudioRouteImport } from './routes/audio'
 import { Route as LimitbreakRouteImport } from './routes/limitbreak'
 import { Route as fullCoworkingRouteImport } from './routes/(full)/coworking'
 import { Route as fullEmoteRainRouteImport } from './routes/(full)/emote-rain'
-import { Route as fullHudRouteImport } from './routes/(full)/hud'
 import { Route as fullOmnibarRouteImport } from './routes/(full)/omnibar'
 import { Route as DebugAlertStackRouteImport } from './routes/debug/alert-stack'
 import { Route as DebugEventsRouteImport } from './routes/debug/events'
+import { Route as DebugHudRouteImport } from './routes/debug/hud'
 import { Route as DebugHudStylesRouteImport } from './routes/debug/hud-styles'
 import { Route as DebugIronmonRouteImport } from './routes/debug/ironmon'
 import { Route as DebugServerRouteImport } from './routes/debug/server'
@@ -44,11 +44,6 @@ const fullEmoteRainRoute = fullEmoteRainRouteImport.update({
   path: '/emote-rain',
   getParentRoute: () => rootRouteImport,
 } as any)
-const fullHudRoute = fullHudRouteImport.update({
-  id: '/(full)/hud',
-  path: '/hud',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const fullOmnibarRoute = fullOmnibarRouteImport.update({
   id: '/(full)/omnibar',
   path: '/omnibar',
@@ -62,6 +57,11 @@ const DebugAlertStackRoute = DebugAlertStackRouteImport.update({
 const DebugEventsRoute = DebugEventsRouteImport.update({
   id: '/debug/events',
   path: '/debug/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugHudRoute = DebugHudRouteImport.update({
+  id: '/debug/hud',
+  path: '/debug/hud',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebugHudStylesRoute = DebugHudStylesRouteImport.update({
@@ -100,10 +100,10 @@ export interface FileRoutesByFullPath {
   '/limitbreak': typeof LimitbreakRoute
   '/coworking': typeof fullCoworkingRoute
   '/emote-rain': typeof fullEmoteRainRoute
-  '/hud': typeof fullHudRoute
   '/omnibar': typeof fullOmnibarRoute
   '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
+  '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
@@ -116,10 +116,10 @@ export interface FileRoutesByTo {
   '/limitbreak': typeof LimitbreakRoute
   '/coworking': typeof fullCoworkingRoute
   '/emote-rain': typeof fullEmoteRainRoute
-  '/hud': typeof fullHudRoute
   '/omnibar': typeof fullOmnibarRoute
   '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
+  '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
@@ -133,10 +133,10 @@ export interface FileRoutesById {
   '/limitbreak': typeof LimitbreakRoute
   '/(full)/coworking': typeof fullCoworkingRoute
   '/(full)/emote-rain': typeof fullEmoteRainRoute
-  '/(full)/hud': typeof fullHudRoute
   '/(full)/omnibar': typeof fullOmnibarRoute
   '/debug/alert-stack': typeof DebugAlertStackRoute
   '/debug/events': typeof DebugEventsRoute
+  '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
   '/debug/server': typeof DebugServerRoute
@@ -151,10 +151,10 @@ export interface FileRouteTypes {
     | '/limitbreak'
     | '/coworking'
     | '/emote-rain'
-    | '/hud'
     | '/omnibar'
     | '/debug/alert-stack'
     | '/debug/events'
+    | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
@@ -167,10 +167,10 @@ export interface FileRouteTypes {
     | '/limitbreak'
     | '/coworking'
     | '/emote-rain'
-    | '/hud'
     | '/omnibar'
     | '/debug/alert-stack'
     | '/debug/events'
+    | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
@@ -183,10 +183,10 @@ export interface FileRouteTypes {
     | '/limitbreak'
     | '/(full)/coworking'
     | '/(full)/emote-rain'
-    | '/(full)/hud'
     | '/(full)/omnibar'
     | '/debug/alert-stack'
     | '/debug/events'
+    | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
     | '/debug/server'
@@ -200,10 +200,10 @@ export interface RootRouteChildren {
   LimitbreakRoute: typeof LimitbreakRoute
   fullCoworkingRoute: typeof fullCoworkingRoute
   fullEmoteRainRoute: typeof fullEmoteRainRoute
-  fullHudRoute: typeof fullHudRoute
   fullOmnibarRoute: typeof fullOmnibarRoute
   DebugAlertStackRoute: typeof DebugAlertStackRoute
   DebugEventsRoute: typeof DebugEventsRoute
+  DebugHudRoute: typeof DebugHudRoute
   DebugHudStylesRoute: typeof DebugHudStylesRoute
   DebugIronmonRoute: typeof DebugIronmonRoute
   DebugServerRoute: typeof DebugServerRoute
@@ -242,13 +242,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof fullEmoteRainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(full)/hud': {
-      id: '/(full)/hud'
-      path: '/hud'
-      fullPath: '/hud'
-      preLoaderRoute: typeof fullHudRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(full)/omnibar': {
       id: '/(full)/omnibar'
       path: '/omnibar'
@@ -268,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/events'
       fullPath: '/debug/events'
       preLoaderRoute: typeof DebugEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug/hud': {
+      id: '/debug/hud'
+      path: '/debug/hud'
+      fullPath: '/debug/hud'
+      preLoaderRoute: typeof DebugHudRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/debug/hud-styles': {
@@ -320,10 +320,10 @@ const rootRouteChildren: RootRouteChildren = {
   LimitbreakRoute: LimitbreakRoute,
   fullCoworkingRoute: fullCoworkingRoute,
   fullEmoteRainRoute: fullEmoteRainRoute,
-  fullHudRoute: fullHudRoute,
   fullOmnibarRoute: fullOmnibarRoute,
   DebugAlertStackRoute: DebugAlertStackRoute,
   DebugEventsRoute: DebugEventsRoute,
+  DebugHudRoute: DebugHudRoute,
   DebugHudStylesRoute: DebugHudStylesRoute,
   DebugIronmonRoute: DebugIronmonRoute,
   DebugServerRoute: DebugServerRoute,

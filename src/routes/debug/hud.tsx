@@ -14,7 +14,7 @@ import { useMusic } from '@/hooks/use-music'
 import { useLimitbreak } from '@/hooks/use-limitbreak'
 import { unraidStats } from '@/lib/unraid'
 
-export const Route = createFileRoute('/(full)/hud')({
+export const Route = createFileRoute('/debug/hud')({
   component: HUD,
 })
 
