@@ -7,6 +7,7 @@ import { useTimeline } from '@/hooks/use-timeline'
 import { usePipelineTest } from '@/hooks/use-pipeline-test'
 import { EASE_POWER2_IN, EASE_POWER2_OUT, EASE_POWER3_OUT } from '@/lib/animations'
 import { cn } from '@/lib/utils'
+import { timelineVisibilityReducer } from '@/machines/timeline-visibility'
 import type { TimelineEvent } from '@/types/events'
 import {
   TIMELINE_AUTO_HIDE_DELAY,
@@ -33,7 +34,13 @@ export const Timeline = () => {
   const animatedEvents = useRef<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
   const hideTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
-  const isVisible = useRef(false)
+  // A ref, not useReducer/useState — the second effect below needs to read
+  // this phase synchronously within the same commit the first effect just
+  // transitioned it in, which a React state update (deferred to the next
+  // render) can't give it. timelineVisibilityReducer is still the single
+  // source of truth for the transition itself; this just holds its result
+  // the way use-server.ts holds ServerConnectionPhase on a class field.
+  const visibilityPhase = useRef<'hidden' | 'visible'>('hidden')
 
 
   // Show/hide timeline based on lastPushTime
@@ -42,10 +49,11 @@ export const Timeline = () => {
     const animations: Animation[] = []
 
     if (lastPushTime > 0 && timelineEvents.length > 0) {
-      // Show timeline
-      if (!isVisible.current) {
-        isVisible.current = true
+      const wasVisible = visibilityPhase.current === 'visible'
+      visibilityPhase.current = timelineVisibilityReducer(visibilityPhase.current, 'timeline:pushed')
 
+      // Show timeline
+      if (!wasVisible) {
         // First, hide all current items to prevent flash. No Animation
         // object holds this yet, so it has to be an imperative set, same
         // as gsap.set was under the hood.
@@ -90,7 +98,7 @@ export const Timeline = () => {
         clearTimeout(hideTimeoutRef.current)
       }
       hideTimeoutRef.current = setTimeout(() => {
-        isVisible.current = false
+        visibilityPhase.current = timelineVisibilityReducer(visibilityPhase.current, 'timeline:idle')
         if (containerRef.current) {
           const hideAnimation = containerRef.current.animate(
             [{ transform: 'translateY(0)' }, { transform: `translateY(${TIMELINE_HIDDEN_Y}px)` }],
@@ -114,7 +122,7 @@ export const Timeline = () => {
 
   useEffect(() => {
     // Only handle new items when timeline is already visible
-    if (!isVisible.current) return
+    if (visibilityPhase.current !== 'visible') return
 
     const newElements: { element: HTMLElement; event: TimelineEvent }[] = []
     const existingElements: HTMLElement[] = []
