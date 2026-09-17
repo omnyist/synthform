@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRealtimeStore } from '@/store/realtime'
 import { serverConnection } from '@/hooks/use-server'
-import { useOBSScreenshot } from '@/hooks/use-obs-screenshot'
 import { useWhep } from '@/hooks/use-whep'
 import { useFeedStats } from '@/hooks/use-feed-stats'
 import { STAMP_BAR_HEIGHT, STAMP_BAR_WIDTH, STAMP_REFERENCE_HEIGHT, STAMP_REFERENCE_WIDTH } from '@/lib/frame-stamp'
@@ -39,7 +38,6 @@ interface LocalStroke {
 
 export function TelestratorInput() {
   const isConnected = useRealtimeStore((s) => s.isConnected)
-  const { imageUrl: obsScreenshot, isConnected: obsConnected } = useOBSScreenshot(null, 5000)
   const { stream: feed, state: feedState, peer } = useWhep(FEED_URL)
   const feedLive = feedState === 'live' && feed !== null
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -345,33 +343,24 @@ export function TelestratorInput() {
 
         <div className="h-6 w-px bg-shark-700" />
 
-        {/* OBS background toggle */}
+        {/* Background toggle */}
         <button
           onClick={() => setShowBackground((v) => !v)}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            showBackground && (feedLive || obsConnected)
+            showBackground && feedLive
               ? 'bg-sky/20 text-sky'
               : 'bg-shark-800 text-shark-400 hover:bg-shark-700'
           }`}
         >
-          BG {showBackground && (feedLive || obsConnected) ? 'ON' : 'OFF'}
+          BG {showBackground && feedLive ? 'ON' : 'OFF'}
         </button>
 
-        {/* Live feed status: LIVE when WebRTC is flowing, otherwise the page
-            falls back to the 5 s OBS screenshot */}
+        {/* Live feed status: LIVE when WebRTC is flowing */}
         <div className="flex items-center gap-2" title={feedState}>
           <span
             className={`inline-block h-2.5 w-2.5 rounded-full ${feedLive ? 'bg-sky' : feedState === 'connecting' ? 'animate-pulse bg-shark-500' : 'bg-shark-600'}`}
           />
           <span className="text-xs text-shark-400">FEED</span>
-        </div>
-
-        {/* OBS status */}
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-block h-2.5 w-2.5 rounded-full ${obsConnected ? 'bg-sky' : 'bg-shark-600'}`}
-          />
-          <span className="text-xs text-shark-400">OBS</span>
         </div>
 
         {/* Latency to source, from the timecode in the picture (same gauge as Scribble's LAG) */}
@@ -395,7 +384,7 @@ export function TelestratorInput() {
         className="relative flex flex-1 items-center justify-center bg-shark-920 p-4"
       >
         <div className="relative">
-          {/* Live feed underneath the canvas; the screenshot only when the feed isn't there. */}
+          {/* Live feed underneath the canvas. */}
           <video
             ref={videoRef}
             autoPlay
@@ -403,13 +392,6 @@ export function TelestratorInput() {
             playsInline
             className={`pointer-events-none absolute inset-0 size-full rounded-lg object-cover opacity-40 ${showBackground && feedLive ? '' : 'hidden'}`}
           />
-          {showBackground && !feedLive && obsScreenshot && (
-            <img
-              src={obsScreenshot}
-              alt=""
-              className="pointer-events-none absolute inset-0 size-full rounded-lg object-cover opacity-40"
-            />
-          )}
           {/* Hide the timecode bar ffmpeg burns into the feed's top-left; the
               stats hook reads it from the video element, not the screen. */}
           {showBackground && feedLive && (
