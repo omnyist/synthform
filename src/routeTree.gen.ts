@@ -19,6 +19,7 @@ import { Route as DebugEventsRouteImport } from './routes/debug/events'
 import { Route as DebugHudRouteImport } from './routes/debug/hud'
 import { Route as DebugHudStylesRouteImport } from './routes/debug/hud-styles'
 import { Route as DebugIronmonRouteImport } from './routes/debug/ironmon'
+import { Route as DebugMachinesRouteImport } from './routes/debug/machines'
 import { Route as DebugServerRouteImport } from './routes/debug/server'
 import { Route as DebugTranscriptionRouteImport } from './routes/debug/transcription'
 import { Route as TelestratorIndexRouteImport } from './routes/telestrator/index'
@@ -74,6 +75,11 @@ const DebugIronmonRoute = DebugIronmonRouteImport.update({
   path: '/debug/ironmon',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebugMachinesRoute = DebugMachinesRouteImport.update({
+  id: '/debug/machines',
+  path: '/debug/machines',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DebugServerRoute = DebugServerRouteImport.update({
   id: '/debug/server',
   path: '/debug/server',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
+  '/debug/machines': typeof DebugMachinesRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
   '/telestrator/output': typeof TelestratorOutputRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
+  '/debug/machines': typeof DebugMachinesRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
   '/telestrator/output': typeof TelestratorOutputRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/debug/hud': typeof DebugHudRoute
   '/debug/hud-styles': typeof DebugHudStylesRoute
   '/debug/ironmon': typeof DebugIronmonRoute
+  '/debug/machines': typeof DebugMachinesRoute
   '/debug/server': typeof DebugServerRoute
   '/debug/transcription': typeof DebugTranscriptionRoute
   '/telestrator/output': typeof TelestratorOutputRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
+    | '/debug/machines'
     | '/debug/server'
     | '/debug/transcription'
     | '/telestrator/output'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
+    | '/debug/machines'
     | '/debug/server'
     | '/debug/transcription'
     | '/telestrator/output'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/debug/hud'
     | '/debug/hud-styles'
     | '/debug/ironmon'
+    | '/debug/machines'
     | '/debug/server'
     | '/debug/transcription'
     | '/telestrator/output'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   DebugHudRoute: typeof DebugHudRoute
   DebugHudStylesRoute: typeof DebugHudStylesRoute
   DebugIronmonRoute: typeof DebugIronmonRoute
+  DebugMachinesRoute: typeof DebugMachinesRoute
   DebugServerRoute: typeof DebugServerRoute
   DebugTranscriptionRoute: typeof DebugTranscriptionRoute
   TelestratorOutputRoute: typeof TelestratorOutputRoute
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugIronmonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/debug/machines': {
+      id: '/debug/machines'
+      path: '/debug/machines'
+      fullPath: '/debug/machines'
+      preLoaderRoute: typeof DebugMachinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/debug/server': {
       id: '/debug/server'
       path: '/debug/server'
@@ -326,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugHudRoute: DebugHudRoute,
   DebugHudStylesRoute: DebugHudStylesRoute,
   DebugIronmonRoute: DebugIronmonRoute,
+  DebugMachinesRoute: DebugMachinesRoute,
   DebugServerRoute: DebugServerRoute,
   DebugTranscriptionRoute: DebugTranscriptionRoute,
   TelestratorOutputRoute: TelestratorOutputRoute,
