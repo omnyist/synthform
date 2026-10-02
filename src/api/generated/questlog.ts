@@ -64,6 +64,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/twitch/game/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Twitch Current Game
+         * @description Current Twitch category for the broadcaster, joined against
+         *     questlog's own catalog via Edition.twitch_category_id.
+         *
+         *     `tracked=False` covers both "not live / no category set" and "a real
+         *     category questlog just doesn't have stats for" -- the panel renders
+         *     the same neutral state either way, so callers don't need to tell them
+         *     apart.
+         */
+        get: operations["apps_integrations_api_twitch_current_game"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/franchises": {
         parameters: {
             query?: never;
@@ -212,7 +238,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/editions/by-twitch/{twitch_category_id}": {
+    "/api/editions/twitch/{twitch_category_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -220,10 +246,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Work By Twitch Category
+         * Get Work For Twitch Category
          * @description Look up a Work by its Twitch category ID. Used by Synthfunc's PromptManager.
          */
-        get: operations["apps_library_api_get_work_by_twitch_category"];
+        get: operations["apps_library_api_get_work_for_twitch_category"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1000,6 +1026,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/speedrun/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Speedrun Runs
+         * @description Every archived run, fastest first within each game and category.
+         */
+        get: operations["apps_profiles_speedrun_api_list_speedrun_runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/speedrun/runs/best": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Best Speedrun Runs
+         * @description Fastest verified run per game and category, each run counted once.
+         */
+        get: operations["apps_profiles_speedrun_api_list_best_speedrun_runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1053,6 +1119,19 @@ export interface components {
             playtimeForever: number;
             /** Iconurl */
             iconUrl: string;
+        };
+        /** TwitchCurrentGameSchema */
+        TwitchCurrentGameSchema: {
+            /** Gameid */
+            gameId?: string | null;
+            /** Gamename */
+            gameName?: string | null;
+            /** Tracked */
+            tracked: boolean;
+            /** Workslug */
+            workSlug?: string | null;
+            /** Workname */
+            workName?: string | null;
         };
         /** FranchiseSchema */
         FranchiseSchema: {
@@ -2282,6 +2361,61 @@ export interface components {
             /** Projected Mr30 Date */
             projected_mr30_date: string | null;
         };
+        /** PagedSpeedrunRunSchema */
+        PagedSpeedrunRunSchema: {
+            /** Items */
+            items: components["schemas"]["SpeedrunRunSchema"][];
+            /** Count */
+            count: number;
+        };
+        /** SpeedrunRunSchema */
+        SpeedrunRunSchema: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Source */
+            source: string;
+            /** Source Run Id */
+            source_run_id: string;
+            /** Game */
+            game: string;
+            /** Game Ref */
+            game_ref: string;
+            /** Category */
+            category: string;
+            /** Variables */
+            variables: {
+                [key: string]: unknown;
+            };
+            /** Platform */
+            platform: string;
+            /** Time Ms */
+            time_ms: number;
+            /** Duration */
+            duration: string;
+            /** Realtime Ms */
+            realtime_ms: number | null;
+            /** Uses Igt */
+            uses_igt: boolean;
+            /** Date */
+            date: string | null;
+            /** Video Url */
+            video_url: string;
+            /** Weblink */
+            weblink: string;
+            /** Status */
+            status: string;
+            /** Rank */
+            rank: number | null;
+            /** Rank Fetched At */
+            rank_fetched_at: string | null;
+            /** Work Slug */
+            work_slug: string | null;
+            /** Duplicate Of */
+            duplicate_of: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -2352,6 +2486,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SteamRecentGameSchema"][];
+                };
+            };
+        };
+    };
+    apps_integrations_api_twitch_current_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TwitchCurrentGameSchema"];
                 };
             };
         };
@@ -2597,7 +2751,7 @@ export interface operations {
             };
         };
     };
-    apps_library_api_get_work_by_twitch_category: {
+    apps_library_api_get_work_for_twitch_category: {
         parameters: {
             query?: never;
             header?: never;
@@ -3695,6 +3849,52 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    apps_profiles_speedrun_api_list_speedrun_runs: {
+        parameters: {
+            query?: {
+                source?: string | null;
+                game?: string | null;
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedSpeedrunRunSchema"];
+                };
+            };
+        };
+    };
+    apps_profiles_speedrun_api_list_best_speedrun_runs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpeedrunRunSchema"][];
                 };
             };
         };
