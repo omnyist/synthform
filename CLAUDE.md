@@ -17,7 +17,6 @@ Project-specific deltas (everything else is inherited from the import above and 
 - **Ports, Redis DB, container names:** not restated here. `recall("<project> port")` or `lookup` against `registry/allocations.md`, which is canonical and derived from what is actually listening. A copy in this file is a second place to be wrong.
 - **No mock mode** — real data/APIs only.
 - **Don't reimplement from scratch** without explicit permission; make the smallest reasonable change; never rename things "improved"/"new"/"enhanced".
-- **Ask for clarification** rather than assuming; it's fine to stop and ask for help.
 - Uses Zustand for client state and the `generate:api` OpenAPI codegen pipeline (both the suite TS standard).
 - **Comments:** never remove one unless it's provably false; keep comments evergreen — describe the code as it is, not how it changed.
 - Update `CHANGELOG.md` as the final step if one exists.
