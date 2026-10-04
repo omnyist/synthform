@@ -554,7 +554,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/port-forwards": {
+    "/api/network/control/forwards": {
         parameters: {
             query?: never;
             header?: never;
@@ -562,20 +562,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Port Forwards
+         * List Forwards
          * @description Read the current WAN port-forward rules straight from the controller.
          */
-        get: operations["apps_network_control_api_list_port_forwards"];
+        get: operations["apps_network_control_api_list_forwards"];
         put?: never;
-        /** Create Port Forward */
-        post: operations["apps_network_control_api_create_port_forward"];
+        /** Create Forward */
+        post: operations["apps_network_control_api_create_forward"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/port-forwards/preview": {
+    "/api/network/control/forwards/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -585,17 +585,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Preview Port Forward
+         * Preview Forward
          * @description Compute what a create/update/delete would do — no snapshot, no write.
          */
-        post: operations["apps_network_control_api_preview_port_forward"];
+        post: operations["apps_network_control_api_preview_forward"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/port-forwards/{rule_id}": {
+    "/api/network/control/forwards/{rule_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -603,11 +603,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Port Forward */
-        put: operations["apps_network_control_api_update_port_forward"];
+        /** Update Forward */
+        put: operations["apps_network_control_api_update_forward"];
         post?: never;
-        /** Delete Port Forward */
-        delete: operations["apps_network_control_api_delete_port_forward"];
+        /** Delete Forward */
+        delete: operations["apps_network_control_api_delete_forward"];
         options?: never;
         head?: never;
         patch?: never;
@@ -753,7 +753,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/firewall-rules": {
+    "/api/network/control/firewall/rules": {
         parameters: {
             query?: never;
             header?: never;
@@ -761,20 +761,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Firewall Rules
+         * List Rules
          * @description Read the current legacy firewall rules straight from the controller.
          */
-        get: operations["apps_network_control_api_list_firewall_rules"];
+        get: operations["apps_network_control_api_list_rules"];
         put?: never;
-        /** Create Firewall Rule */
-        post: operations["apps_network_control_api_create_firewall_rule"];
+        /** Create Rule */
+        post: operations["apps_network_control_api_create_rule"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/firewall-rules/preview": {
+    "/api/network/control/firewall/rules/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -783,15 +783,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Preview Firewall Rule */
-        post: operations["apps_network_control_api_preview_firewall_rule"];
+        /** Preview Rule */
+        post: operations["apps_network_control_api_preview_rule"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/network/control/firewall-rules/{rule_id}": {
+    "/api/network/control/firewall/rules/{rule_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -799,11 +799,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Firewall Rule */
-        put: operations["apps_network_control_api_update_firewall_rule"];
+        /** Update Rule */
+        put: operations["apps_network_control_api_update_rule"];
         post?: never;
-        /** Delete Firewall Rule */
-        delete: operations["apps_network_control_api_delete_firewall_rule"];
+        /** Delete Rule */
+        delete: operations["apps_network_control_api_delete_rule"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2800,7 +2800,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_list_port_forwards: {
+    apps_network_control_api_list_forwards: {
         parameters: {
             query?: never;
             header?: never;
@@ -2818,7 +2818,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_create_port_forward: {
+    apps_network_control_api_create_forward: {
         parameters: {
             query?: {
                 confirm?: boolean;
@@ -2844,7 +2844,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_preview_port_forward: {
+    apps_network_control_api_preview_forward: {
         parameters: {
             query?: never;
             header?: never;
@@ -2868,7 +2868,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_update_port_forward: {
+    apps_network_control_api_update_forward: {
         parameters: {
             query?: {
                 confirm?: boolean;
@@ -2896,7 +2896,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_delete_port_forward: {
+    apps_network_control_api_delete_forward: {
         parameters: {
             query?: {
                 confirm?: boolean;
@@ -3160,7 +3160,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_list_firewall_rules: {
+    apps_network_control_api_list_rules: {
         parameters: {
             query?: never;
             header?: never;
@@ -3178,7 +3178,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_create_firewall_rule: {
+    apps_network_control_api_create_rule: {
         parameters: {
             query?: {
                 confirm?: boolean;
@@ -3204,7 +3204,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_preview_firewall_rule: {
+    apps_network_control_api_preview_rule: {
         parameters: {
             query?: never;
             header?: never;
@@ -3228,7 +3228,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_update_firewall_rule: {
+    apps_network_control_api_update_rule: {
         parameters: {
             query?: {
                 confirm?: boolean;
@@ -3256,7 +3256,7 @@ export interface operations {
             };
         };
     };
-    apps_network_control_api_delete_firewall_rule: {
+    apps_network_control_api_delete_rule: {
         parameters: {
             query?: {
                 confirm?: boolean;
