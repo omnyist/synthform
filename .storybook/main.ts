@@ -1,7 +1,7 @@
 import type { StorybookConfig } from '@storybook/react-vite'
 
-// Props reach the docs pages through Storybook 11's server-side docgen, which is on by default and
-// reads the TypeScript types itself, so there is no reactDocgen option or docgen tsconfig here.
+// Props reach the docs pages through react-docgen, react-vite's default, which reads them from the
+// TypeScript source without the compiler API, so there is no reactDocgen option or docgen tsconfig.
 // Vite's publicDir (public/: fonts, sounds, stickers) is served and copied by Storybook itself in
 // 11, so there is no staticDirs either.
 const config: StorybookConfig = {
