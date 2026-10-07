@@ -33,7 +33,7 @@ run:
       SSH="ssh -i ~/.ssh/id_ed25519 -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=10"
       RSYNC_SSH="$SSH"
 
-      # An unresolved ((var)) arrives as its literal text, which is not empty.
+      # An unresolved pipeline var arrives as its literal placeholder, not empty.
       case "$VITE_GITHUB_TOKEN" in
         ''|'(('*)
           echo "::error:: VITE_GITHUB_TOKEN is missing; check the Synthform 1Password Environment."
