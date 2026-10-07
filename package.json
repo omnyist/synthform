@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -b",
-    "lint": "oxlint --report-unused-disable-directives",
+    "lint": "oxlint --report-unused-disable-directives --max-warnings=108",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "test": "bun test",
