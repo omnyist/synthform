@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect, waitFor } from 'storybook/test'
 
 import { useRealtimeStore } from '@/store/realtime'
 import type { TimelineEvent } from '@/types/events'
@@ -60,6 +61,21 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+// The timeline slides up and then fades its items in, close to two seconds with twenty events. The
+// accessibility check runs after play, so play waits for the shown state; before it, the items are
+// clipped and transparent and the check passes over them.
+const shown: Story['play'] = async ({ canvasElement }) => {
+  await waitFor(
+    async () => {
+      const animations = canvasElement.getAnimations({ subtree: true })
+      // The slide, then the items' fades, which start once the slide ends.
+      await expect(animations.length).toBeGreaterThan(1)
+      await expect(animations.every((animation) => animation.playState === 'finished')).toBe(true)
+    },
+    { timeout: 5000 },
+  )
+}
+
 // Nothing to show, so the timeline stays below the bar.
 export const Empty: Story = {
   beforeEach: seed([]),
@@ -67,6 +83,7 @@ export const Empty: Story = {
 
 export const OneEvent: Story = {
   beforeEach: seed([fixtures.follow('follow-mirai', 'Mirai')]),
+  play: shown,
 }
 
 export const Mixed: Story = {
@@ -77,6 +94,7 @@ export const Mixed: Story = {
     fixtures.follow('follow-mirai', 'Mirai'),
     fixtures.communitySubGift,
   ]),
+  play: shown,
 }
 
 // The overlay keeps up to twenty, more than the bar is wide; the rest run off the edge.
@@ -93,4 +111,5 @@ export const Full: Story = {
     fixtures.sub,
     ...Array.from({ length: 11 }, (_, i) => fixtures.follow(`follow-${i}`, `Follower${i + 1}`)),
   ]),
+  play: shown,
 }

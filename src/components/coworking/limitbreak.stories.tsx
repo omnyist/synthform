@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect, waitFor } from 'storybook/test'
 
 import { useRealtimeStore } from '@/store/realtime'
 import type { LimitBreakData } from '@/types/server'
@@ -17,6 +18,13 @@ const meta = {
   parameters: {
     // Each story seeds the one realtime store, so the docs page renders each in its own frame.
     docs: { story: { inline: false, iframeHeight: '96px' } },
+  },
+  // The gauge fades in over 600ms when its data arrives. The accessibility check runs after play,
+  // so play waits for the fade; during it the count is transparent and the check passes over it.
+  // The fade starts in an effect after mount and may not exist yet, so wait out its length first.
+  play: async ({ canvasElement }) => {
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await waitFor(() => expect(canvasElement.getAnimations({ subtree: true })).toHaveLength(0))
   },
 } satisfies Meta<typeof LimitBreak>
 
