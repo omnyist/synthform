@@ -12,6 +12,7 @@ inputs:
 params:
   SSH_KEY: ((deploy_ssh_key))
   KNOWN_HOSTS: ((demi_known_hosts))
+  VITE_GITHUB_TOKEN: ((vite_github_token))
 
 run:
   path: sh
@@ -32,26 +33,32 @@ run:
       SSH="ssh -i ~/.ssh/id_ed25519 -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=10"
       RSYNC_SSH="$SSH"
 
+      # An unresolved ((var)) arrives as its literal text, which is not empty.
+      case "$VITE_GITHUB_TOKEN" in
+        ''|'(('*)
+          echo "::error:: VITE_GITHUB_TOKEN is missing; check the Synthform 1Password Environment."
+          exit 1 ;;
+      esac
+
       # Demi is OFF unless Bryan is streaming or working. Fail loudly and say
       # why: a deploy that silently succeeds against nothing is worse than one
       # that stops and names the reason.
       if ! $SSH -o BatchMode=yes "$DEMI" true 2>/dev/null; then
         echo "::error:: Demi is unreachable at 100.111.202.16."
         echo "           It is powered off unless Bryan is streaming or at the desk."
-        echo "           This is a manual-trigger job: re-run it when Demi is up."
+        echo "           The next push deploys it, or re-run this job once Demi is up."
         exit 1
       fi
 
       $SSH "$DEMI" 'mkdir -p ~/ci/deploys/synthform'
 
-      # --exclude .env is load-bearing. Demi's .env is the WORKING config and
-      # is not in git: it holds VITE_GITHUB_TOKEN plus seven settings, and
-      # origin/main reads four more that it does not define (the two
-      # HOMEASSISTANT vars, which have code defaults, and the two SYNTHMULT_WS
-      # ones, which do not). The retired GHA workflow wrote a DIFFERENT and
-      # partly dead set -- HOMEASSISTANT vars but no WS_HOST/TENANT_SLUG --
-      # which is how the two copies drifted. This deploy ships code and leaves
-      # config alone rather than reconstructing a file it cannot fully know.
+      # This deploy writes Demi's .env from the Synthform 1Password
+      # Environment, which also feeds Zelan's mounted .env, so both build with
+      # the same token. VITE_GITHUB_TOKEN is the only value that differs from
+      # the code's defaults: a classic token with no scopes (public read, for
+      # the activity feed). It travels on stdin, never argv.
       rsync -a --delete --exclude '.env' -e "$RSYNC_SSH" repo/ "$DEMI":~/ci/deploys/synthform/
+      printf 'VITE_GITHUB_TOKEN=%s\n' "$VITE_GITHUB_TOKEN" |
+        $SSH "$DEMI" 'umask 077 && cat > ~/ci/deploys/synthform/.env && chmod 600 ~/ci/deploys/synthform/.env'
 
       $SSH "$DEMI" 'cd ~/ci/deploys/synthform && bash ci/deploy.sh && sh ci/verify.sh'

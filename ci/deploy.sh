@@ -22,19 +22,18 @@ set -eu
 # that was never here — and the build went ahead with NO VITE_* set at all.
 #
 # The failure is invisible from outside: Vite bakes VITE_* at BUILD time, so
-# the container starts, nginx serves, and /omnibar returns 200. The overlays
-# just quietly point at defaults instead of saya:7175/7176, with no tenant and
-# no token. A health check cannot see it. So the check belongs here.
+# the container starts, the preview server serves, and /omnibar returns
+# 200. Without a token the activity feed is just empty. A health check
+# cannot see it. So the check belongs here.
 #
-# Seeding it is a one-time manual step, deliberately: this file is not in git
-# (it holds VITE_GITHUB_TOKEN) and the pipeline does not reconstruct it,
-# because origin/main reads four variables the working .env does not define.
-if [ ! -f .env ]; then
-  echo "::error:: no .env in $(pwd)."
-  echo "           Vite bakes VITE_* at build time, so deploying without it"
-  echo "           yields overlays that load and point at nothing."
-  echo "           Seed it once, then this deploy preserves it:"
-  echo "             cp ~/Code/synthform/.env ~/ci/deploys/synthform/.env"
+# The pipeline's deploy task writes this file from the Synthform 1Password
+# Environment before it runs this script (ci/tasks/deploy.yml); run by hand,
+# the same file has to be there first.
+if ! grep -q '^VITE_GITHUB_TOKEN=[^[:space:]]' .env 2>/dev/null; then
+  echo "::error:: no VITE_GITHUB_TOKEN in $(pwd)/.env."
+  echo "           Vite bakes VITE_* at build time, so building without it"
+  echo "           ships overlays with an empty activity feed."
+  echo "           The pipeline's deploy task writes it; check that task's log."
   exit 1
 fi
 
