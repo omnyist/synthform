@@ -1,0 +1,31 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: oven/bun
+    # Debian, not the test task's Alpine: Playwright's Chromium runs on Debian
+    # and Ubuntu, not Alpine. This image has no real Node (`node` runs Bun), so
+    # Vitest and Storybook run under Bun here; that passed every story on the
+    # Unraid worker's x86_64 on 2026-10-07. Pinned for the same reason the test
+    # task is.
+    tag: '1.4-debian'
+
+inputs:
+  - name: repo
+
+params:
+  STORYBOOK_DISABLE_TELEMETRY: '1'
+
+# Story tests: every story renders in headless Chromium and fails on an
+# accessibility violation. The browser and its system libraries install on
+# each run, since the image doesn't carry them.
+run:
+  path: sh
+  dir: repo
+  args:
+    - -ec
+    - |
+      bun install --frozen-lockfile
+      bunx playwright install --with-deps chromium
+      bunx vitest --project=storybook --run
