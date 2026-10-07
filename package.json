@@ -33,6 +33,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@omnyist/declick": "^0.1.0",
     "@rolldown/plugin-babel": "^0.2.3",
     "@storybook/addon-a11y": "11.0.0-alpha.4",
     "@storybook/addon-docs": "11.0.0-alpha.4",

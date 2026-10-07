@@ -9,6 +9,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 
+import { resolvedConfig } from '@omnyist/declick/guard'
+
 const root = join(import.meta.dir, '..')
 const oxlint = join(root, 'node_modules', '.bin', 'oxlint')
 // A temporary folder, so neither a lint running at the same moment nor an editor sees the broken
@@ -199,4 +201,10 @@ test('every rule family in the lint config still reports', () => {
     if (missing.length > 0) silent[file] = missing
   }
   expect(silent).toEqual({})
+})
+
+// The whole resolved config, so one rule dropped from a preset or from .oxlintrc.json fails here,
+// not only a whole family going quiet.
+test('the resolved lint config matches its snapshot', async () => {
+  expect(await resolvedConfig()).toMatchSnapshot()
 })

@@ -21,6 +21,7 @@
         "zustand": "^5.0.15",
       },
       "devDependencies": {
+        "@omnyist/declick": "^0.1.0",
         "@rolldown/plugin-babel": "^0.2.3",
         "@storybook/addon-a11y": "11.0.0-alpha.4",
         "@storybook/addon-docs": "11.0.0-alpha.4",
@@ -201,6 +202,8 @@
     "@msgpack/msgpack": ["@msgpack/msgpack@2.8.0", "", {}, "sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.3", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || ^2.0.0-alpha.4", "@emnapi/runtime": "^1.7.1 || ^2.0.0-alpha.4" } }, "sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q=="],
+
+    "@omnyist/declick": ["@omnyist/declick@0.1.0", "", { "peerDependencies": { "@tanstack/eslint-plugin-query": "^5.104.1", "eslint-plugin-storybook": "^10.0.0 || ^11.0.0-alpha.4", "oxlint": "^1.87.0", "oxlint-tsgolint": "^7.0.2003" }, "optionalPeers": ["@tanstack/eslint-plugin-query", "eslint-plugin-storybook", "oxlint-tsgolint"] }, "sha512-aYGNZUWUNMY9+Ynq8++OxzlGxmwvRTaoj/lQ1oFD6/Az3EJ5kf2MUTfaKS2aQFVvsyPsBuMfC2N9JCWb9R8IBQ=="],
 
     "@oxc-parser/binding-android-arm-eabi": ["@oxc-parser/binding-android-arm-eabi@0.127.0", "", { "os": "android", "cpu": "arm" }, "sha512-0LC7ye4hvqbIKxAzThzvswgHLFu2AURKzYLeSVvLdu2TBOYWQDmHnTqPLeA597BcUCxiLqLsS4CJ5uoI5WYWCQ=="],
 
