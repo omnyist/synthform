@@ -18,6 +18,7 @@ bun run typecheck
 # anything NEW at error level while the known debt stays visible rather than
 # hidden behind a blanket `|| true`.
 bun run lint
+bun run format:check
 
 bun test
 bun run build

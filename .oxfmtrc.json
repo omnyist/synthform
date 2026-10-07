@@ -7,5 +7,14 @@
   "trailingComma": "all",
   "sortPackageJson": false,
   "sortTailwindcss": {},
-  "ignorePatterns": ["src/api/generated/**", "src/routeTree.gen.ts", "public/emotes.json"]
+  "ignorePatterns": [
+    // Written by generate:api, the router plugin and the sprite packer.
+    "src/api/generated/**",
+    "src/routeTree.gen.ts",
+    "public/emotes.json",
+    // oxfmt formats HTML through Prettier in a worker thread, and under Bun
+    // 1.2's node fallback (CI's oven/bun:1.2-alpine) that throws
+    // DataCloneError. Bun 1.3 and 1.4 format it fine.
+    "index.html"
+  ]
 }
