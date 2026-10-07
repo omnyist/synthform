@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react"],
-  "jsPlugins": ["@tanstack/eslint-plugin-query"],
+  "jsPlugins": ["@tanstack/eslint-plugin-query", "eslint-plugin-storybook"],
   "categories": {
     "correctness": "off"
   },
@@ -13,7 +13,7 @@
   "options": {
     "typeAware": true
   },
-  "ignorePatterns": ["dist"],
+  "ignorePatterns": ["dist", "storybook-static"],
   "rules": {
     // TRACKED DEBT, not a preference. Every rule set to "warn" below has
     // findings today, and is a warning so that lint can GATE on everything
@@ -177,6 +177,33 @@
       "files": ["src/routes/**/*.tsx"],
       "rules": {
         "react/only-export-components": "off"
+      }
+    },
+    {
+      // eslint-plugin-storybook's recommended rules, as its flat/recommended config sets them.
+      // Stories export a meta object and story objects rather than components, and Storybook
+      // re-renders them itself, so Fast Refresh's rule has nothing to protect; render functions
+      // are not components either, which is why the plugin turns rules-of-hooks off.
+      "files": ["**/*.stories.{ts,tsx}"],
+      "rules": {
+        "storybook/await-interactions": "error",
+        "storybook/context-in-play-function": "error",
+        "storybook/default-exports": "error",
+        "storybook/hierarchy-separator": "warn",
+        "storybook/no-redundant-story-name": "warn",
+        "storybook/no-renderer-packages": "error",
+        "storybook/prefer-pascal-case": "warn",
+        "storybook/story-exports": "error",
+        "storybook/use-storybook-expect": "error",
+        "storybook/use-storybook-testing-library": "error",
+        "react/rules-of-hooks": "off",
+        "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": ["**/.storybook/main.ts"],
+      "rules": {
+        "storybook/no-uninstalled-addons": "error"
       }
     }
   ]

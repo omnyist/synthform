@@ -5,11 +5,15 @@ node_modules
 out
 dist
 dist-ssr
+storybook-static
 *.tgz
 
 # code coverage
 coverage
 *.lcov
+
+# Vitest browser mode's failure screenshots
+__screenshots__
 
 # logs
 logs

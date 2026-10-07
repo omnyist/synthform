@@ -9,6 +9,7 @@ Synthform is a personal streaming overlay frontend built with React, Vite, and T
 ## Conventions
 
 @~/Code/standards/conventions/typescript.md
+@~/Code/standards/conventions/storybook.md
 
 Project-specific deltas (everything else is inherited from the import above and ~/.claude/CLAUDE.md):
 

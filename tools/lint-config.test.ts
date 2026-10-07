@@ -5,7 +5,7 @@
 // and checks that each rule is reported.
 
 import { afterAll, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 
@@ -96,6 +96,28 @@ export function Query({ id }: { id: string }) {
 }
 `
 
+const stories = `import { render } from '@storybook/react'
+import { expect } from 'vitest'
+import { userEvent } from '@testing-library/user-event'
+import { within } from 'storybook/test'
+
+const meta = { title: 'Group/Probe', component: render }
+
+export const BadStory = {
+  name: 'Bad Story',
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button'))
+    expect(meta).toBeDefined()
+  },
+}
+
+export const bad_case = {}
+`
+
+const main = `export default { stories: [], addons: ['@storybook/addon-not-installed'] }
+`
+
 // One rule at least from every plugin and rule family the config enables.
 const EXPECTED: Record<string, string[]> = {
   'probe.ts': [
@@ -130,6 +152,15 @@ const EXPECTED: Record<string, string[]> = {
     '@tanstack/query(mutation-property-order)',
     '@tanstack/query(infinite-query-property-order)',
   ],
+  'Probe.stories.tsx': [
+    'storybook(default-exports)',
+    'storybook(no-redundant-story-name)',
+    'storybook(no-renderer-packages)',
+    'storybook(prefer-pascal-case)',
+    'storybook(use-storybook-expect)',
+    'storybook(use-storybook-testing-library)',
+  ],
+  'main.ts': ['storybook(no-uninstalled-addons)'],
 }
 
 afterAll(() => rmSync(probe, { recursive: true, force: true }))
@@ -139,6 +170,9 @@ test('every rule family in the lint config still reports', () => {
   writeFileSync(join(probe, 'probe.ts'), plain)
   writeFileSync(join(probe, 'Hooks.tsx'), hooks)
   writeFileSync(join(probe, 'Query.tsx'), query)
+  writeFileSync(join(probe, 'Probe.stories.tsx'), stories)
+  mkdirSync(join(probe, '.storybook'))
+  writeFileSync(join(probe, '.storybook', 'main.ts'), main)
 
   const result = Bun.spawnSync([oxlint, '-c', join(root, '.oxlintrc.json'), '-f', 'json', probe], {
     cwd: root,

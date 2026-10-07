@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { resolve } from 'node:path'
 
 import { defineConfig, type Plugin } from 'vite'
@@ -6,6 +7,8 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+import { playwright } from '@vitest/browser-playwright'
 
 import { buildStickerManifest } from './tools/stickers.ts'
 
@@ -77,5 +80,30 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/obs/, ''),
       },
     },
+  },
+  // Story tests only: every story renders in headless Chromium and its accessibility checks run.
+  // The unit tests stay on `bun test`, which doesn't read this file.
+  test: {
+    projects: [
+      {
+        extends: true,
+        plugins: [
+          storybookTest({
+            configDir: resolve(import.meta.dirname, '.storybook'),
+            // Where a failure's "debug in Storybook" link points; the `storybook` script's port.
+            storybookUrl: 'http://localhost:6007',
+          }),
+        ],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+    ],
   },
 })

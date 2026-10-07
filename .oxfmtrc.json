@@ -12,6 +12,8 @@
     "src/api/generated/**",
     "src/routeTree.gen.ts",
     "public/emotes.json",
+    // Written by build-storybook.
+    "storybook-static",
     // oxfmt formats HTML through Prettier in a worker thread, and under Bun
     // 1.2's node fallback (CI's oven/bun:1.2-alpine) that throws
     // DataCloneError. Bun 1.3 and 1.4 format it fine.
