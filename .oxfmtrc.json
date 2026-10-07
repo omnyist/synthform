@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "bracketSameLine": true,
+  "printWidth": 100,
+  "singleQuote": true,
+  "semi": false,
+  "trailingComma": "all",
+  "sortPackageJson": false,
+  "sortTailwindcss": {},
+  "ignorePatterns": ["src/api/generated/**", "src/routeTree.gen.ts", "public/emotes.json"]
+}

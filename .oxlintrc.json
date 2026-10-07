@@ -1,0 +1,183 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "jsPlugins": ["@tanstack/eslint-plugin-query"],
+  "categories": {
+    "correctness": "off"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "es2020": true
+  },
+  "options": {
+    "typeAware": true
+  },
+  "ignorePatterns": ["dist"],
+  "rules": {
+    // TRACKED DEBT, not a preference. Every rule set to "warn" below has
+    // findings today, and is a warning so that lint can GATE on everything
+    // else: before 2026-09-06 nothing ran a linter at all (the old deploy
+    // workflow never linted), so these accumulated unseen. They print on
+    // every build and the counts only go down deliberately.
+    //
+    // no-explicit-any: 30 occurrences, none in the generated API clients.
+    // 14 are `as any` at serverConnection.subscribe/unsubscribe call sites
+    // (telestrator/output.tsx 10, debug/ironmon.tsx 2, debug/server.tsx 2);
+    // 12 are `any`-typed fields in the hand-written types (types/server.ts 9,
+    // types/campaign.ts 2, types/obs.ts 1); the rest are scattered.
+    //
+    // For the subscribe casts, the tempting conclusion — "one badly typed
+    // signature" — is wrong. subscribe is already correctly generic
+    // (<T extends MessageType>, callback: (data: PayloadType<T>) => void)
+    // and already absorbs the variance internally. The casts exist because
+    // callers pass a message-type VARIABLE rather than a literal, so T
+    // widens and PayloadType<T> becomes a union the handler cannot satisfy.
+    //
+    // The fix is therefore per-call-site (narrow those to literals or
+    // as-const), not one signature change. Real work, modest payoff, in
+    // overlay code — worth doing while touching these files, not as a
+    // dedicated sweep.
+    //
+    // react/immutability: 1 occurrence, a connect() called in a useEffect. A
+    // genuine correctness rule; left visible rather than silenced, because
+    // fixing it means restructuring the hook.
+    //
+    // react/purity (4) and react/set-state-in-effect (3) are React Compiler
+    // rules that were off under ESLint; they are on now and start as
+    // warnings for the same reason.
+    //
+    // @tanstack/query/exhaustive-deps: 2, both in use-questlog.ts.
+    //
+    // The type-aware rules (tsgolint, the "typescript/" rules after
+    // triple-slash-reference) are all warnings while they are new:
+    // no-unnecessary-type-assertion (38), no-redundant-type-constituents
+    // (21, all in types/events.ts), no-floating-promises (3) and
+    // no-misused-promises (2).
+    //
+    // Promote each back to "error" as its count reaches zero.
+    "for-direction": "error",
+    "no-async-promise-executor": "error",
+    "no-case-declarations": "error",
+    "no-compare-neg-zero": "error",
+    "no-cond-assign": "error",
+    "no-constant-binary-expression": "error",
+    "no-constant-condition": ["error", { "checkLoops": "allExceptWhileTrue" }],
+    "no-control-regex": "error",
+    "no-debugger": "error",
+    "no-delete-var": "error",
+    "no-dupe-else-if": "error",
+    "no-duplicate-case": "error",
+    "no-empty": "error",
+    "no-empty-character-class": "error",
+    "no-empty-pattern": "error",
+    "no-empty-static-block": "error",
+    "no-ex-assign": "error",
+    "no-extra-boolean-cast": "error",
+    "no-fallthrough": "error",
+    "no-global-assign": "error",
+    "no-invalid-regexp": "error",
+    "no-irregular-whitespace": "error",
+    "no-loss-of-precision": "error",
+    "no-misleading-character-class": "error",
+    "no-nonoctal-decimal-escape": "error",
+    "no-prototype-builtins": "error",
+    "no-regex-spaces": "error",
+    "no-self-assign": "error",
+    "no-shadow-restricted-names": ["error", { "reportGlobalThis": false }],
+    "no-sparse-arrays": "error",
+    "no-unexpected-multiline": "error",
+    "no-unsafe-finally": "error",
+    "no-unsafe-optional-chaining": "error",
+    "no-unused-labels": "error",
+    "no-unused-private-class-members": "error",
+    "no-useless-backreference": "error",
+    "no-useless-catch": "error",
+    "no-useless-escape": "error",
+    "require-yield": "error",
+    "use-isnan": "error",
+    "valid-typeof": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "no-array-constructor": "error",
+    "no-unused-expressions": "error",
+    // Allow underscore-prefixed unused vars (standard TypeScript pattern)
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-extra-non-null-assertion": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-namespace-keyword": "error",
+    "typescript/triple-slash-reference": "error",
+
+    "typescript/await-thenable": "warn",
+    "typescript/no-array-delete": "warn",
+    "typescript/no-base-to-string": "warn",
+    "typescript/no-duplicate-type-constituents": "warn",
+    "typescript/no-floating-promises": "warn",
+    "typescript/no-for-in-array": "warn",
+    "typescript/no-implied-eval": "warn",
+    "typescript/no-meaningless-void-operator": "warn",
+    "typescript/no-misused-promises": "warn",
+    "typescript/no-misused-spread": "warn",
+    "typescript/no-redundant-type-constituents": "warn",
+    "typescript/no-unnecessary-type-assertion": "warn",
+    "typescript/no-unsafe-unary-minus": "warn",
+    "typescript/no-useless-default-assignment": "warn",
+    "typescript/require-array-sort-compare": "warn",
+    "typescript/restrict-template-expressions": "warn",
+    "typescript/unbound-method": "warn",
+
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    // Suppressing a hooks rule makes the React Compiler skip the whole
+    // component or hook, so the compiler rules below go quiet there too.
+    "react/rule-suppression": "error",
+    "react/static-components": "error",
+    "react/use-memo": "error",
+    "react/void-use-memo": "error",
+    "react/preserve-manual-memoization": "error",
+    "react/incompatible-library": "warn",
+    "react/immutability": "warn",
+    "react/globals": "error",
+    "react/refs": "error",
+    "react/set-state-in-effect": "warn",
+    "react/error-boundaries": "error",
+    "react/purity": "warn",
+    "react/set-state-in-render": "error",
+    "react/unsupported-syntax": "warn",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+
+    "@tanstack/query/exhaustive-deps": "warn",
+    "@tanstack/query/stable-query-client": "error",
+    "@tanstack/query/no-rest-destructuring": "warn",
+    "@tanstack/query/no-unstable-deps": "error",
+    "@tanstack/query/infinite-query-property-order": "error",
+    "@tanstack/query/mutation-property-order": "error"
+  },
+  "overrides": [
+    {
+      // TanStack Router's file routes export `Route` beside a local component.
+      // autoCodeSplitting moves that component into its own chunk and the
+      // router plugin handles the route's HMR, so Fast Refresh is not at risk.
+      "files": ["src/routes/**/*.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ]
+}

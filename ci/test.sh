@@ -13,8 +13,8 @@ cd repo
 bun install --frozen-lockfile
 bun run typecheck
 
-# Lint GATES. The two categories that were failing on day one are recorded as
-# warnings in eslint.config.js with their counts and the reason, so this stops
+# Lint GATES. The rules that had findings when they were turned on are recorded
+# as warnings in .oxlintrc.json with their counts and the reason, so this stops
 # anything NEW at error level while the known debt stays visible rather than
 # hidden behind a blanket `|| true`.
 bun run lint
