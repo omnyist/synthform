@@ -4,7 +4,13 @@ import { AlertAudioDriver } from '@/components/shared/alert-audio-driver'
 import { Canvas } from '@/components/ui/canvas'
 import { useLatestReadings } from '@/hooks/use-latest-readings'
 import { useTempest, useTempestForecast, useTempestCurrent } from '@/hooks/use-tempest'
-import { useEnphase, useEnphaseBatteries, useEnphaseToday, useEnphaseCurrent, useEnphaseMicroinverters } from '@/hooks/use-enphase'
+import {
+  useEnphase,
+  useEnphaseBatteries,
+  useEnphaseToday,
+  useEnphaseCurrent,
+  useEnphaseMicroinverters,
+} from '@/hooks/use-enphase'
 import { useNetwork, useNetworkDevices, usePduOutlets } from '@/hooks/use-network'
 import { useGitHubCommits } from '@/hooks/use-github'
 import { useSteamPlayer, useSteamRecentGames } from '@/hooks/use-steam'
@@ -47,7 +53,13 @@ function HUD() {
   // ---------------------------------------------------------------------------
   // Weather (Synthhome WebSocket + REST)
   // ---------------------------------------------------------------------------
-  const { observation, rapidWind, lastStrike, isRaining, isConnected: tempestConnected } = useTempest()
+  const {
+    observation,
+    rapidWind,
+    lastStrike,
+    isRaining,
+    isConnected: tempestConnected,
+  } = useTempest()
   const { data: forecast } = useTempestForecast()
   useTempestCurrent()
 
@@ -70,7 +82,12 @@ function HUD() {
   // ---------------------------------------------------------------------------
   // Energy (Synthhome WebSocket + REST)
   // ---------------------------------------------------------------------------
-  const { snapshot: energySnapshot, events: energyEvents, hasFault: energyHasFault, isConnected: enphaseConnected } = useEnphase()
+  const {
+    snapshot: energySnapshot,
+    events: energyEvents,
+    hasFault: energyHasFault,
+    isConnected: enphaseConnected,
+  } = useEnphase()
   const { data: energyCurrent } = useEnphaseCurrent()
   const { data: energyToday } = useEnphaseToday()
   const { data: batteries } = useEnphaseBatteries()
@@ -88,7 +105,8 @@ function HUD() {
   const selfConsumption = (energy.self_consumption_w as number) ?? 0
 
   // Daily totals and peaks
-  const productionTodayWh = energyToday?.grid_export_today_wh != null ? (energyCurrent?.production_today_wh ?? null) : null
+  const productionTodayWh =
+    energyToday?.grid_export_today_wh != null ? (energyCurrent?.production_today_wh ?? null) : null
   const consumptionTodayWh = energyCurrent?.consumption_today_wh ?? null
   const gridImportTodayWh = energyToday?.grid_import_today_wh ?? null
   const gridExportTodayWh = energyToday?.grid_export_today_wh ?? null
@@ -102,7 +120,11 @@ function HUD() {
   // ---------------------------------------------------------------------------
   // Network (Synthhome WebSocket + REST)
   // ---------------------------------------------------------------------------
-  const { snapshot: networkSnapshot, events: networkEvents, isConnected: unifiConnected } = useNetwork()
+  const {
+    snapshot: networkSnapshot,
+    events: networkEvents,
+    isConnected: unifiConnected,
+  } = useNetwork()
   const { data: networkDevices } = useNetworkDevices()
   const { data: pduOutlets } = usePduOutlets()
 
@@ -142,31 +164,67 @@ function HUD() {
     airPurifier: { pm25, filterLife },
     server: { cpuUsage, ramUsage, uptime, arrayUsage, disk1, disk2, disk3 },
     network: {
-      wanDownload, wanUpload, wanLatency, rackPower, wifiClients,
-      devices: networkDevices?.map((d) => ({ name: d.name, type: d.device_type, cpu: d.cpu_pct, mem: d.mem_pct })),
-      pdu: pduOutlets?.filter((o) => o.has_metering && (o.power_w ?? 0) > 0).map((o) => ({ index: o.index, name: o.name, power: o.power_w })),
+      wanDownload,
+      wanUpload,
+      wanLatency,
+      rackPower,
+      wifiClients,
+      devices: networkDevices?.map((d) => ({
+        name: d.name,
+        type: d.device_type,
+        cpu: d.cpu_pct,
+        mem: d.mem_pct,
+      })),
+      pdu: pduOutlets
+        ?.filter((o) => o.has_metering && (o.power_w ?? 0) > 0)
+        .map((o) => ({ index: o.index, name: o.name, power: o.power_w })),
       events: networkEvents.slice(0, 5),
     },
     weather: {
-      outdoorTemp, outdoorHumidity, windAvg, windGust, windDir,
-      pressure, uv, solarRadiation, illuminance, dailyRain,
-      isRaining, lastStrike,
+      outdoorTemp,
+      outdoorHumidity,
+      windAvg,
+      windGust,
+      windDir,
+      pressure,
+      uv,
+      solarRadiation,
+      illuminance,
+      dailyRain,
+      isRaining,
+      lastStrike,
     },
     forecastCurrent,
     forecastHourly: forecastHourly.slice(0, 6),
     forecastDaily: forecastDaily.slice(0, 3),
     energy: {
-      solarProd, houseConsumption, gridImport, gridExport, gridNet,
-      batteryPower, batterySoc, batteryAvailWh, selfConsumption,
+      solarProd,
+      houseConsumption,
+      gridImport,
+      gridExport,
+      gridNet,
+      batteryPower,
+      batterySoc,
+      batteryAvailWh,
+      selfConsumption,
     },
     energyToday: {
-      productionTodayWh, consumptionTodayWh,
-      gridImportTodayWh, gridExportTodayWh,
-      batteryChargedTodayWh, batteryDischargedTodayWh,
-      peakProductionW, peakConsumptionW, maxSocToday, minSocToday,
+      productionTodayWh,
+      consumptionTodayWh,
+      gridImportTodayWh,
+      gridExportTodayWh,
+      batteryChargedTodayWh,
+      batteryDischargedTodayWh,
+      peakProductionW,
+      peakConsumptionW,
+      maxSocToday,
+      minSocToday,
     },
     batteries: batteries?.map((b) => ({ serial: b.serial, soc: b.soc, temp_c: b.temp_c })),
-    inverters: { total: inverters?.length, producing: inverters?.filter((i) => (i.last_w ?? 0) > 0).length },
+    inverters: {
+      total: inverters?.length,
+      producing: inverters?.filter((i) => (i.last_w ?? 0) > 0).length,
+    },
     energyEvents: energyEvents.slice(0, 5),
     energyHasFault,
     github: commits?.slice(0, 5),
@@ -184,7 +242,7 @@ function HUD() {
       {/* Invisible alert sound handler — soundEnabled: false, routes/audio.tsx is the dedicated audio source */}
       <AlertAudioDriver soundEnabled={false} />
       <div className="size-full overflow-auto bg-[#0a0e14] p-4 font-mono text-[11px] text-gray-200">
-        <pre className="whitespace-pre-wrap break-words text-gray-400">
+        <pre className="break-words whitespace-pre-wrap text-gray-400">
           {JSON.stringify(debugPayloads, null, 2)}
         </pre>
       </div>

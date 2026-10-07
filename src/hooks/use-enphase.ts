@@ -41,18 +41,22 @@ export function useEnphase() {
     const disconnect = connectEnergy({
       onSnapshot: setSnapshot,
       onEvent: handleEvent,
-      onConnected: () => { setIsConnected(true); setError(null) },
+      onConnected: () => {
+        setIsConnected(true)
+        setError(null)
+      },
       onDisconnected: () => setIsConnected(false),
-      onError: (err) => { setError(err); setIsConnected(false) },
+      onError: (err) => {
+        setError(err)
+        setIsConnected(false)
+      },
     })
 
     return disconnect
   }, [handleEvent])
 
   // Derived: any active fault
-  const hasFault = events.some(
-    (e) => e.kind === 'battery_fault' || e.kind === 'controller_fault',
-  )
+  const hasFault = events.some((e) => e.kind === 'battery_fault' || e.kind === 'controller_fault')
 
   return { snapshot, events, hasFault, isConnected, error }
 }

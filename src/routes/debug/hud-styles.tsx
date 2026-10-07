@@ -2,7 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useLatestReadings } from '@/hooks/use-latest-readings'
 import { useNetwork } from '@/hooks/use-network'
 import { useTempest, useTempestForecast } from '@/hooks/use-tempest'
-import { useEnphase, useEnphaseBatteries, useEnphaseMicroinverters, useEnphaseToday } from '@/hooks/use-enphase'
+import {
+  useEnphase,
+  useEnphaseBatteries,
+  useEnphaseMicroinverters,
+  useEnphaseToday,
+} from '@/hooks/use-enphase'
 import { useGitHubCommits } from '@/hooks/use-github'
 import { useSteamPlayer, useSteamRecentGames } from '@/hooks/use-steam'
 import { useSparkline, useAccumulatingSparkline } from '@/hooks/use-sparkline'
@@ -50,7 +55,14 @@ function ArcGauge({
   return (
     <div className="flex flex-col items-center gap-1">
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={center} cy={center} r={radius} fill="none" stroke={trackColor} strokeWidth={strokeWidth} />
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={trackColor}
+          strokeWidth={strokeWidth}
+        />
         <circle
           cx={center}
           cy={center}
@@ -61,14 +73,21 @@ function ArcGauge({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.8s ease-out', filter: `drop-shadow(0 0 4px ${color})` }}
+          style={{
+            transition: 'stroke-dashoffset 0.8s ease-out',
+            filter: `drop-shadow(0 0 4px ${color})`,
+          }}
         />
       </svg>
-      <div className="absolute flex flex-col items-center" style={{ width: size, height: size, justifyContent: 'center' }}>
-        <span className="tabular-nums text-lg font-bold" style={{ color }}>{value.toFixed(value % 1 === 0 ? 0 : 1)}</span>
+      <div
+        className="absolute flex flex-col items-center"
+        style={{ width: size, height: size, justifyContent: 'center' }}>
+        <span className="text-lg font-bold tabular-nums" style={{ color }}>
+          {value.toFixed(value % 1 === 0 ? 0 : 1)}
+        </span>
         <span className="text-[9px] text-gray-500">{unit}</span>
       </div>
-      <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
     </div>
   )
 }
@@ -119,15 +138,20 @@ function HalfArcGauge({
             strokeDasharray={halfCirc}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.8s ease-out', filter: `drop-shadow(0 0 4px ${color})` }}
+            style={{
+              transition: 'stroke-dashoffset 0.8s ease-out',
+              filter: `drop-shadow(0 0 4px ${color})`,
+            }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
-          <span className="tabular-nums text-lg font-bold" style={{ color }}>{value.toFixed(value % 1 === 0 ? 0 : 1)}</span>
+          <span className="text-lg font-bold tabular-nums" style={{ color }}>
+            {value.toFixed(value % 1 === 0 ? 0 : 1)}
+          </span>
           <span className="text-[9px] text-gray-500">{unit}</span>
         </div>
       </div>
-      <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
     </div>
   )
 }
@@ -154,7 +178,9 @@ function Sparkline({
 }) {
   if (data.length < 2) {
     return (
-      <div style={{ width, height }} className="flex items-center justify-center text-[10px] text-gray-600">
+      <div
+        style={{ width, height }}
+        className="flex items-center justify-center text-[10px] text-gray-600">
         Accumulating...
       </div>
     )
@@ -178,9 +204,11 @@ function Sparkline({
     <div className="flex flex-col gap-1">
       {(label || currentValue) && (
         <div className="flex items-baseline justify-between">
-          {label && <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>}
+          {label && (
+            <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
+          )}
           {currentValue && (
-            <span className="tabular-nums text-xs font-bold" style={{ color }}>
+            <span className="text-xs font-bold tabular-nums" style={{ color }}>
               {currentValue}
               {unit && <span className="ml-1 text-[9px] font-normal text-gray-500">{unit}</span>}
             </span>
@@ -243,7 +271,10 @@ function Compass({
 
   // Arrow pointing in wind direction
   const rad = (direction - 90) * (Math.PI / 180)
-  const arrowTip = { x: center + Math.cos(rad) * (innerR - 4), y: center + Math.sin(rad) * (innerR - 4) }
+  const arrowTip = {
+    x: center + Math.cos(rad) * (innerR - 4),
+    y: center + Math.sin(rad) * (innerR - 4),
+  }
   const arrowBase1 = { x: center + Math.cos(rad + 2.8) * 12, y: center + Math.sin(rad + 2.8) * 12 }
   const arrowBase2 = { x: center + Math.cos(rad - 2.8) * 12, y: center + Math.sin(rad - 2.8) * 12 }
 
@@ -251,8 +282,22 @@ function Compass({
     <div className="flex flex-col items-center gap-1">
       <svg width={size} height={size}>
         {/* Outer ring */}
-        <circle cx={center} cy={center} r={outerR} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-        <circle cx={center} cy={center} r={innerR} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={1} />
+        <circle
+          cx={center}
+          cy={center}
+          r={outerR}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={1}
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={innerR}
+          fill="none"
+          stroke="rgba(255,255,255,0.04)"
+          strokeWidth={1}
+        />
 
         {/* Tick marks */}
         {Array.from({ length: 36 }).map((_, i) => {
@@ -286,8 +331,7 @@ function Compass({
               fill="rgba(255,255,255,0.4)"
               fontSize={8}
               fontWeight="bold"
-              fontFamily="inherit"
-            >
+              fontFamily="inherit">
               {label}
             </text>
           )
@@ -301,19 +345,36 @@ function Compass({
         />
 
         {/* Center readout */}
-        <text x={center} y={center - 4} textAnchor="middle" fill={color} fontSize={14} fontWeight="bold" fontFamily="inherit">
+        <text
+          x={center}
+          y={center - 4}
+          textAnchor="middle"
+          fill={color}
+          fontSize={14}
+          fontWeight="bold"
+          fontFamily="inherit">
           {speed.toFixed(1)}
         </text>
-        <text x={center} y={center + 8} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={8} fontFamily="inherit">
+        <text
+          x={center}
+          y={center + 8}
+          textAnchor="middle"
+          fill="rgba(255,255,255,0.4)"
+          fontSize={8}
+          fontFamily="inherit">
           mph
         </text>
       </svg>
       <div className="flex gap-3 text-[9px]">
         <span className="text-gray-500">
-          GUST <span className="tabular-nums font-bold" style={{ color }}>{gust.toFixed(1)}</span> mph
+          GUST{' '}
+          <span className="font-bold tabular-nums" style={{ color }}>
+            {gust.toFixed(1)}
+          </span>{' '}
+          mph
         </span>
         <span className="text-gray-500">
-          DIR <span className="tabular-nums font-bold text-white">{direction.toFixed(0)}°</span>
+          DIR <span className="font-bold text-white tabular-nums">{direction.toFixed(0)}°</span>
         </span>
       </div>
     </div>
@@ -351,8 +412,13 @@ function SegmentBar({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
-        <span className="tabular-nums text-xs font-bold" style={{ color: pctValue >= criticalAt ? criticalColor : pctValue >= warningAt ? warningColor : color }}>
+        <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
+        <span
+          className="text-xs font-bold tabular-nums"
+          style={{
+            color:
+              pctValue >= criticalAt ? criticalColor : pctValue >= warningAt ? warningColor : color,
+          }}>
           {value.toFixed(value % 1 === 0 ? 0 : 1)}
           <span className="ml-1 text-[9px] font-normal text-gray-500">{unit}</span>
         </span>
@@ -399,9 +465,11 @@ function BigNumber({
   const textSize = { sm: 'text-lg', md: 'text-2xl', lg: 'text-4xl', xl: 'text-5xl' }[size]
   return (
     <div className="flex flex-col">
-      <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
       <div className="flex items-baseline gap-1">
-        <span className={`tabular-nums font-bold ${textSize}`} style={{ color }}>{value}</span>
+        <span className={`font-bold tabular-nums ${textSize}`} style={{ color }}>
+          {value}
+        </span>
         {unit && <span className="text-sm text-gray-500">{unit}</span>}
       </div>
     </div>
@@ -429,8 +497,12 @@ function VerticalBar({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="tabular-nums text-[10px] font-bold" style={{ color }}>{value.toFixed(0)}</span>
-      <div className="relative rounded-sm" style={{ width, height, backgroundColor: 'rgba(255,255,255,0.04)' }}>
+      <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
+        {value.toFixed(0)}
+      </span>
+      <div
+        className="relative rounded-sm"
+        style={{ width, height, backgroundColor: 'rgba(255,255,255,0.04)' }}>
         <div
           className="absolute bottom-0 w-full rounded-sm"
           style={{
@@ -441,7 +513,7 @@ function VerticalBar({
           }}
         />
       </div>
-      <span className="text-[8px] uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="text-[8px] tracking-wider text-gray-500 uppercase">{label}</span>
     </div>
   )
 }
@@ -467,16 +539,37 @@ function EnergyFlow({
 
   return (
     <div className="flex flex-col gap-3">
-      <FlowArrow from="Solar" to="House" value={solarW} color="#ffd600" active={solarW > 10} maxW={maxW} />
-      <FlowArrow from={importing ? "Grid" : "Solar"} to={importing ? "House" : "Grid"} value={gridW} color={importing ? '#ff8c00' : '#00ff88'} active={Math.abs(gridW) > 10} maxW={maxW} />
-      <FlowArrow from={charging ? "Solar" : "Battery"} to={charging ? "Battery" : "House"} value={batteryW} color={charging ? '#b388ff' : '#00e5ff'} active={Math.abs(batteryW) > 10} maxW={maxW} />
+      <FlowArrow
+        from="Solar"
+        to="House"
+        value={solarW}
+        color="#ffd600"
+        active={solarW > 10}
+        maxW={maxW}
+      />
+      <FlowArrow
+        from={importing ? 'Grid' : 'Solar'}
+        to={importing ? 'House' : 'Grid'}
+        value={gridW}
+        color={importing ? '#ff8c00' : '#00ff88'}
+        active={Math.abs(gridW) > 10}
+        maxW={maxW}
+      />
+      <FlowArrow
+        from={charging ? 'Solar' : 'Battery'}
+        to={charging ? 'Battery' : 'House'}
+        value={batteryW}
+        color={charging ? '#b388ff' : '#00e5ff'}
+        active={Math.abs(batteryW) > 10}
+        maxW={maxW}
+      />
       <div className="mt-1 flex items-center justify-between text-[10px]">
-        <span className="tabular-nums text-gray-400">
-          <span className="text-[8px] uppercase tracking-wider text-gray-500">House </span>
+        <span className="text-gray-400 tabular-nums">
+          <span className="text-[8px] tracking-wider text-gray-500 uppercase">House </span>
           {(houseW / 1000).toFixed(2)} kW
         </span>
-        <span className="tabular-nums text-gray-400">
-          <span className="text-[8px] uppercase tracking-wider text-gray-500">Battery </span>
+        <span className="text-gray-400 tabular-nums">
+          <span className="text-[8px] tracking-wider text-gray-500 uppercase">Battery </span>
           {batterySoc.toFixed(0)}%
         </span>
       </div>
@@ -484,14 +577,32 @@ function EnergyFlow({
   )
 }
 
-function FlowArrow({ from, to, value, color, active, maxW }: { from: string; to: string; value: number; color: string; active: boolean; maxW: number }) {
+function FlowArrow({
+  from,
+  to,
+  value,
+  color,
+  active,
+  maxW,
+}: {
+  from: string
+  to: string
+  value: number
+  color: string
+  active: boolean
+  maxW: number
+}) {
   const scale = (w: number) => Math.min(Math.abs(w) / maxW, 1)
   const opacity = active ? Math.max(0.3, scale(value)) : 0.05
   const width = active ? Math.max(1, scale(value) * 4) : 0.5
   return (
     <div className="flex items-center gap-1">
-      <span className="w-16 text-right text-[8px] uppercase tracking-wider text-gray-500">{from}</span>
-      <div className="relative h-1 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
+      <span className="w-16 text-right text-[8px] tracking-wider text-gray-500 uppercase">
+        {from}
+      </span>
+      <div
+        className="relative h-1 flex-1 overflow-hidden rounded-full"
+        style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
         <div
           className="absolute inset-y-0 left-0 rounded-full"
           style={{
@@ -506,7 +617,7 @@ function FlowArrow({ from, to, value, color, active, maxW }: { from: string; to:
           }}
         />
       </div>
-      <span className="w-16 text-[8px] uppercase tracking-wider text-gray-500">{to}</span>
+      <span className="w-16 text-[8px] tracking-wider text-gray-500 uppercase">{to}</span>
     </div>
   )
 }
@@ -546,28 +657,31 @@ function SolarGrid({
 }
 
 // Battery quartet — four individual battery units
-function BatteryQuartet({
-  batteries,
-}: {
-  batteries: BatteryDetail[]
-}) {
+function BatteryQuartet({ batteries }: { batteries: BatteryDetail[] }) {
   return (
     <div className="flex gap-3">
       {batteries.map((b) => (
         <div key={b.serial} className="flex flex-col items-center gap-1">
-          <div className="relative h-16 w-8 rounded-sm" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
+          <div
+            className="relative h-16 w-8 rounded-sm"
+            style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
             <div
               className="absolute bottom-0 w-full rounded-sm"
               style={{
                 height: `${b.soc ?? 0}%`,
-                backgroundColor: (b.soc ?? 0) > 80 ? '#00ff88' : (b.soc ?? 0) > 30 ? '#ffd600' : '#ff3d3d',
+                backgroundColor:
+                  (b.soc ?? 0) > 80 ? '#00ff88' : (b.soc ?? 0) > 30 ? '#ffd600' : '#ff3d3d',
                 boxShadow: `0 0 4px ${(b.soc ?? 0) > 80 ? '#00ff88' : (b.soc ?? 0) > 30 ? '#ffd600' : '#ff3d3d'}`,
                 transition: 'height 2s ease-out',
               }}
             />
           </div>
-          <span className="tabular-nums text-[10px] font-bold text-gray-300">{(b.soc ?? 0).toFixed(0)}%</span>
-          <span className="text-[8px] text-gray-500">{b.temp_c != null ? `${((b.temp_c * 9) / 5 + 32).toFixed(0)}°F` : '—'}</span>
+          <span className="text-[10px] font-bold text-gray-300 tabular-nums">
+            {(b.soc ?? 0).toFixed(0)}%
+          </span>
+          <span className="text-[8px] text-gray-500">
+            {b.temp_c != null ? `${((b.temp_c * 9) / 5 + 32).toFixed(0)}°F` : '—'}
+          </span>
         </div>
       ))}
     </div>
@@ -592,7 +706,10 @@ function ForecastStrip({
         const tempPct = (h.temp - minTemp) / range
         const hasPrecip = h.precipPct > 0
         return (
-          <div key={i} className="flex flex-1 flex-col items-center gap-0.5" title={`${h.conditions} ${h.temp}°F ${h.precipPct}%`}>
+          <div
+            key={i}
+            className="flex flex-1 flex-col items-center gap-0.5"
+            title={`${h.conditions} ${h.temp}°F ${h.precipPct}%`}>
             <span className="text-[8px] text-gray-500">{h.localHour}h</span>
             <div className="relative h-8 w-full">
               <div
@@ -613,7 +730,7 @@ function ForecastStrip({
                 />
               )}
             </div>
-            <span className="tabular-nums text-[8px] text-gray-400">{h.temp.toFixed(0)}°</span>
+            <span className="text-[8px] text-gray-400 tabular-nums">{h.temp.toFixed(0)}°</span>
           </div>
         )
       })}
@@ -636,7 +753,7 @@ function CommitTicker({
         const timeStr = ago < 60 ? `${ago}m` : `${Math.floor(ago / 60)}h`
         return (
           <div key={c.sha} className="flex items-baseline gap-2 text-[10px]">
-            <span className="tabular-nums font-bold text-gray-500">{c.sha}</span>
+            <span className="font-bold text-gray-500 tabular-nums">{c.sha}</span>
             <span className="truncate text-gray-300">{c.message}</span>
             <span className="ml-auto shrink-0 text-[9px] text-gray-600">{c.repo}</span>
             <span className="shrink-0 text-[9px] text-gray-600">{timeStr}</span>
@@ -657,7 +774,15 @@ function SteamStatus({
   recentGames: { name: string; playtime2Weeks: number; iconUrl: string }[]
   personaState: number
 }) {
-  const stateLabels: Record<number, string> = { 0: 'Offline', 1: 'Online', 2: 'Busy', 3: 'Away', 4: 'Snooze', 5: 'Trade', 6: 'Play' }
+  const stateLabels: Record<number, string> = {
+    0: 'Offline',
+    1: 'Online',
+    2: 'Busy',
+    3: 'Away',
+    4: 'Snooze',
+    5: 'Trade',
+    6: 'Play',
+  }
 
   if (currentGame) {
     return (
@@ -674,14 +799,19 @@ function SteamStatus({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2 text-[10px] text-gray-500">
-        <div className="size-1.5 rounded-full" style={{ backgroundColor: personaState > 0 ? '#00e5ff' : '#666' }} />
+        <div
+          className="size-1.5 rounded-full"
+          style={{ backgroundColor: personaState > 0 ? '#00e5ff' : '#666' }}
+        />
         {stateLabels[personaState] ?? 'Unknown'}
       </div>
       {recentGames.slice(0, 3).map((g) => (
         <div key={g.name} className="flex items-center gap-2 text-[10px]">
           <img src={g.iconUrl} alt="" className="size-4 rounded-[2px]" />
           <span className="truncate text-gray-300">{g.name}</span>
-          <span className="ml-auto shrink-0 tabular-nums text-gray-500">{(g.playtime2Weeks / 60).toFixed(1)}h</span>
+          <span className="ml-auto shrink-0 text-gray-500 tabular-nums">
+            {(g.playtime2Weeks / 60).toFixed(1)}h
+          </span>
         </div>
       ))}
     </div>
@@ -706,7 +836,7 @@ function DayScorecard({
   batteryDischargedWh: number | null
   commitCount: number
 }) {
-  const fmt = (wh: number | null) => wh != null ? (wh / 1000).toFixed(2) : '—'
+  const fmt = (wh: number | null) => (wh != null ? (wh / 1000).toFixed(2) : '—')
 
   return (
     <div className="flex flex-col">
@@ -728,8 +858,8 @@ function DayScorecard({
 function Row({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <div className="flex items-baseline justify-between border-b border-white/5 py-0.5">
-      <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
-      <span className="tabular-nums text-xs font-bold text-gray-300">
+      <span className="text-[9px] tracking-wider text-gray-500 uppercase">{label}</span>
+      <span className="text-xs font-bold text-gray-300 tabular-nums">
         {value} <span className="text-[9px] font-normal text-gray-500">{unit}</span>
       </span>
     </div>
@@ -739,7 +869,7 @@ function Row({ label, value, unit }: { label: string; value: string; unit: strin
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3 rounded border border-white/[0.08] p-4">
-      <h2 className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">{title}</h2>
+      <h2 className="text-[10px] font-bold tracking-[0.12em] text-gray-400 uppercase">{title}</h2>
       {children}
     </div>
   )
@@ -797,13 +927,21 @@ function HUDStyles() {
     <div className="min-h-screen bg-[#0a0e14] p-6 font-mono text-[13px] leading-relaxed text-gray-200 antialiased">
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
-        <h1 className="text-sm font-bold uppercase tracking-[0.12em] text-gray-300">HUD Style Compendium</h1>
-        <div className={`flex items-center gap-2 text-[10px] ${tempestConnected ? 'text-green-400' : 'text-red-400'}`}>
-          <span className={`inline-block size-2 rounded-full ${tempestConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`} />
+        <h1 className="text-sm font-bold tracking-[0.12em] text-gray-300 uppercase">
+          HUD Style Compendium
+        </h1>
+        <div
+          className={`flex items-center gap-2 text-[10px] ${tempestConnected ? 'text-green-400' : 'text-red-400'}`}>
+          <span
+            className={`inline-block size-2 rounded-full ${tempestConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`}
+          />
           Tempest {tempestConnected ? 'LIVE' : 'OFFLINE'}
         </div>
-        <div className={`flex items-center gap-2 text-[10px] ${enphaseConnected ? 'text-green-400' : 'text-red-400'}`}>
-          <span className={`inline-block size-2 rounded-full ${enphaseConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`} />
+        <div
+          className={`flex items-center gap-2 text-[10px] ${enphaseConnected ? 'text-green-400' : 'text-red-400'}`}>
+          <span
+            className={`inline-block size-2 rounded-full ${enphaseConnected ? 'bg-green-400 shadow-[0_0_6px_theme(--color-green-400)]' : 'animate-pulse bg-red-400'}`}
+          />
           Enphase {enphaseConnected ? 'LIVE' : 'OFFLINE'}
         </div>
       </div>
@@ -841,11 +979,41 @@ function HUDStyles() {
         {/* Sparklines */}
         <Section title="Sparklines">
           <div className="flex flex-col gap-4">
-            <Sparkline data={outdoorTempHistory} label="Outdoor Temp" currentValue={outdoorTemp.toFixed(1)} unit="°F" color="#00e5ff" />
-            <Sparkline data={windSpeedHistory} label="Wind Speed" currentValue={windAvg.toFixed(1)} unit="mph" color="#b388ff" />
-            <Sparkline data={solarProdHistory} label="Solar" currentValue={(solarProd / 1000).toFixed(2)} unit="kW" color="#ffd600" />
-            <Sparkline data={houseConsumptionHistory} label="House" currentValue={(houseConsumption / 1000).toFixed(2)} unit="kW" color="#ff8c00" />
-            <Sparkline data={cpuHistory} label="CPU" currentValue={cpuUsage.toFixed(1)} unit="%" color="#ff3d3d" />
+            <Sparkline
+              data={outdoorTempHistory}
+              label="Outdoor Temp"
+              currentValue={outdoorTemp.toFixed(1)}
+              unit="°F"
+              color="#00e5ff"
+            />
+            <Sparkline
+              data={windSpeedHistory}
+              label="Wind Speed"
+              currentValue={windAvg.toFixed(1)}
+              unit="mph"
+              color="#b388ff"
+            />
+            <Sparkline
+              data={solarProdHistory}
+              label="Solar"
+              currentValue={(solarProd / 1000).toFixed(2)}
+              unit="kW"
+              color="#ffd600"
+            />
+            <Sparkline
+              data={houseConsumptionHistory}
+              label="House"
+              currentValue={(houseConsumption / 1000).toFixed(2)}
+              unit="kW"
+              color="#ff8c00"
+            />
+            <Sparkline
+              data={cpuHistory}
+              label="CPU"
+              currentValue={cpuUsage.toFixed(1)}
+              unit="%"
+              color="#ff3d3d"
+            />
           </div>
         </Section>
 
@@ -853,9 +1021,27 @@ function HUDStyles() {
         <Section title="Segmented Bars">
           <div className="flex flex-col gap-3">
             <SegmentBar value={arrayUsage} label="Array" color="#00e5ff" />
-            <SegmentBar value={disk1} label="Disk 1" color="#00e5ff" warningAt={85} criticalAt={95} />
-            <SegmentBar value={disk2} label="Disk 2" color="#00e5ff" warningAt={85} criticalAt={95} />
-            <SegmentBar value={disk3} label="Disk 3" color="#00e5ff" warningAt={85} criticalAt={95} />
+            <SegmentBar
+              value={disk1}
+              label="Disk 1"
+              color="#00e5ff"
+              warningAt={85}
+              criticalAt={95}
+            />
+            <SegmentBar
+              value={disk2}
+              label="Disk 2"
+              color="#00e5ff"
+              warningAt={85}
+              criticalAt={95}
+            />
+            <SegmentBar
+              value={disk3}
+              label="Disk 3"
+              color="#00e5ff"
+              warningAt={85}
+              criticalAt={95}
+            />
           </div>
         </Section>
 
@@ -876,13 +1062,50 @@ function HUDStyles() {
         {/* Big Numbers */}
         <Section title="Big Numbers">
           <div className="grid grid-cols-2 gap-4">
-            <BigNumber value={(solarProd / 1000).toFixed(2)} unit="kW" label="Solar Production" color="#ffd600" />
-            <BigNumber value={(houseConsumption / 1000).toFixed(2)} unit="kW" label="House Consumption" color="#ff8c00" />
-            <BigNumber value={(gridExport / 1000).toFixed(2)} unit="kW" label="Grid Export" color="#00ff88" />
-            <BigNumber value={(batteryPower / 1000).toFixed(2)} unit="kW" label="Battery Power" color={batteryPower > 0 ? '#00e5ff' : '#b388ff'} />
-            <BigNumber value={wifiClients.toFixed(0)} unit="devices" label="Network" color="#b388ff" />
-            <BigNumber value={pressure.toFixed(2)} unit="inHg" label="Barometric" color="#00e5ff" size="md" />
-            <BigNumber value={pm25.toFixed(0)} unit="μg/m³" label="PM2.5" color="#00ff88" size="md" />
+            <BigNumber
+              value={(solarProd / 1000).toFixed(2)}
+              unit="kW"
+              label="Solar Production"
+              color="#ffd600"
+            />
+            <BigNumber
+              value={(houseConsumption / 1000).toFixed(2)}
+              unit="kW"
+              label="House Consumption"
+              color="#ff8c00"
+            />
+            <BigNumber
+              value={(gridExport / 1000).toFixed(2)}
+              unit="kW"
+              label="Grid Export"
+              color="#00ff88"
+            />
+            <BigNumber
+              value={(batteryPower / 1000).toFixed(2)}
+              unit="kW"
+              label="Battery Power"
+              color={batteryPower > 0 ? '#00e5ff' : '#b388ff'}
+            />
+            <BigNumber
+              value={wifiClients.toFixed(0)}
+              unit="devices"
+              label="Network"
+              color="#b388ff"
+            />
+            <BigNumber
+              value={pressure.toFixed(2)}
+              unit="inHg"
+              label="Barometric"
+              color="#00e5ff"
+              size="md"
+            />
+            <BigNumber
+              value={pm25.toFixed(0)}
+              unit="μg/m³"
+              label="PM2.5"
+              color="#00ff88"
+              size="md"
+            />
           </div>
         </Section>
 
@@ -937,17 +1160,23 @@ function HUDStyles() {
         {/* Day Scorecard */}
         <Section title="Day Scorecard">
           <DayScorecard
-            productionWh={energyToday?.grid_export_today_wh != null ? (energyReadings.production_today_wh as number) ?? null : null}
+            productionWh={
+              energyToday?.grid_export_today_wh != null
+                ? ((energyReadings.production_today_wh as number) ?? null)
+                : null
+            }
             consumptionWh={(energyReadings.consumption_today_wh as number) ?? null}
             gridImportWh={energyToday?.grid_import_today_wh ?? null}
             gridExportWh={energyToday?.grid_export_today_wh ?? null}
             batteryChargedWh={energyToday?.battery_charged_today_wh ?? null}
             batteryDischargedWh={energyToday?.battery_discharged_today_wh ?? null}
-            commitCount={commits?.filter((c) => {
-              const d = new Date(c.timestamp)
-              const now = new Date()
-              return d.toDateString() === now.toDateString()
-            }).length ?? 0}
+            commitCount={
+              commits?.filter((c) => {
+                const d = new Date(c.timestamp)
+                const now = new Date()
+                return d.toDateString() === now.toDateString()
+              }).length ?? 0
+            }
           />
         </Section>
 

@@ -188,7 +188,9 @@ export type SynthhomeLatestReading = components['schemas']['LatestReadingSchema'
 
 /** Latest value of every metric a source has reported, keyed by metric name. */
 export async function fetchLatestReadings(source: string): Promise<Record<string, number>> {
-  const page = await fetchJSON<{ items: SynthhomeLatestReading[] }>(`/readings/latest?source=${source}`)
+  const page = await fetchJSON<{ items: SynthhomeLatestReading[] }>(
+    `/readings/latest?source=${source}`,
+  )
   return Object.fromEntries(page.items.map((r) => [r.metric, r.value]))
 }
 
@@ -448,14 +450,9 @@ export interface GitHubCommit {
 }
 
 export async function fetchRecentCommits(limit = 20): Promise<GitHubCommit[]> {
-  const res = await fetch(
-    `https://api.github.com/users/${GITHUB_USER}/events?per_page=100`,
-    {
-      headers: GITHUB_TOKEN
-        ? { Authorization: `Bearer ${GITHUB_TOKEN}` }
-        : {},
-    },
-  )
+  const res = await fetch(`https://api.github.com/users/${GITHUB_USER}/events?per_page=100`, {
+    headers: GITHUB_TOKEN ? { Authorization: `Bearer ${GITHUB_TOKEN}` } : {},
+  })
   if (!res.ok) throw new Error(`GitHub API: ${res.status}`)
   const events = await res.json()
 

@@ -13,22 +13,23 @@ const Event = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string 
 )
 Event.displayName = 'Event'
 
-const Frame = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string; style?: React.CSSProperties }>>(
-  ({ className, children, style }, ref) => {
-    return (
-      <div
-        ref={ref}
-        style={style}
-        className={cn(
-          'relative flex h-16 min-w-0 items-center overflow-x-hidden',
-          'bg-shark-960',
-          className,
-        )}>
-        {children}
-      </div>
-    )
-  },
-)
+const Frame = forwardRef<
+  HTMLDivElement,
+  PropsWithChildren<{ className?: string; style?: React.CSSProperties }>
+>(({ className, children, style }, ref) => {
+  return (
+    <div
+      ref={ref}
+      style={style}
+      className={cn(
+        'relative flex h-16 min-w-0 items-center overflow-x-hidden',
+        'bg-shark-960',
+        className,
+      )}>
+      {children}
+    </div>
+  )
+})
 Frame.displayName = 'Frame'
 
 const Item = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string }>>(
@@ -54,6 +55,5 @@ const Username = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: stri
   },
 )
 Username.displayName = 'Username'
-
 
 export { Event, Frame, Item, Username }

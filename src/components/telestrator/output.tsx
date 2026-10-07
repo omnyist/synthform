@@ -196,8 +196,7 @@ export function TelestratorOutput() {
   return (
     <div
       className="relative overflow-hidden"
-      style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT, background: 'transparent' }}
-    >
+      style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT, background: 'transparent' }}>
       <canvas
         ref={canvasRef}
         width={FRAME_WIDTH}

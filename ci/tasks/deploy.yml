@@ -4,7 +4,7 @@ image_resource:
   type: registry-image
   source:
     repository: alpine
-    tag: "3.20"
+    tag: '3.20'
 
 inputs:
   - name: repo

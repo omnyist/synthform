@@ -37,7 +37,7 @@ export function useChatMessages(options: UseChatMessagesOptions = {}) {
 
     // Process emotes
     if (onEmote && latestMessage.fragments) {
-      latestMessage.fragments.forEach(fragment => {
+      latestMessage.fragments.forEach((fragment) => {
         if (fragment.type === 'emote' && fragment.emote?.id) {
           onEmote(fragment.emote.id, fragment.emote.emote_set_id)
         }
@@ -55,6 +55,6 @@ export function useChatMessages(options: UseChatMessagesOptions = {}) {
     messages,
     latestMessage,
     messageCount: messages.length,
-    isConnected
+    isConnected,
   }
 }

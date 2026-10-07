@@ -28,7 +28,9 @@ function AlertAudioInstance({
   soundEnabled: boolean
 }) {
   const handleComplete = useCallback(() => {
-    useRealtimeStore.getState().dispatchAlertStack({ type: 'stack:lifecycle', id, event: 'audio:ended' })
+    useRealtimeStore
+      .getState()
+      .dispatchAlertStack({ type: 'stack:lifecycle', id, event: 'audio:ended' })
   }, [id])
 
   useAlertSound(alert, { enabled: soundEnabled, onComplete: handleComplete })
@@ -44,7 +46,12 @@ export function AlertAudioDriver({ soundEnabled = true }: { soundEnabled?: boole
   return (
     <>
       {active.map((instance) => (
-        <AlertAudioInstance key={instance.id} id={instance.id} alert={instance.alert} soundEnabled={soundEnabled} />
+        <AlertAudioInstance
+          key={instance.id}
+          id={instance.id}
+          alert={instance.alert}
+          soundEnabled={soundEnabled}
+        />
       ))}
     </>
   )

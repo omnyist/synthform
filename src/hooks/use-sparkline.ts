@@ -34,9 +34,10 @@ export function useSparkline(
         // Readings come newest-first from the API, reverse for chronological order
         const values = readings.map((r) => r.value).reverse()
         // Downsample if we got more than maxLength
-        const sampled = values.length > maxLength
-          ? values.filter((_, i) => i % Math.ceil(values.length / maxLength) === 0)
-          : values
+        const sampled =
+          values.length > maxLength
+            ? values.filter((_, i) => i % Math.ceil(values.length / maxLength) === 0)
+            : values
 
         setData(sampled)
         initialized.current = true
@@ -47,7 +48,9 @@ export function useSparkline(
     }
 
     loadHistory()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [source, metric, historyHours, maxLength])
 
   // Append live values

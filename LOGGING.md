@@ -5,6 +5,7 @@ This document defines the logging standard for the Synthform streaming overlay s
 ## Overview
 
 Logs are consumed directly via `docker compose logs -f` by a single developer for real-time debugging during streams. The standard prioritizes:
+
 - **Human readability** - No JSON or structured logging formats
 - **Scannability** - Consistent format for quick visual parsing
 - **Information density** - Preserve critical debugging details
@@ -17,6 +18,7 @@ Logs are consumed directly via `docker compose logs -f` by a single developer fo
 ```
 
 **Components:**
+
 - `[Component]` - Service or module name (e.g., `[OBS]`, `[TwitchIO]`, `[Redis]`)
 - `Message` - Human-readable description of the event
 - `[key=value ...]` - Optional structured context for filtering/searching
@@ -32,6 +34,7 @@ Logs are consumed directly via `docker compose logs -f` by a single developer fo
 ### 2. Component Identification
 
 Always include the component/service name in brackets:
+
 - `[OBS]` - OBS WebSocket service
 - `[TwitchIO]` - TwitchIO EventSub service
 - `[Redis]` - Redis connections
@@ -44,6 +47,7 @@ Always include the component/service name in brackets:
 ### 3. Structured Context
 
 Use `key=value` format at the end of the line:
+
 - Simple values: `version=1.2.3 port=4455 count=11`
 - Values with spaces: `error="Connection refused" reason="Token expired"`
 - Always lowercase keys
@@ -61,6 +65,7 @@ Use emojis sparingly as visual anchors for critical events:
 - 💾 **Persistence** - Save operations, database writes
 
 **NO emojis for:**
+
 - Routine operations (starting services, processing events)
 - Debug logs
 - Informational messages
@@ -74,6 +79,7 @@ Use emojis sparingly as visual anchors for critical events:
 ### 6. Detail Preservation
 
 Always include:
+
 - **Version numbers** for external connections: `version=32.0.0`
 - **IDs** for clients/sessions: `id=abc123 session_id=xyz789`
 - **Counts** for batch operations: `count=11 processed=150`

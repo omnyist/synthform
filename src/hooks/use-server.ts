@@ -1,10 +1,5 @@
 import { serverConnectionReducer, type ServerConnectionPhase } from '@/machines/server-connection'
-import type {
-  MessageType,
-  PayloadType,
-  ServerMessage,
-  CacheEntry,
-} from '@/types/server'
+import type { MessageType, PayloadType, ServerMessage, CacheEntry } from '@/types/server'
 
 // Cache configuration
 const DEFAULT_CACHE_TTL = 5 * 60 * 1000 // 5 minutes

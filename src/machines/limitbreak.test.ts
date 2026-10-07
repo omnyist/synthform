@@ -32,7 +32,10 @@ describe('limitBreakReducer', () => {
   // its own via audio:ended. No special-casing — this falls out of the
   // transition table simply having no entry for it.
   test('a double-fire of executed while already executing is ignored', () => {
-    const state = limitBreakReducer({ phase: 'executing', maxedDuringExecuting: false }, 'limitbreak:executed')
+    const state = limitBreakReducer(
+      { phase: 'executing', maxedDuringExecuting: false },
+      'limitbreak:executed',
+    )
     expect(state).toEqual({ phase: 'executing', maxedDuringExecuting: false })
   })
 

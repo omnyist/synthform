@@ -57,9 +57,16 @@ export const Route = createFileRoute('/debug/machines')({
 // inside EmoteRain itself (Active/Backlog counts, "Spawn Test Emotes",
 // "Emote Bomb!") wherever that component is mounted.
 
-function TransitionTable<TState extends string>({ transitions }: { transitions: Transitions<TState> }) {
+function TransitionTable<TState extends string>({
+  transitions,
+}: {
+  transitions: Transitions<TState>
+}) {
   const rows: { from: TState; event: string; to: TState }[] = []
-  for (const [from, events] of Object.entries(transitions) as [TState, Partial<Record<string, TState>>][]) {
+  for (const [from, events] of Object.entries(transitions) as [
+    TState,
+    Partial<Record<string, TState>>,
+  ][]) {
     for (const [event, to] of Object.entries(events)) {
       if (to) rows.push({ from, event, to: to as TState })
     }
@@ -70,8 +77,8 @@ function TransitionTable<TState extends string>({ transitions }: { transitions: 
       <tbody>
         {rows.map((r, i) => (
           <tr key={i}>
-            <td className="pr-2 py-0.5 text-gray-400">{r.from}</td>
-            <td className="pr-2 py-0.5 text-gray-600">--{r.event}--&gt;</td>
+            <td className="py-0.5 pr-2 text-gray-400">{r.from}</td>
+            <td className="py-0.5 pr-2 text-gray-600">--{r.event}--&gt;</td>
             <td className="py-0.5 text-gray-400">{r.to}</td>
           </tr>
         ))}
@@ -106,7 +113,7 @@ function MachinePanel<TState, TEvent extends string>({
   }
 
   return (
-    <div className="border border-gray-800 rounded bg-gray-950 p-4">
+    <div className="rounded border border-gray-800 bg-gray-950 p-4">
       <h2 className="text-sm font-bold text-gray-200">{name}</h2>
       <p className="mb-3 text-gray-500">{description}</p>
 
@@ -120,8 +127,7 @@ function MachinePanel<TState, TEvent extends string>({
           <button
             key={event}
             onClick={() => handleDispatch(event)}
-            className="rounded bg-shark-800 px-2 py-1 text-[11px] text-gray-300 hover:bg-shark-700 active:bg-shark-600"
-          >
+            className="bg-shark-800 hover:bg-shark-700 active:bg-shark-600 rounded px-2 py-1 text-[11px] text-gray-300">
             {event}
           </button>
         ))}
@@ -154,7 +160,11 @@ const MIC_STATUS_EVENTS: MicStatusEvent[] = [
   'mute:reset',
 ]
 
-const ALERT_LIFECYCLE_EVENTS: AlertLifecycleEvent[] = ['enter:complete', 'reveal:complete', 'audio:ended']
+const ALERT_LIFECYCLE_EVENTS: AlertLifecycleEvent[] = [
+  'enter:complete',
+  'reveal:complete',
+  'audio:ended',
+]
 
 const LIMITBREAK_EVENTS: LimitBreakEvent[] = ['bars:maxed', 'limitbreak:executed', 'audio:ended']
 
@@ -173,11 +183,12 @@ function MachinesDebug() {
   return (
     <div className="min-h-screen bg-black p-6 font-mono text-xs text-white">
       <div className="mb-6">
-        <h1 className="mb-1 text-2xl text-chalk">Machines Debug</h1>
+        <h1 className="text-chalk mb-1 text-2xl">Machines Debug</h1>
         <p className="text-gray-500">
-          Click an event to dispatch it against that machine's own reducer. Buttons list every event the
-          machine knows about, not just the ones valid from the current state — an invalid one is a
-          visible no-op, which is the point: unhandled events hold position by design. Reload to reset.
+          Click an event to dispatch it against that machine's own reducer. Buttons list every event
+          the machine knows about, not just the ones valid from the current state — an invalid one
+          is a visible no-op, which is the point: unhandled events hold position by design. Reload
+          to reset.
         </p>
       </div>
 
@@ -189,7 +200,9 @@ function MachinesDebug() {
           initial={INITIAL_MIC_STATUS_STATE}
           events={MIC_STATUS_EVENTS}
           renderState={(s) => `${s.connection} / ${s.mute}`}
-          transitions={{ ...MIC_CONNECTION_TRANSITIONS, ...MIC_MUTE_TRANSITIONS } as Transitions<string>}
+          transitions={
+            { ...MIC_CONNECTION_TRANSITIONS, ...MIC_MUTE_TRANSITIONS } as Transitions<string>
+          }
         />
 
         <MachinePanel<AlertInstanceState, AlertLifecycleEvent>
@@ -198,7 +211,9 @@ function MachinesDebug() {
           reducer={alertLifecycleReducer}
           initial={newAlertInstance()}
           events={ALERT_LIFECYCLE_EVENTS}
-          renderState={(s) => `${s.phase}${s.audioEndedEarly ? ' (audio ended early, pending)' : ''}`}
+          renderState={(s) =>
+            `${s.phase}${s.audioEndedEarly ? ' (audio ended early, pending)' : ''}`
+          }
           transitions={ALERT_LIFECYCLE_TRANSITIONS as Transitions<string>}
         />
 

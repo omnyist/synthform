@@ -38,12 +38,7 @@ const MONITORED_TYPES: MessageType[] = [
 ]
 
 // Sync types that should arrive on connect
-const EXPECTED_SYNCS = [
-  'ticker:sync',
-  'alerts:sync',
-  'limitbreak:sync',
-  'status:sync',
-] as const
+const EXPECTED_SYNCS = ['ticker:sync', 'alerts:sync', 'limitbreak:sync', 'status:sync'] as const
 
 // Sync types that only arrive when data exists
 const CONDITIONAL_SYNCS = [
@@ -155,49 +150,46 @@ function ServerDebug() {
     }
   }, [handleMessage])
 
-  const filteredEvents = filter
-    ? events.filter((e) => e.type.includes(filter))
-    : events
+  const filteredEvents = filter ? events.filter((e) => e.type.includes(filter)) : events
 
   const chatCount = events.filter((e) => e.type === 'chat:message').length
   const alertCount = events.filter((e) => e.type === 'alerts:push').length
   const timelineCount = events.filter((e) => e.type === 'timeline:push').length
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 font-mono text-xs">
+    <div className="min-h-screen bg-black p-6 font-mono text-xs text-white">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl mb-1 text-chalk">Synthform Server Debug</h1>
+        <h1 className="text-chalk mb-1 text-2xl">Synthform Server Debug</h1>
         <p className="text-gray-500">Monitoring WebSocket connection to Synthfunc</p>
       </div>
 
       {/* Connection Status */}
       <div className="mb-6 flex items-center gap-4">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded ${
-          isConnected ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
-        }`}>
-          <span className={`inline-block h-2 w-2 rounded-full ${
-            isConnected ? 'bg-green-400' : 'bg-red-400 animate-pulse'
-          }`} />
+        <div
+          className={`flex items-center gap-2 rounded px-3 py-1.5 ${
+            isConnected ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
+          }`}>
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              isConnected ? 'bg-green-400' : 'animate-pulse bg-red-400'
+            }`}
+          />
           {isConnected ? 'Connected' : 'Disconnected'}
         </div>
-        {connectedAt && (
-          <span className="text-gray-500">Connected at {connectedAt}</span>
-        )}
-        <span className="text-gray-600">
-          {events.length} events captured
-        </span>
+        {connectedAt && <span className="text-gray-500">Connected at {connectedAt}</span>}
+        <span className="text-gray-600">{events.length} events captured</span>
       </div>
 
       <div className="grid grid-cols-[320px_1fr] gap-6">
         {/* Left column: Sync checklist + Stats */}
         <div className="space-y-6">
           {/* Sync Checklist */}
-          <div className="border border-gray-800 rounded p-4 bg-gray-950">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">Initial Sync Checklist</h2>
+          <div className="rounded border border-gray-800 bg-gray-950 p-4">
+            <h2 className="mb-3 text-sm font-bold text-gray-300">Initial Sync Checklist</h2>
 
             <div className="mb-3">
-              <h3 className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Required</h3>
+              <h3 className="mb-1 text-[10px] tracking-wider text-gray-500 uppercase">Required</h3>
               {EXPECTED_SYNCS.map((sync) => (
                 <div key={sync} className="flex items-center gap-2 py-0.5">
                   <span className={receivedSyncs.has(sync) ? 'text-green-400' : 'text-gray-600'}>
@@ -211,7 +203,9 @@ function ServerDebug() {
             </div>
 
             <div>
-              <h3 className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Conditional (need data)</h3>
+              <h3 className="mb-1 text-[10px] tracking-wider text-gray-500 uppercase">
+                Conditional (need data)
+              </h3>
               {CONDITIONAL_SYNCS.map((sync) => (
                 <div key={sync} className="flex items-center gap-2 py-0.5">
                   <span className={receivedSyncs.has(sync) ? 'text-green-400' : 'text-gray-600'}>
@@ -226,8 +220,8 @@ function ServerDebug() {
           </div>
 
           {/* Live Counters */}
-          <div className="border border-gray-800 rounded p-4 bg-gray-950">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">Live Counters</h2>
+          <div className="rounded border border-gray-800 bg-gray-950 p-4">
+            <h2 className="mb-3 text-sm font-bold text-gray-300">Live Counters</h2>
             <div className="space-y-1">
               <div className="flex justify-between">
                 <span className="text-pink-400">chat:message</span>
@@ -245,16 +239,14 @@ function ServerDebug() {
           </div>
 
           {/* Current State Snapshot */}
-          <div className="border border-gray-800 rounded p-4 bg-gray-950">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">Current State</h2>
+          <div className="rounded border border-gray-800 bg-gray-950 p-4">
+            <h2 className="mb-3 text-sm font-bold text-gray-300">Current State</h2>
 
             {/* Status */}
             {status && (
               <div className="mb-2">
                 <span className="text-gray-500">Status: </span>
-                <span className="text-green-400">
-                  {status.status ?? '—'}
-                </span>
+                <span className="text-green-400">{status.status ?? '—'}</span>
               </div>
             )}
 
@@ -262,9 +254,7 @@ function ServerDebug() {
             {stream && (
               <div className="mb-2">
                 <span className="text-gray-500">Stream: </span>
-                <span className="text-cyan-400 break-words">
-                  {stream.title ?? '—'}
-                </span>
+                <span className="break-words text-cyan-400">{stream.title ?? '—'}</span>
               </div>
             )}
 
@@ -282,57 +272,59 @@ function ServerDebug() {
         </div>
 
         {/* Right column: Event Feed */}
-        <div className="border border-gray-800 rounded bg-gray-950 flex flex-col max-h-[calc(100vh-180px)]">
+        <div className="flex max-h-[calc(100vh-180px)] flex-col rounded border border-gray-800 bg-gray-950">
           {/* Filter Bar */}
-          <div className="flex items-center gap-2 p-3 border-b border-gray-800">
+          <div className="flex items-center gap-2 border-b border-gray-800 p-3">
             <span className="text-gray-500">Filter:</span>
             <input
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="e.g. chat, alerts, timeline..."
-              className="flex-1 bg-black border border-gray-700 rounded px-2 py-1 text-white placeholder-gray-600 focus:border-gray-500 focus:outline-none"
+              className="flex-1 rounded border border-gray-700 bg-black px-2 py-1 text-white placeholder-gray-600 focus:border-gray-500 focus:outline-none"
             />
             {filter && (
-              <button
-                onClick={() => setFilter('')}
-                className="text-gray-500 hover:text-white px-2"
-              >
+              <button onClick={() => setFilter('')} className="px-2 text-gray-500 hover:text-white">
                 clear
               </button>
             )}
             <button
-              onClick={() => { setEvents([]); eventIdRef.current = 0 }}
-              className="text-red-400 hover:text-red-300 px-2"
-            >
+              onClick={() => {
+                setEvents([])
+                eventIdRef.current = 0
+              }}
+              className="px-2 text-red-400 hover:text-red-300">
               clear log
             </button>
           </div>
 
           {/* Event List */}
-          <div ref={feedRef} className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div ref={feedRef} className="flex-1 space-y-1 overflow-y-auto p-2">
             {filteredEvents.length === 0 ? (
-              <p className="text-gray-600 p-4 text-center">
+              <p className="p-4 text-center text-gray-600">
                 {isConnected ? 'Waiting for events...' : 'Not connected'}
               </p>
             ) : (
               filteredEvents.map((event) => (
                 <details
                   key={event.id}
-                  className={`border border-gray-800 bg-gray-900/50 rounded border-l-2 ${getCategoryBorder(event.type)}`}
-                >
-                  <summary className="cursor-pointer px-3 py-1.5 flex items-center gap-3 hover:bg-gray-800/50">
-                    <span className="text-gray-600 w-20 shrink-0">{event.receivedAt}</span>
-                    <span className={`font-bold ${getCategoryColor(event.type)}`}>{event.type}</span>
-                    <span className="text-gray-600 ml-auto">
+                  className={`rounded border border-l-2 border-gray-800 bg-gray-900/50 ${getCategoryBorder(event.type)}`}>
+                  <summary className="flex cursor-pointer items-center gap-3 px-3 py-1.5 hover:bg-gray-800/50">
+                    <span className="w-20 shrink-0 text-gray-600">{event.receivedAt}</span>
+                    <span className={`font-bold ${getCategoryColor(event.type)}`}>
+                      {event.type}
+                    </span>
+                    <span className="ml-auto text-gray-600">
                       {event.type === 'chat:message' && (
                         <span className="text-pink-300">
-                          {(event.payload as { user_name?: string })?.user_name}: {(event.payload as { text?: string })?.text?.slice(0, 60)}
+                          {(event.payload as { user_name?: string })?.user_name}:{' '}
+                          {(event.payload as { text?: string })?.text?.slice(0, 60)}
                         </span>
                       )}
                       {event.type === 'alerts:push' && (
                         <span className="text-red-300">
-                          {(event.payload as { type?: string })?.type} — {(event.payload as { user_name?: string })?.user_name}
+                          {(event.payload as { type?: string })?.type} —{' '}
+                          {(event.payload as { user_name?: string })?.user_name}
                         </span>
                       )}
                       {event.type === 'base:update' && (
@@ -352,7 +344,7 @@ function ServerDebug() {
                       )}
                     </span>
                   </summary>
-                  <pre className="px-3 py-2 bg-black/50 overflow-auto text-[10px] max-h-48 text-gray-400">
+                  <pre className="max-h-48 overflow-auto bg-black/50 px-3 py-2 text-[10px] text-gray-400">
                     {JSON.stringify(event.payload, null, 2)}
                   </pre>
                 </details>

@@ -53,7 +53,9 @@ export function micStatusReducer(state: MicStatusState, event: MicStatusEvent): 
 
   const connection = transition(MIC_CONNECTION_TRANSITIONS, state.connection, event)
   const mute =
-    connection === 'reconnecting' ? transition(MIC_MUTE_TRANSITIONS, state.mute, 'mute:reset') : state.mute
+    connection === 'reconnecting'
+      ? transition(MIC_MUTE_TRANSITIONS, state.mute, 'mute:reset')
+      : state.mute
 
   return { connection, mute }
 }

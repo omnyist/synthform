@@ -47,7 +47,7 @@ export function useEmoteSpriteSheet() {
         // Build frame map from array structure
         frameMapRef.current.clear()
         if (data.textures && data.textures[0] && data.textures[0].frames) {
-          data.textures[0].frames.forEach(frame => {
+          data.textures[0].frames.forEach((frame) => {
             frameMapRef.current.set(frame.filename, frame)
           })
         }
@@ -78,63 +78,69 @@ export function useEmoteSpriteSheet() {
   }, [])
 
   // Get sprite data for an emote ID
-  const getEmoteData = useCallback((emoteId: string): EmoteSpriteData | null => {
-    // Check cache first
-    if (emoteDataCache.current.has(emoteId)) {
-      return emoteDataCache.current.get(emoteId)!
-    }
+  const getEmoteData = useCallback(
+    (emoteId: string): EmoteSpriteData | null => {
+      // Check cache first
+      if (emoteDataCache.current.has(emoteId)) {
+        return emoteDataCache.current.get(emoteId)!
+      }
 
-    if (!spriteSheet || !isLoaded || frameMapRef.current.size === 0) {
-      emoteDataCache.current.set(emoteId, null)
-      return null
-    }
+      if (!spriteSheet || !isLoaded || frameMapRef.current.size === 0) {
+        emoteDataCache.current.set(emoteId, null)
+        return null
+      }
 
-    // Get emote name from ID
-    const emoteName = getEmoteName(emoteId)
-    if (!emoteName) {
-      emoteDataCache.current.set(emoteId, null)
-      return null
-    }
+      // Get emote name from ID
+      const emoteName = getEmoteName(emoteId)
+      if (!emoteName) {
+        emoteDataCache.current.set(emoteId, null)
+        return null
+      }
 
-    // Look up frame by filename (emoteName + .png)
-    const filename = `${emoteName}.png`
-    const frame = frameMapRef.current.get(filename)
+      // Look up frame by filename (emoteName + .png)
+      const filename = `${emoteName}.png`
+      const frame = frameMapRef.current.get(filename)
 
-    if (!frame) {
-      emoteDataCache.current.set(emoteId, null)
-      return null
-    }
+      if (!frame) {
+        emoteDataCache.current.set(emoteId, null)
+        return null
+      }
 
-    // Calculate scaled dimensions based on source size
-    // Target display size is 56px for the larger dimension
-    const targetSize = 56
-    const sourceMax = Math.max(frame.sourceSize.w, frame.sourceSize.h)
-    const scale = targetSize / sourceMax
+      // Calculate scaled dimensions based on source size
+      // Target display size is 56px for the larger dimension
+      const targetSize = 56
+      const sourceMax = Math.max(frame.sourceSize.w, frame.sourceSize.h)
+      const scale = targetSize / sourceMax
 
-    // Use the trimmed size for accurate collision
-    const width = frame.spriteSourceSize.w * scale
-    const height = frame.spriteSourceSize.h * scale
+      // Use the trimmed size for accurate collision
+      const width = frame.spriteSourceSize.w * scale
+      const height = frame.spriteSourceSize.h * scale
 
-    const data: EmoteSpriteData = {
-      frame,
-      width,
-      height
-    }
+      const data: EmoteSpriteData = {
+        frame,
+        width,
+        height,
+      }
 
-    emoteDataCache.current.set(emoteId, data)
-    return data
-  }, [spriteSheet, isLoaded])
+      emoteDataCache.current.set(emoteId, data)
+      return data
+    },
+    [spriteSheet, isLoaded],
+  )
 
   // Check if an emote is in the sprite sheet
-  const hasEmote = useCallback((emoteId: string): boolean => {
-    return getEmoteData(emoteId) !== null
-  }, [getEmoteData])
+  const hasEmote = useCallback(
+    (emoteId: string): boolean => {
+      return getEmoteData(emoteId) !== null
+    },
+    [getEmoteData],
+  )
 
   return {
     spriteSheet,
     spriteImage,
     isLoaded,
     getEmoteData,
-    hasEmote
+    hasEmote,
   }
 }

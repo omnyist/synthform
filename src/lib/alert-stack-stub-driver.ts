@@ -24,7 +24,10 @@ const STUB_PHASE_EVENTS = {
 
 const MAX_CONCURRENT_ALERTS = Number(import.meta.env.VITE_ALERT_STACK_MAX) || 1
 
-const timers = new Map<string, { timer: ReturnType<typeof setTimeout>; lifecycle: AlertInstanceState }>()
+const timers = new Map<
+  string,
+  { timer: ReturnType<typeof setTimeout>; lifecycle: AlertInstanceState }
+>()
 
 function scheduleNext(id: string, lifecycle: AlertInstanceState): void {
   const existing = timers.get(id)

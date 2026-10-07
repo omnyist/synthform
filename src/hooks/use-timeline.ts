@@ -29,7 +29,7 @@ export function useTimeline(maxEvents: number = 10) {
     (event: TimelineEvent) => {
       addTimelineEvent(event)
     },
-    [addTimelineEvent]
+    [addTimelineEvent],
   )
 
   return {

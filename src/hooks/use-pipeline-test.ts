@@ -16,9 +16,10 @@ export function usePipelineTest() {
   const triggerSingleEvent = useCallback(() => {
     const { alert, timeline } = TestEventFactory.random()
 
-    const noticeType = timeline.type === 'twitch.channel.chat.notification'
-      ? (timeline as ChatNotificationEvent).data.payload.notice_type
-      : undefined
+    const noticeType =
+      timeline.type === 'twitch.channel.chat.notification'
+        ? (timeline as ChatNotificationEvent).data.payload.notice_type
+        : undefined
 
     console.log('🧪 Single Event Test:', {
       alertType: alert.type,
@@ -50,9 +51,10 @@ export function usePipelineTest() {
 
     events.forEach(({ alert, timeline }, index) => {
       setTimeout(() => {
-        const noticeType = timeline.type === 'twitch.channel.chat.notification'
-          ? (timeline as ChatNotificationEvent).data.payload.notice_type
-          : undefined
+        const noticeType =
+          timeline.type === 'twitch.channel.chat.notification'
+            ? (timeline as ChatNotificationEvent).data.payload.notice_type
+            : undefined
 
         console.log(`📤 Event ${index + 1}/${events.length}:`, {
           alertType: alert.type,

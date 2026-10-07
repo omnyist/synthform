@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  connectWeather,
-  fetchForecast,
-  fetchCurrentWeather,
-} from '@/api/synthhome'
+import { connectWeather, fetchForecast, fetchCurrentWeather } from '@/api/synthhome'
 import type {
   WeatherObservation,
   WeatherRapidWind,
@@ -35,9 +31,15 @@ export function useTempest() {
       onRapidWind: setRapidWind,
       onLightningStrike: setLastStrike,
       onRainStart: () => setIsRaining(true),
-      onConnected: () => { setIsConnected(true); setError(null) },
+      onConnected: () => {
+        setIsConnected(true)
+        setError(null)
+      },
       onDisconnected: () => setIsConnected(false),
-      onError: (err) => { setError(err); setIsConnected(false) },
+      onError: (err) => {
+        setError(err)
+        setIsConnected(false)
+      },
     })
 
     return disconnect
@@ -63,4 +65,3 @@ export function useTempestCurrent() {
     refetchInterval: 60_000,
   })
 }
-

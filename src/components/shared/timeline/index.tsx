@@ -42,7 +42,6 @@ export const Timeline = () => {
   // the way use-server.ts holds ServerConnectionPhase on a class field.
   const visibilityPhase = useRef<'hidden' | 'visible'>('hidden')
 
-
   // Show/hide timeline based on lastPushTime
   useEffect(() => {
     if (!containerRef.current) return
@@ -50,7 +49,10 @@ export const Timeline = () => {
 
     if (lastPushTime > 0 && timelineEvents.length > 0) {
       const wasVisible = visibilityPhase.current === 'visible'
-      visibilityPhase.current = timelineVisibilityReducer(visibilityPhase.current, 'timeline:pushed')
+      visibilityPhase.current = timelineVisibilityReducer(
+        visibilityPhase.current,
+        'timeline:pushed',
+      )
 
       // Show timeline
       if (!wasVisible) {
@@ -98,7 +100,10 @@ export const Timeline = () => {
         clearTimeout(hideTimeoutRef.current)
       }
       hideTimeoutRef.current = setTimeout(() => {
-        visibilityPhase.current = timelineVisibilityReducer(visibilityPhase.current, 'timeline:idle')
+        visibilityPhase.current = timelineVisibilityReducer(
+          visibilityPhase.current,
+          'timeline:idle',
+        )
         if (containerRef.current) {
           const hideAnimation = containerRef.current.animate(
             [{ transform: 'translateY(0)' }, { transform: `translateY(${TIMELINE_HIDDEN_Y}px)` }],
@@ -171,7 +176,11 @@ export const Timeline = () => {
             animations.push(
               el.animate(
                 [{ transform: `translateX(${-shift}px)` }, { transform: 'translateX(0)' }],
-                { duration: TIMELINE_SLIDE_DURATION * 1000, easing: EASE_POWER3_OUT, fill: 'forwards' },
+                {
+                  duration: TIMELINE_SLIDE_DURATION * 1000,
+                  easing: EASE_POWER3_OUT,
+                  fill: 'forwards',
+                },
               ),
             )
           }

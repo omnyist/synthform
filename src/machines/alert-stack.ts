@@ -83,5 +83,7 @@ function admitFromBacklog<TAlert>(state: AlertStackState<TAlert>): AlertStackSta
     backlog = backlog.slice(1)
   }
 
-  return active === state.active && backlog === state.backlog ? state : { ...state, active, backlog }
+  return active === state.active && backlog === state.backlog
+    ? state
+    : { ...state, active, backlog }
 }

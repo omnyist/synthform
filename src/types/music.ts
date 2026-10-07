@@ -5,23 +5,23 @@ export interface BaseMusicTrack {
   artist: string
   album?: string
   artwork?: string
-  duration?: number  // in seconds
-  elapsed?: number   // in seconds
+  duration?: number // in seconds
+  elapsed?: number // in seconds
   timestamp: string
 }
 
 // Rainwave-specific song data
 export interface RainwaveSong extends BaseMusicTrack {
-  game?: string      // For Rainwave, album is the game
-  station?: string   // Station name
-  url?: string       // OCRemix URL
-  requested_by?: string  // Username who requested
+  game?: string // For Rainwave, album is the game
+  station?: string // Station name
+  url?: string // OCRemix URL
+  requested_by?: string // Username who requested
   requested_by_id?: string
   event_id?: string
-  event_type?: string  // OneUp, Election, etc.
-  votes?: number     // For elections
+  event_type?: string // OneUp, Election, etc.
+  votes?: number // For elections
   is_request?: boolean
-  is_crusader?: boolean  // True if requester is a community member
+  is_crusader?: boolean // True if requester is a community member
 }
 
 // Rainwave election (voting) data
@@ -35,15 +35,15 @@ export interface RainwaveElection {
 // Complete Rainwave data with queue and history
 export interface RainwaveData extends RainwaveSong {
   source: 'rainwave'
-  upcoming?: Array<RainwaveSong | RainwaveElection>  // Next tracks/elections
-  history?: RainwaveSong[]   // Previous tracks
+  upcoming?: Array<RainwaveSong | RainwaveElection> // Next tracks/elections
+  history?: RainwaveSong[] // Previous tracks
 }
 
 // Apple Music data
 export interface AppleMusicData extends BaseMusicTrack {
   source: 'apple'
   playing?: boolean
-  position?: number  // Apple uses position instead of elapsed
+  position?: number // Apple uses position instead of elapsed
 }
 
 // Union type for all music sources

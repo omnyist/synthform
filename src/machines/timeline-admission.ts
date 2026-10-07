@@ -18,7 +18,9 @@ export interface TimelineAdmissionState<TEvent> {
   maxVisible: number
 }
 
-export function createTimelineAdmission<TEvent>(maxVisible: number): TimelineAdmissionState<TEvent> {
+export function createTimelineAdmission<TEvent>(
+  maxVisible: number,
+): TimelineAdmissionState<TEvent> {
   return { pending: [], visible: [], maxVisible }
 }
 

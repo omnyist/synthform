@@ -63,23 +63,24 @@ function IronMONDebug() {
   }, [handleMessage])
 
   return (
-    <div className="min-h-screen bg-black text-green-500 p-8 font-mono text-sm">
-      <h1 className="text-2xl mb-4 border-b-2 border-green-500 pb-2">IronMON Events Debug</h1>
+    <div className="min-h-screen bg-black p-8 font-mono text-sm text-green-500">
+      <h1 className="mb-4 border-b-2 border-green-500 pb-2 text-2xl">IronMON Events Debug</h1>
 
       <div className="mb-4">
-        <span className={`px-3 py-1 rounded ${isConnected ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+        <span
+          className={`rounded px-3 py-1 ${isConnected ? 'bg-green-600' : 'bg-red-600'} text-white`}>
           {isConnected ? '✓ Connected' : '✗ Disconnected'}
         </span>
       </div>
 
       {/* Stats from Questlog */}
-      <div className="mb-6 border border-gray-700 bg-gray-900 p-4 rounded">
-        <h2 className="text-lg text-cyan-400 mb-3">Stats (Questlog)</h2>
+      <div className="mb-6 rounded border border-gray-700 bg-gray-900 p-4">
+        <h2 className="mb-3 text-lg text-cyan-400">Stats (Questlog)</h2>
         {statsLoading ? (
           <p className="text-gray-500">Loading stats...</p>
         ) : stats ? (
           <div>
-            <div className="grid grid-cols-4 gap-4 mb-4">
+            <div className="mb-4 grid grid-cols-4 gap-4">
               <div>
                 <span className="text-gray-500">Challenge</span>
                 <p className="text-white">{stats.challenge}</p>
@@ -99,12 +100,12 @@ function IronMONDebug() {
             </div>
             {stats.checkpoints.length > 0 && (
               <details>
-                <summary className="cursor-pointer hover:underline text-yellow-400">
+                <summary className="cursor-pointer text-yellow-400 hover:underline">
                   Checkpoint Clear Rates
                 </summary>
                 <table className="mt-2 w-full text-xs">
                   <thead>
-                    <tr className="text-gray-500 text-left">
+                    <tr className="text-left text-gray-500">
                       <th className="pr-4">#</th>
                       <th className="pr-4">Checkpoint</th>
                       <th className="pr-4">Trainer</th>
@@ -135,16 +136,16 @@ function IronMONDebug() {
       </div>
 
       {/* Recent Runs from Questlog */}
-      <div className="mb-6 border border-gray-700 bg-gray-900 p-4 rounded">
-        <h2 className="text-lg text-cyan-400 mb-3">Recent Runs (Questlog)</h2>
+      <div className="mb-6 rounded border border-gray-700 bg-gray-900 p-4">
+        <h2 className="mb-3 text-lg text-cyan-400">Recent Runs (Questlog)</h2>
         {runsLoading ? (
           <p className="text-gray-500">Loading runs...</p>
         ) : runs ? (
           <div>
-            <p className="text-gray-500 mb-2">{runs.count} total runs</p>
+            <p className="mb-2 text-gray-500">{runs.count} total runs</p>
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-gray-500 text-left">
+                <tr className="text-left text-gray-500">
                   <th className="pr-4">Seed</th>
                   <th className="pr-4">Highest Checkpoint</th>
                   <th className="pr-4">Victory</th>
@@ -169,22 +170,24 @@ function IronMONDebug() {
       </div>
 
       {/* Live Event Log */}
-      <h2 className="text-lg text-cyan-400 mb-3">Live Events (WebSocket)</h2>
+      <h2 className="mb-3 text-lg text-cyan-400">Live Events (WebSocket)</h2>
       <div className="space-y-3">
         {events.length === 0 ? (
           <p className="text-gray-500">Waiting for IronMON events... Start a run in BizHawk!</p>
         ) : (
           events.map((event, i) => (
-            <div key={i} className="border border-gray-700 bg-gray-900 p-4 rounded border-l-4 border-l-green-500">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-cyan-400 font-bold">{event.type}</span>
-                <span className="text-gray-500 text-xs">{event.timestamp}</span>
+            <div
+              key={i}
+              className="rounded border border-l-4 border-gray-700 border-l-green-500 bg-gray-900 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-bold text-cyan-400">{event.type}</span>
+                <span className="text-xs text-gray-500">{event.timestamp}</span>
               </div>
               <details>
-                <summary className="cursor-pointer hover:underline text-yellow-400">
+                <summary className="cursor-pointer text-yellow-400 hover:underline">
                   Show data
                 </summary>
-                <pre className="mt-2 p-2 bg-black rounded overflow-auto text-xs">
+                <pre className="mt-2 overflow-auto rounded bg-black p-2 text-xs">
                   {JSON.stringify(event.data, null, 2)}
                 </pre>
               </details>

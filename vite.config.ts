@@ -20,7 +20,8 @@ function stickersManifest(): Plugin {
   const dir = resolve(import.meta.dirname, 'public/stickers')
   const render = async () => {
     const { manifest, skipped } = await buildStickerManifest(dir)
-    for (const name of skipped) console.warn(`[stickers] skipped ${name}: not a readable PNG, WebP or GIF`)
+    for (const name of skipped)
+      console.warn(`[stickers] skipped ${name}: not a readable PNG, WebP or GIF`)
     return JSON.stringify(manifest, null, 2) + '\n'
   }
   return {
@@ -50,7 +51,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['saya', 'zelan', 'synthform'],
     host: true,
-    port: 8008
+    port: 8008,
   },
   // The deployed container runs `vite preview`, which checks the Host header.
   // On Demi it is bound to localhost and fronted by Tailscale Serve for the
@@ -70,7 +71,11 @@ export default defineConfig({
       // OBS runs on the host; in the prod container that is host.docker.internal
       // (docker-compose.prod.yml maps it to the host gateway). OBS_WS_TARGET
       // overrides for a dev server run outside the container.
-      '/obs': { target: process.env.OBS_WS_TARGET || 'ws://host.docker.internal:4455', ws: true, rewrite: (path) => path.replace(/^\/obs/, '') },
+      '/obs': {
+        target: process.env.OBS_WS_TARGET || 'ws://host.docker.internal:4455',
+        ws: true,
+        rewrite: (path) => path.replace(/^\/obs/, ''),
+      },
     },
   },
 })

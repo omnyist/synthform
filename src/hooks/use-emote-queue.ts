@@ -40,5 +40,11 @@ export function useEmoteQueue(maxConcurrent: number, onAdmit: (entry: EmoteQueue
     dispatch({ type: 'queue:reap', id })
   }, [])
 
-  return { active: state.active, backlog: state.backlog, maxConcurrent: state.maxConcurrent, queueEmote, reap }
+  return {
+    active: state.active,
+    backlog: state.backlog,
+    maxConcurrent: state.maxConcurrent,
+    queueEmote,
+    reap,
+  }
 }

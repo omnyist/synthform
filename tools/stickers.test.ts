@@ -39,12 +39,23 @@ describe('imageInfo', () => {
   test('reads a GIF and spots the NETSCAPE loop extension', () => {
     const still = bytes('GIF89a', u16le(120), u16le(90), [0, 0, 0])
     expect(imageInfo(still)).toEqual({ width: 120, height: 90, animated: false })
-    const looping = bytes('GIF89a', u16le(120), u16le(90), [0, 0, 0, 0x21, 0xff, 0x0b], 'NETSCAPE2.0')
+    const looping = bytes(
+      'GIF89a',
+      u16le(120),
+      u16le(90),
+      [0, 0, 0, 0x21, 0xff, 0x0b],
+      'NETSCAPE2.0',
+    )
     expect(imageInfo(looping)?.animated).toBe(true)
   })
 
   test('two graphic control extensions also mean animated', () => {
-    const two = bytes('GIF89a', u16le(1), u16le(1), [0, 0, 0, 0x21, 0xf9, 0x04, 0, 0, 0, 0, 0, 0x21, 0xf9, 0x04, 0, 0, 0, 0, 0])
+    const two = bytes(
+      'GIF89a',
+      u16le(1),
+      u16le(1),
+      [0, 0, 0, 0x21, 0xf9, 0x04, 0, 0, 0, 0, 0, 0x21, 0xf9, 0x04, 0, 0, 0, 0, 0],
+    )
     expect(imageInfo(two)?.animated).toBe(true)
   })
 
@@ -57,17 +68,35 @@ describe('imageInfo', () => {
 
   test('reads lossless VP8L WebP', () => {
     // 14-bit width-1 = 299, 14-bit height-1 = 199, packed little-endian after the 0x2f signature.
-    const w = 299, h = 199
+    const w = 299,
+      h = 199
     const b0 = w & 0xff
     const b1 = ((w >> 8) & 0x3f) | ((h & 0x03) << 6)
     const b2 = (h >> 2) & 0xff
     const b3 = (h >> 10) & 0x0f
-    const header = bytes('RIFF', u32(0), 'WEBP', 'VP8L', u32(0), [0x2f, b0, b1, b2, b3], [0, 0, 0, 0, 0, 0])
+    const header = bytes(
+      'RIFF',
+      u32(0),
+      'WEBP',
+      'VP8L',
+      u32(0),
+      [0x2f, b0, b1, b2, b3],
+      [0, 0, 0, 0, 0, 0],
+    )
     expect(imageInfo(header)).toEqual({ width: 300, height: 200, animated: false })
   })
 
   test('reads lossy VP8 WebP', () => {
-    const header = bytes('RIFF', u32(0), 'WEBP', 'VP8 ', u32(0), [0, 0, 0, 0x9d, 0x01, 0x2a], u16le(640), u16le(360))
+    const header = bytes(
+      'RIFF',
+      u32(0),
+      'WEBP',
+      'VP8 ',
+      u32(0),
+      [0, 0, 0, 0x9d, 0x01, 0x2a],
+      u16le(640),
+      u16le(360),
+    )
     expect(imageInfo(header)).toEqual({ width: 640, height: 360, animated: false })
   })
 
@@ -81,9 +110,15 @@ describe('buildStickerManifest', () => {
   test('globs the directory, sorts by id, skips what it cannot read', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'stickers-'))
     await writeFile(join(dir, 'wow.png'), pngBytes(512, 512))
-    await writeFile(join(dir, 'Blob.gif'), bytes('GIF89a', u16le(64), u16le(48), [0, 0, 0, 0x21, 0xff, 0x0b], 'NETSCAPE2.0'))
+    await writeFile(
+      join(dir, 'Blob.gif'),
+      bytes('GIF89a', u16le(64), u16le(48), [0, 0, 0, 0x21, 0xff, 0x0b], 'NETSCAPE2.0'),
+    )
     await writeFile(join(dir, 'notes.txt'), 'not an image')
-    await writeFile(join(dir, 'broken.webp'), bytes('RIFF', u32(0), 'WEBP', 'XXXX', u32(0), [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+    await writeFile(
+      join(dir, 'broken.webp'),
+      bytes('RIFF', u32(0), 'WEBP', 'XXXX', u32(0), [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    )
     await writeFile(join(dir, '.DS_Store'), 'junk')
 
     const { manifest, skipped } = await buildStickerManifest(dir)

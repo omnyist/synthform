@@ -4,7 +4,6 @@ import { Frame } from '@/components/ui/chyron'
 import { useCampaign } from '@/hooks/use-campaign'
 import type { Milestone } from '@/types/campaign'
 
-
 const Milestone: FC<{ next: Milestone }> = ({ next }) => {
   return (
     <div className="inset-ring-shark-800 flex items-center rounded-sm bg-black inset-ring-1">
@@ -28,7 +27,7 @@ export const Campaign: FC = () => {
     <Frame className="grow">
       <div className="flex items-center gap-3 pl-6 text-white">
         {/* Campaign */}
-        <div className="inset-ring-shark-800 inset-ring-1 flex items-center rounded-sm bg-black">
+        <div className="inset-ring-shark-800 flex items-center rounded-sm bg-black inset-ring-1">
           <div className="font-caps to-lime from-marigold bg-linear-to-r/longer bg-clip-text p-0.5 px-3 text-2xl text-transparent">
             {campaign?.name}
           </div>

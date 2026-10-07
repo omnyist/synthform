@@ -219,19 +219,20 @@ export interface ChatNotificationPayload {
   // Type-specific data fields (only one will be populated based on notice_type)
   // These match TwitchIO's actual field names after serialization
   sub?: {
-    tier: string  // "1000", "2000", or "3000"
+    tier: string // "1000", "2000", or "3000"
     prime: boolean
     months: number
   }
   resub?: {
-    tier: string  // "1000", "2000", or "3000"
+    tier: string // "1000", "2000", or "3000"
     prime: boolean
     gift: boolean
     months: number
     cumulative_months: number
     streak_months: number | null
     anonymous?: boolean | null
-    gifter?: {  // PartialUser object
+    gifter?: {
+      // PartialUser object
       id: string
       name: string
       display_name: string
@@ -239,11 +240,12 @@ export interface ChatNotificationPayload {
     } | null
   }
   sub_gift?: {
-    tier: string  // "1000", "2000", or "3000"
+    tier: string // "1000", "2000", or "3000"
     months: number
     cumulative_total: number | null
     community_gift_id: string | null
-    recipient: {  // PartialUser object
+    recipient: {
+      // PartialUser object
       id: string
       name: string
       display_name: string
@@ -251,14 +253,15 @@ export interface ChatNotificationPayload {
     }
   }
   community_sub_gift?: {
-    tier: string  // "1000", "2000", or "3000"
+    tier: string // "1000", "2000", or "3000"
     total: number
     cumulative_total: number | null
     id: string
   }
   gift_paid_upgrade?: {
     anonymous: boolean
-    gifter?: {  // PartialUser object
+    gifter?: {
+      // PartialUser object
       id: string
       name: string
       display_name: string
@@ -266,24 +269,27 @@ export interface ChatNotificationPayload {
     } | null
   }
   prime_paid_upgrade?: {
-    tier: string  // "1000", "2000", or "3000"
+    tier: string // "1000", "2000", or "3000"
   }
   raid?: {
-    user: {  // PartialUser object
+    user: {
+      // PartialUser object
       id: string
       name: string
       display_name: string
       login: string
     }
     viewer_count: number
-    profile_image: {  // Asset object
+    profile_image: {
+      // Asset object
       url: string
     }
   }
-  unraid?: null  // Always null
+  unraid?: null // Always null
   pay_it_forward?: {
     anonymous: boolean
-    gifter?: {  // PartialUser object
+    gifter?: {
+      // PartialUser object
       id: string
       name: string
       display_name: string
@@ -291,14 +297,15 @@ export interface ChatNotificationPayload {
     } | null
   }
   announcement?: {
-    colour: string  // TwitchIO uses British spelling
+    colour: string // TwitchIO uses British spelling
   }
   bits_badge_tier?: {
     tier: number
   }
   charity_donation?: {
     name: string
-    amount: {  // CharityValues object
+    amount: {
+      // CharityValues object
       value: number
       decimal_places: number
       currency: string

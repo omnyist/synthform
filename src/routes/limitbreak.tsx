@@ -6,5 +6,9 @@ export const Route = createFileRoute('/limitbreak')({
 })
 
 function RouteComponent() {
-  return <div><LimitBreak /></div>
+  return (
+    <div>
+      <LimitBreak />
+    </div>
+  )
 }

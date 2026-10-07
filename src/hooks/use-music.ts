@@ -14,16 +14,16 @@ export function useMusic() {
     source: null,
     lastUpdate: null,
   })
-  
+
   // Track interpolated elapsed time
   const [interpolatedElapsed, setInterpolatedElapsed] = useState(0)
   const animationFrameRef = useRef<number | undefined>(undefined)
-  
+
   const storeMusic = useRealtimeStore((s) => s.music)
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
   const updateMusicState = useCallback((data: any) => {
-    setMusicState(prev => {
+    setMusicState((prev) => {
       // Check if this is a "tuned out" signal
       if (data.tuned_in === false) {
         return {
@@ -36,16 +36,19 @@ export function useMusic() {
           history: undefined,
         }
       }
-      
+
       // If data has an id, it's the track data
       if (data.id) {
         // Normalize Apple Music data structure
-        const normalizedData = data.source === 'apple' ? {
-          ...data,
-          elapsed: data.position || data.elapsed || 0,
-          isPlaying: data.playing !== undefined ? data.playing : true,
-        } : data
-        
+        const normalizedData =
+          data.source === 'apple'
+            ? {
+                ...data,
+                elapsed: data.position || data.elapsed || 0,
+                isPlaying: data.playing !== undefined ? data.playing : true,
+              }
+            : data
+
         // New track
         if (data.id !== prev.current?.id) {
           // Reset interpolation for new track
@@ -90,7 +93,7 @@ export function useMusic() {
         // No changes
         return prev
       }
-      
+
       // If data has a current property, it's wrapped (future format)
       if (data.current) {
         if (data.current.id !== prev.current?.id) {
@@ -105,7 +108,7 @@ export function useMusic() {
         // Same track, don't update state
         return prev
       }
-      
+
       // Unknown format, return previous state
       return prev
     })
@@ -134,7 +137,7 @@ export function useMusic() {
       const now = Date.now()
       const deltaTime = (now - startTime) / 1000 // Convert to seconds
       const newElapsed = Math.min(startElapsed + deltaTime, musicState.current?.duration || 0)
-      
+
       setInterpolatedElapsed(newElapsed)
       animationFrameRef.current = requestAnimationFrame(animate)
     }
@@ -149,20 +152,25 @@ export function useMusic() {
   }, [musicState.isPlaying, musicState.current?.elapsed, musicState.current?.duration])
 
   // Computed values - use interpolated elapsed for smooth progress
-  const displayElapsed = musicState.isPlaying ? interpolatedElapsed : (musicState.current?.elapsed || 0)
-  const progress = displayElapsed && musicState.current?.duration
-    ? (displayElapsed / musicState.current.duration) * 100
-    : 0
+  const displayElapsed = musicState.isPlaying
+    ? interpolatedElapsed
+    : musicState.current?.elapsed || 0
+  const progress =
+    displayElapsed && musicState.current?.duration
+      ? (displayElapsed / musicState.current.duration) * 100
+      : 0
 
   const formattedElapsed = formatTime(displayElapsed)
   const formattedDuration = formatTime(musicState.current?.duration || 0)
 
   return {
     ...musicState,
-    current: musicState.current ? {
-      ...musicState.current,
-      elapsed: displayElapsed  // Override with interpolated value
-    } : null,
+    current: musicState.current
+      ? {
+          ...musicState.current,
+          elapsed: displayElapsed, // Override with interpolated value
+        }
+      : null,
     isConnected,
     progress,
     formattedElapsed,

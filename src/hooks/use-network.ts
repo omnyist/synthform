@@ -1,23 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  connectNetwork,
-  fetchNetworkDevices,
-  fetchPduOutlets,
-} from '@/api/synthhome'
-import type {
-  NetworkSnapshot,
-  NetworkEvent,
-  NetworkDevice,
-  PduOutlet,
-} from '@/api/synthhome'
+import { connectNetwork, fetchNetworkDevices, fetchPduOutlets } from '@/api/synthhome'
+import type { NetworkSnapshot, NetworkEvent, NetworkDevice, PduOutlet } from '@/api/synthhome'
 
-export type {
-  NetworkSnapshot,
-  NetworkEvent,
-  NetworkDevice,
-  PduOutlet,
-}
+export type { NetworkSnapshot, NetworkEvent, NetworkDevice, PduOutlet }
 
 export function useNetwork() {
   const [snapshot, setSnapshot] = useState<NetworkSnapshot | null>(null)
@@ -35,9 +21,15 @@ export function useNetwork() {
     const disconnect = connectNetwork({
       onSnapshot: setSnapshot,
       onEvent: handleEvent,
-      onConnected: () => { setIsConnected(true); setError(null) },
+      onConnected: () => {
+        setIsConnected(true)
+        setError(null)
+      },
       onDisconnected: () => setIsConnected(false),
-      onError: (err) => { setError(err); setIsConnected(false) },
+      onError: (err) => {
+        setError(err)
+        setIsConnected(false)
+      },
     })
 
     return disconnect

@@ -9,7 +9,9 @@ export const MicStatusBadge = () => {
   const { mute } = useMicStatus()
 
   if (mute === 'unknown') {
-    return <div className="outline-shark-920 bg-marigold size-4 animate-pulse rounded-full bg-radial-[at_50%_25%] outline-4" />
+    return (
+      <div className="outline-shark-920 bg-marigold size-4 animate-pulse rounded-full bg-radial-[at_50%_25%] outline-4" />
+    )
   }
 
   return (

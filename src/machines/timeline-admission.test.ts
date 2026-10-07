@@ -13,7 +13,11 @@ interface TestEvent {
 describe('timelineAdmissionReducer', () => {
   test('a queued event stays out of visible until released', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:queued', id: 'a', event: { label: 'a' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:queued',
+      id: 'a',
+      event: { label: 'a' },
+    })
 
     expect(state.visible).toEqual([])
     expect(state.pending.map((p) => p.id)).toEqual(['a'])
@@ -21,7 +25,11 @@ describe('timelineAdmissionReducer', () => {
 
   test('an admitted event goes straight to visible', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'a', event: { label: 'a' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'a',
+      event: { label: 'a' },
+    })
 
     expect(state.visible).toEqual([{ label: 'a' }])
     expect(state.pending).toEqual([])
@@ -29,7 +37,11 @@ describe('timelineAdmissionReducer', () => {
 
   test('releasing a queued event moves it into visible', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:queued', id: 'a', event: { label: 'a' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:queued',
+      id: 'a',
+      event: { label: 'a' },
+    })
     state = timelineAdmissionReducer(state, { type: 'timeline:released', id: 'a' })
 
     expect(state.visible).toEqual([{ label: 'a' }])
@@ -40,7 +52,11 @@ describe('timelineAdmissionReducer', () => {
   // gift-sub events, or one that was already admitted directly).
   test('releasing an unknown id is a safe no-op', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'a', event: { label: 'a' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'a',
+      event: { label: 'a' },
+    })
 
     const before = state
     state = timelineAdmissionReducer(state, { type: 'timeline:released', id: 'never-held' })
@@ -50,25 +66,53 @@ describe('timelineAdmissionReducer', () => {
 
   test('visible is newest first', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'a', event: { label: 'a' } })
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'b', event: { label: 'b' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'a',
+      event: { label: 'a' },
+    })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'b',
+      event: { label: 'b' },
+    })
 
     expect(state.visible).toEqual([{ label: 'b' }, { label: 'a' }])
   })
 
   test('visible respects maxVisible', () => {
     let state: TimelineAdmissionState<TestEvent> = createTimelineAdmission<TestEvent>(2)
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'a', event: { label: 'a' } })
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'b', event: { label: 'b' } })
-    state = timelineAdmissionReducer(state, { type: 'timeline:admitted', id: 'c', event: { label: 'c' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'a',
+      event: { label: 'a' },
+    })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'b',
+      event: { label: 'b' },
+    })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:admitted',
+      id: 'c',
+      event: { label: 'c' },
+    })
 
     expect(state.visible).toEqual([{ label: 'c' }, { label: 'b' }])
   })
 
   test('multiple pending events release independently', () => {
     let state = createTimelineAdmission<TestEvent>(20)
-    state = timelineAdmissionReducer(state, { type: 'timeline:queued', id: 'a', event: { label: 'a' } })
-    state = timelineAdmissionReducer(state, { type: 'timeline:queued', id: 'b', event: { label: 'b' } })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:queued',
+      id: 'a',
+      event: { label: 'a' },
+    })
+    state = timelineAdmissionReducer(state, {
+      type: 'timeline:queued',
+      id: 'b',
+      event: { label: 'b' },
+    })
 
     state = timelineAdmissionReducer(state, { type: 'timeline:released', id: 'a' })
 

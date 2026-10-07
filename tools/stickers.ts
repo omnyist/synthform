@@ -39,7 +39,8 @@ const EXTENSIONS = new Set(['.png', '.webp', '.gif'])
 export function imageInfo(bytes: Uint8Array): ImageInfo | null {
   if (bytes.length >= 24 && ascii(bytes, 1, 3) === 'PNG') return png(bytes)
   if (bytes.length >= 10 && ascii(bytes, 0, 3) === 'GIF') return gif(bytes)
-  if (bytes.length >= 30 && ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 4) === 'WEBP') return webp(bytes)
+  if (bytes.length >= 30 && ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 4) === 'WEBP')
+    return webp(bytes)
   return null
 }
 
@@ -48,7 +49,12 @@ function ascii(bytes: Uint8Array, offset: number, length: number): string {
 }
 
 function u32be(bytes: Uint8Array, offset: number): number {
-  return ((bytes[offset]! << 24) >>> 0) + (bytes[offset + 1]! << 16) + (bytes[offset + 2]! << 8) + bytes[offset + 3]!
+  return (
+    ((bytes[offset]! << 24) >>> 0) +
+    (bytes[offset + 1]! << 16) +
+    (bytes[offset + 2]! << 8) +
+    bytes[offset + 3]!
+  )
 }
 
 function u16le(bytes: Uint8Array, offset: number): number {
@@ -103,7 +109,10 @@ function webp(bytes: Uint8Array): ImageInfo | null {
     }
   }
   if (chunk === 'VP8L') {
-    const b0 = bytes[21]!, b1 = bytes[22]!, b2 = bytes[23]!, b3 = bytes[24]!
+    const b0 = bytes[21]!,
+      b1 = bytes[22]!,
+      b2 = bytes[23]!,
+      b3 = bytes[24]!
     return {
       width: 1 + (((b1 & 0x3f) << 8) | b0),
       height: 1 + (((b3 & 0x0f) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6)),

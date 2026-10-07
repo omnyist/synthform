@@ -3,18 +3,15 @@ import { useRealtimeStore } from '@/store/realtime'
 import { serverConnection } from '@/hooks/use-server'
 import { useWhep } from '@/hooks/use-whep'
 import { useFeedStats } from '@/hooks/use-feed-stats'
-import { STAMP_BAR_HEIGHT, STAMP_BAR_WIDTH, STAMP_REFERENCE_HEIGHT, STAMP_REFERENCE_WIDTH } from '@/lib/frame-stamp'
+import {
+  STAMP_BAR_HEIGHT,
+  STAMP_BAR_WIDTH,
+  STAMP_REFERENCE_HEIGHT,
+  STAMP_REFERENCE_WIDTH,
+} from '@/lib/frame-stamp'
 import type { TelestratorPoint } from '@/types/telestrator'
 
-const COLORS = [
-  '#ffffff',
-  '#ef4444',
-  '#f59e0b',
-  '#22c55e',
-  '#3b82f6',
-  '#a855f7',
-  '#ec4899',
-]
+const COLORS = ['#ffffff', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899']
 
 const WIDTHS = [3, 6, 10, 16]
 
@@ -27,7 +24,8 @@ const FLUSH_INTERVAL = 16 // ms
 // Live feed of OBS program out (scribble/docs/telestrator-v1.5.md). Relative by default
 // so it resolves against whatever origin serves this page (Tailscale Serve on
 // Demi maps /whep to the media server). Empty string disables the feed.
-const FEED_URL: string | null = (import.meta.env.VITE_TELESTRATOR_FEED_URL ?? '/whep/telestrator/whep') || null
+const FEED_URL: string | null =
+  (import.meta.env.VITE_TELESTRATOR_FEED_URL ?? '/whep/telestrator/whep') || null
 
 interface LocalStroke {
   id: string
@@ -274,20 +272,20 @@ export function TelestratorInput() {
   }, [redraw])
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-shark-950 text-chalk select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="bg-shark-950 text-chalk flex h-screen w-screen flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] select-none">
       {/* Toolbar */}
-      <div className="flex items-center gap-4 border-b border-shark-800 px-4 py-3">
+      <div className="border-shark-800 flex items-center gap-4 border-b px-4 py-3">
         {/* Connection indicator */}
         <div className="flex items-center gap-2">
           <span
-            className={`inline-block h-2.5 w-2.5 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`}
+            className={`inline-block h-2.5 w-2.5 rounded-full ${isConnected ? 'bg-green-400' : 'animate-pulse bg-red-400'}`}
           />
-          <span className="text-xs text-shark-400">
+          <span className="text-shark-400 text-xs">
             {isConnected ? 'Connected' : 'Disconnected'}
           </span>
         </div>
 
-        <div className="h-6 w-px bg-shark-700" />
+        <div className="bg-shark-700 h-6 w-px" />
 
         {/* Colors */}
         <div className="flex items-center gap-1.5">
@@ -296,14 +294,14 @@ export function TelestratorInput() {
               key={c}
               onClick={() => setColor(c)}
               className={`h-8 w-8 rounded-full border-2 transition-transform ${
-                color === c ? 'scale-110 border-chalk' : 'border-transparent'
+                color === c ? 'border-chalk scale-110' : 'border-transparent'
               }`}
               style={{ backgroundColor: c }}
             />
           ))}
         </div>
 
-        <div className="h-6 w-px bg-shark-700" />
+        <div className="bg-shark-700 h-6 w-px" />
 
         {/* Widths */}
         <div className="flex items-center gap-1.5">
@@ -313,35 +311,29 @@ export function TelestratorInput() {
               onClick={() => setWidth(w)}
               className={`flex h-8 w-8 items-center justify-center rounded-lg border-2 transition-transform ${
                 width === w
-                  ? 'scale-110 border-chalk bg-shark-800'
-                  : 'border-transparent bg-shark-900'
-              }`}
-            >
-              <span
-                className="rounded-full bg-chalk"
-                style={{ width: w, height: w }}
-              />
+                  ? 'border-chalk bg-shark-800 scale-110'
+                  : 'bg-shark-900 border-transparent'
+              }`}>
+              <span className="bg-chalk rounded-full" style={{ width: w, height: w }} />
             </button>
           ))}
         </div>
 
-        <div className="h-6 w-px bg-shark-700" />
+        <div className="bg-shark-700 h-6 w-px" />
 
         {/* Actions */}
         <button
           onClick={handleUndo}
-          className="rounded-lg bg-shark-800 px-4 py-2 text-sm font-medium text-chalk transition-colors hover:bg-shark-700 active:bg-shark-600"
-        >
+          className="bg-shark-800 text-chalk hover:bg-shark-700 active:bg-shark-600 rounded-lg px-4 py-2 text-sm font-medium transition-colors">
           Undo
         </button>
         <button
           onClick={handleClear}
-          className="rounded-lg bg-red-900/60 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900/80 active:bg-red-800"
-        >
+          className="rounded-lg bg-red-900/60 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900/80 active:bg-red-800">
           Clear
         </button>
 
-        <div className="h-6 w-px bg-shark-700" />
+        <div className="bg-shark-700 h-6 w-px" />
 
         {/* Background toggle */}
         <button
@@ -350,21 +342,22 @@ export function TelestratorInput() {
             showBackground && feedLive
               ? 'bg-sky/20 text-sky'
               : 'bg-shark-800 text-shark-400 hover:bg-shark-700'
-          }`}
-        >
+          }`}>
           BG {showBackground && feedLive ? 'ON' : 'OFF'}
         </button>
 
         {/* Live feed status: LIVE when WebRTC is flowing */}
         <div className="flex items-center gap-2" title={feedState}>
           <span
-            className={`inline-block h-2.5 w-2.5 rounded-full ${feedLive ? 'bg-sky' : feedState === 'connecting' ? 'animate-pulse bg-shark-500' : 'bg-shark-600'}`}
+            className={`inline-block h-2.5 w-2.5 rounded-full ${feedLive ? 'bg-sky' : feedState === 'connecting' ? 'bg-shark-500 animate-pulse' : 'bg-shark-600'}`}
           />
-          <span className="text-xs text-shark-400">FEED</span>
+          <span className="text-shark-400 text-xs">FEED</span>
         </div>
 
         {/* Latency to source, from the timecode in the picture (same gauge as Scribble's LAG) */}
-        <span className="font-mono text-xs text-shark-400 tabular-nums" title="latency to source, ms">
+        <span
+          className="text-shark-400 font-mono text-xs tabular-nums"
+          title="latency to source, ms">
           LAG {stats.lagMs === null ? '—' : Math.round(stats.lagMs)} ms
         </span>
 
@@ -372,8 +365,7 @@ export function TelestratorInput() {
           onClick={() => setShowDebug((v) => !v)}
           className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
             showDebug ? 'bg-sky/20 text-sky' : 'bg-shark-800 text-shark-400 hover:bg-shark-700'
-          }`}
-        >
+          }`}>
           DBG
         </button>
       </div>
@@ -381,8 +373,7 @@ export function TelestratorInput() {
       {/* Canvas area */}
       <div
         ref={containerRef}
-        className="relative flex flex-1 items-center justify-center bg-shark-920 p-4"
-      >
+        className="bg-shark-920 relative flex flex-1 items-center justify-center p-4">
         <div className="relative">
           {/* Live feed underneath the canvas. */}
           <video
@@ -409,20 +400,23 @@ export function TelestratorInput() {
             style={{ touchAction: 'none' }}
           />
           {showDebug && (
-            <div className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-2 font-mono text-[11px] leading-5 text-chalk tabular-nums">
+            <div className="text-chalk pointer-events-none absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-2 font-mono text-[11px] leading-5 tabular-nums">
               <div>
                 feed {feedState} · {stats.transport ?? '?'} · rtt{' '}
                 {stats.rttMs === null ? '—' : stats.rttMs.toFixed(1)} ms
               </div>
               <div>
                 lag {stats.lagMs === null ? '—' : Math.round(stats.lagMs)} ms (offset{' '}
-                {stats.offsetMs === null ? 'assumed 0' : `${stats.offsetMs.toFixed(1)} ms`}; misreads{' '}
-                {stats.stampMisreads}; frame {stats.frame ?? '—'})
+                {stats.offsetMs === null ? 'assumed 0' : `${stats.offsetMs.toFixed(1)} ms`};
+                misreads {stats.stampMisreads}; frame {stats.frame ?? '—'})
               </div>
-              <div>buffer {stats.bufferMs === null ? '—' : stats.bufferMs.toFixed(1)} ms over the last second</div>
               <div>
-                frames {stats.framesReceived} received · {stats.framesDecoded} decoded · {stats.framesDropped}{' '}
-                dropped
+                buffer {stats.bufferMs === null ? '—' : stats.bufferMs.toFixed(1)} ms over the last
+                second
+              </div>
+              <div>
+                frames {stats.framesReceived} received · {stats.framesDecoded} decoded ·{' '}
+                {stats.framesDropped} dropped
               </div>
               <div>
                 packets lost {stats.packetsLost} · freezes {stats.freezeCount}

@@ -24,9 +24,12 @@ describe('timelineVisibilityReducer', () => {
 describe('toMermaid', () => {
   test('renders the timeline visibility machine', () => {
     expect(toMermaid(TIMELINE_VISIBILITY_TRANSITIONS, 'hidden')).toBe(
-      ['stateDiagram-v2', '    [*] --> hidden', '    hidden --> visible: timeline:pushed', '    visible --> hidden: timeline:idle'].join(
-        '\n',
-      ),
+      [
+        'stateDiagram-v2',
+        '    [*] --> hidden',
+        '    hidden --> visible: timeline:pushed',
+        '    visible --> hidden: timeline:idle',
+      ].join('\n'),
     )
   })
 })

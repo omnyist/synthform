@@ -32,7 +32,10 @@ export type EmoteQueueAction =
   // stack:reap is a separate signal from the lifecycle reaching 'exiting'.
   | { type: 'queue:reap'; id: string }
 
-export function emoteQueueReducer(state: EmoteQueueState, action: EmoteQueueAction): EmoteQueueState {
+export function emoteQueueReducer(
+  state: EmoteQueueState,
+  action: EmoteQueueAction,
+): EmoteQueueState {
   switch (action.type) {
     case 'queue:arrive':
       return admitFromBacklog({
@@ -62,5 +65,7 @@ function admitFromBacklog(state: EmoteQueueState): EmoteQueueState {
     backlog = backlog.slice(1)
   }
 
-  return active === state.active && backlog === state.backlog ? state : { ...state, active, backlog }
+  return active === state.active && backlog === state.backlog
+    ? state
+    : { ...state, active, backlog }
 }

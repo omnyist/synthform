@@ -83,15 +83,14 @@ function TranscriptionDebug() {
   const fullText = lines.map((l) => l.text).join(' ')
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 font-mono">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-black p-8 font-mono text-white">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl">Transcription Debug</h1>
           <div className="flex items-center gap-4 text-sm">
             <span className="text-gray-500">{updateCount} updates</span>
             <span
-              className={`px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}
-            >
+              className={`rounded px-2 py-1 text-xs ${isConnected ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
               {isConnected ? 'Connected' : 'Reconnecting...'}
             </span>
           </div>
@@ -99,29 +98,25 @@ function TranscriptionDebug() {
 
         {/* Live caption preview — what closed captions would look like */}
         <div className="mb-8">
-          <h2 className="text-sm text-gray-500 uppercase tracking-wide mb-2">Caption Preview</h2>
-          <div className="bg-gray-900 rounded-lg p-6 min-h-[120px] flex items-end">
+          <h2 className="mb-2 text-sm tracking-wide text-gray-500 uppercase">Caption Preview</h2>
+          <div className="flex min-h-[120px] items-end rounded-lg bg-gray-900 p-6">
             <p className="text-xl leading-relaxed">
-              {buffer || fullText || (
-                <span className="text-gray-600">Waiting for speech...</span>
-              )}
+              {buffer || fullText || <span className="text-gray-600">Waiting for speech...</span>}
             </p>
           </div>
         </div>
 
         {/* Committed lines */}
         <div className="mb-8">
-          <h2 className="text-sm text-gray-500 uppercase tracking-wide mb-2">
+          <h2 className="mb-2 text-sm tracking-wide text-gray-500 uppercase">
             Committed Lines ({lines.length})
           </h2>
-          <div ref={scrollRef} className="bg-gray-900 rounded-lg p-4 max-h-96 overflow-y-auto">
+          <div ref={scrollRef} className="max-h-96 overflow-y-auto rounded-lg bg-gray-900 p-4">
             {lines.length > 0 ? (
               <div className="space-y-1">
                 {lines.map((line, i) => (
                   <div key={i} className="flex gap-3">
-                    <span className="text-gray-600 shrink-0 w-24 text-right">
-                      {line.start}
-                    </span>
+                    <span className="w-24 shrink-0 text-right text-gray-600">{line.start}</span>
                     <span>{line.text}</span>
                   </div>
                 ))}
@@ -135,8 +130,10 @@ function TranscriptionDebug() {
         {/* Buffer (partial / in-progress) */}
         {buffer && (
           <div>
-            <h2 className="text-sm text-gray-500 uppercase tracking-wide mb-2">Buffer (in progress)</h2>
-            <div className="bg-gray-900 rounded-lg p-4">
+            <h2 className="mb-2 text-sm tracking-wide text-gray-500 uppercase">
+              Buffer (in progress)
+            </h2>
+            <div className="rounded-lg bg-gray-900 p-4">
               <p className="text-yellow-400">{buffer}</p>
             </div>
           </div>

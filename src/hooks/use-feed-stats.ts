@@ -109,8 +109,12 @@ export function useFeedStats(
             break
           case 'candidate-pair':
             if (stat.nominated === true && stat.state === 'succeeded') {
-              rttMs = typeof stat.currentRoundTripTime === 'number' ? stat.currentRoundTripTime * 1000 : null
-              localCandidateId = typeof stat.localCandidateId === 'string' ? stat.localCandidateId : null
+              rttMs =
+                typeof stat.currentRoundTripTime === 'number'
+                  ? stat.currentRoundTripTime * 1000
+                  : null
+              localCandidateId =
+                typeof stat.localCandidateId === 'string' ? stat.localCandidateId : null
             }
             break
           case 'remote-outbound-rtp':
@@ -151,8 +155,14 @@ export function useFeedStats(
         const sy = video.videoHeight / STAMP_REFERENCE_HEIGHT
         ctx.drawImage(
           video,
-          0, 0, STAMP_BAR_WIDTH * sx, STAMP_BAR_HEIGHT * sy,
-          0, 0, STAMP_BAR_WIDTH, STAMP_BAR_HEIGHT,
+          0,
+          0,
+          STAMP_BAR_WIDTH * sx,
+          STAMP_BAR_HEIGHT * sy,
+          0,
+          0,
+          STAMP_BAR_WIDTH,
+          STAMP_BAR_HEIGHT,
         )
         const pixels = ctx.getImageData(0, 0, STAMP_BAR_WIDTH, STAMP_BAR_HEIGHT).data
         const luma = (x: number, y: number) => {
@@ -165,7 +175,8 @@ export function useFeedStats(
         if (lag === null) {
           if (stamp !== null) misreadsRef.current += 1
         } else {
-          lagRef.current = lagRef.current === null ? lag : lagRef.current + SMOOTHING * (lag - lagRef.current)
+          lagRef.current =
+            lagRef.current === null ? lag : lagRef.current + SMOOTHING * (lag - lagRef.current)
         }
       }
 

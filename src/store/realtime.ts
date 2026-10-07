@@ -37,7 +37,12 @@ import {
   type TimelineAdmissionState,
 } from '@/machines/timeline-admission'
 import { TIMELINE_MAX_EVENTS } from '@/config/timeline'
-import { limitBreakReducer, newLimitBreakState, type LimitBreakEvent, type LimitBreakState } from '@/machines/limitbreak'
+import {
+  limitBreakReducer,
+  newLimitBreakState,
+  type LimitBreakEvent,
+  type LimitBreakState,
+} from '@/machines/limitbreak'
 import type { ServerConnectionPhase } from '@/machines/server-connection'
 import type {
   Campaign,
@@ -318,8 +323,8 @@ export const useRealtimeStore = create<RealtimeStore>()(
           set((state) => ({
             chat: {
               ...state.chat,
-              messages: payload as ChatMessage[]
-            }
+              messages: payload as ChatMessage[],
+            },
           }))
           break
 
@@ -498,7 +503,9 @@ export const useRealtimeStore = create<RealtimeStore>()(
     },
 
     dispatchTimelineAdmission: (action) => {
-      set((state) => ({ timelineAdmission: timelineAdmissionReducer(state.timelineAdmission, action) }))
+      set((state) => ({
+        timelineAdmission: timelineAdmissionReducer(state.timelineAdmission, action),
+      }))
     },
 
     dispatchLimitBreak: (event) => {

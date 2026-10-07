@@ -43,40 +43,41 @@ function DebugAlertStack() {
   const timelineAdmission = useRealtimeStore((s) => s.timelineAdmission)
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 font-mono text-xs">
+    <div className="min-h-screen bg-black p-8 font-mono text-xs text-white">
       <AlertAudioDriver />
-      <h1 className="text-2xl mb-4">Alert Stack Debug</h1>
+      <h1 className="mb-4 text-2xl">Alert Stack Debug</h1>
 
       <div className="mb-4 flex items-center gap-4">
-        <span className={`px-2 py-1 rounded ${isConnected ? 'bg-green-600' : 'bg-red-600'}`}>
+        <span className={`rounded px-2 py-1 ${isConnected ? 'bg-green-600' : 'bg-red-600'}`}>
           {isConnected ? 'Connected' : 'Disconnected'}
         </span>
-        <span className="px-2 py-1 rounded bg-gray-700">
+        <span className="rounded bg-gray-700 px-2 py-1">
           capacity: {alertStack.maxConcurrent} (VITE_ALERT_STACK_MAX)
         </span>
         <button
           type="button"
           onClick={() => simulateArrival(false)}
-          className="px-3 py-1 rounded bg-blue-700 hover:bg-blue-600 cursor-pointer"
-        >
+          className="cursor-pointer rounded bg-blue-700 px-3 py-1 hover:bg-blue-600">
           simulate arrival
         </button>
         <button
           type="button"
           onClick={() => simulateArrival(true)}
-          className="px-3 py-1 rounded bg-purple-700 hover:bg-purple-600 cursor-pointer"
-        >
+          className="cursor-pointer rounded bg-purple-700 px-3 py-1 hover:bg-purple-600">
           simulate arrival + timeline event
         </button>
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl mb-2">Active ({alertStack.active.length} / {alertStack.maxConcurrent})</h2>
+        <h2 className="mb-2 text-xl">
+          Active ({alertStack.active.length} / {alertStack.maxConcurrent})
+        </h2>
         {alertStack.active.length > 0 ? (
-          <ul className="list-disc list-inside">
+          <ul className="list-inside list-disc">
             {alertStack.active.map((instance) => (
               <li key={instance.id}>
-                {instance.id} — phase: <span className="text-yellow-400">{instance.lifecycle.phase}</span>
+                {instance.id} — phase:{' '}
+                <span className="text-yellow-400">{instance.lifecycle.phase}</span>
                 {instance.lifecycle.audioEndedEarly && (
                   <span className="text-orange-400"> (audio ended early, pending)</span>
                 )}
@@ -92,9 +93,9 @@ function DebugAlertStack() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl mb-2">Backlog ({alertStack.backlog.length})</h2>
+        <h2 className="mb-2 text-xl">Backlog ({alertStack.backlog.length})</h2>
         {alertStack.backlog.length > 0 ? (
-          <ol className="list-decimal list-inside">
+          <ol className="list-inside list-decimal">
             {alertStack.backlog.map((item) => (
               <li key={item.id}>
                 {item.id} — {item.alert.type}
@@ -108,12 +109,12 @@ function DebugAlertStack() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl mb-2">
+        <h2 className="mb-2 text-xl">
           Timeline Admission — pending ({timelineAdmission.pending.length}), visible (
           {timelineAdmission.visible.length} / {timelineAdmission.maxVisible})
         </h2>
         {timelineAdmission.pending.length > 0 ? (
-          <ol className="list-decimal list-inside">
+          <ol className="list-inside list-decimal">
             {timelineAdmission.pending.map((entry) => (
               <li key={entry.id} className="text-orange-400">
                 {entry.id} — held, waiting on matching alert
@@ -124,7 +125,7 @@ function DebugAlertStack() {
           <p className="text-gray-500">nothing pending</p>
         )}
         {timelineAdmission.visible.length > 0 && (
-          <ol className="list-decimal list-inside mt-2">
+          <ol className="mt-2 list-inside list-decimal">
             {timelineAdmission.visible.map((event, i) => (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               <li key={(event as any).id ?? i} className="text-green-400">
@@ -137,8 +138,10 @@ function DebugAlertStack() {
       </div>
 
       <details className="mt-4">
-        <summary className="cursor-pointer hover:underline">Raw JSON Data (click to expand)</summary>
-        <pre className="mt-2 p-4 bg-gray-900 rounded overflow-auto max-h-96">
+        <summary className="cursor-pointer hover:underline">
+          Raw JSON Data (click to expand)
+        </summary>
+        <pre className="mt-2 max-h-96 overflow-auto rounded bg-gray-900 p-4">
           {JSON.stringify({ alertStack, timelineAdmission }, null, 2)}
         </pre>
       </details>

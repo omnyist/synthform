@@ -1,8 +1,5 @@
 // Import types from obs-websocket-js for reference
-import type {
-  OBSResponseTypes,
-  OBSEventTypes,
-} from 'obs-websocket-js'
+import type { OBSResponseTypes, OBSEventTypes } from 'obs-websocket-js'
 
 // Re-export useful types
 export type GetSceneListResponse = OBSResponseTypes['GetSceneList']

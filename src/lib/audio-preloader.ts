@@ -80,8 +80,8 @@ export function preloadSounds(): Promise<void> {
             failedPreloads.add(soundPath)
             resolve() // Don't block other sounds
           }
-        })
-    )
+        }),
+    ),
   ).then(() => {
     preloadComplete = true
     console.log(`[Audio] Preloaded ${audioCache.size} sounds`)
@@ -118,4 +118,3 @@ export function getPreloadedAudio(soundPath: string): HTMLAudioElement | null {
   audio.preload = 'auto'
   return audio
 }
-
