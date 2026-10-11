@@ -15,6 +15,7 @@ Project-specific deltas (everything else is inherited from the import above and 
 
 - **Commits:** open to agents. Stage paths, never `git add -A`.
 - Single-tenant (always `avalonstar`); runs on the Tailscale LAN.
+- Run `just` for the recipes; CI runs `just check`.
 - **Ports, Redis DB, container names:** not restated here. `recall("<project> port")` or `lookup` against `registry/allocations.md`, which is canonical and derived from what is actually listening. A copy in this file is a second place to be wrong.
 - **No mock mode** — real data/APIs only.
 - **Don't reimplement from scratch** without explicit permission; make the smallest reasonable change; never rename things "improved"/"new"/"enhanced".

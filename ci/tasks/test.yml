@@ -11,6 +11,7 @@ image_resource:
 
 inputs:
   - name: repo
+  - name: standards
 
 run:
   path: sh
