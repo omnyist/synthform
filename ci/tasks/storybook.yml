@@ -9,7 +9,7 @@ image_resource:
     # Vitest and Storybook run under Bun here; that passed every story on the
     # Unraid worker's x86_64 on 2026-10-07. Pinned for the same reason the test
     # task is.
-    tag: '1.4-debian'
+    tag: '1.4.3-debian'
 
 inputs:
   - name: repo
